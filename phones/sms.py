@@ -43,10 +43,7 @@ class SMSCodeException(Exception):
 
 
 def send_new_code(phone_number):
-    phone_number.sms_bucket = min(
-        settings.SMS_BUCKET_MAX,
-        phone_number.sms_bucket + int((timezone.now() - phone_number.updated ).total_seconds() / settings.SMS_BUCKET_INTERVAL)
-    )
+    phone_number.update_bucket()
 
     if phone_number.sms_bucket == 0:
         raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')

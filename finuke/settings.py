@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'phonenumber_field',
+    'crispy_forms',
     'phones',
     'votes',
 ]
@@ -124,8 +125,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Cripsy settings
+
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+CRISPY_FAIL_SILENTLY = not DEBUG
+
 # OVH Settings
-OVH_SMS_DISABLE = True
+OVH_SMS_DISABLE = os.environ.get('OVH_SMS_DISABLE', True)
 OVH_SMS_SERVICE = os.environ.get('OVH_SMS_SERVICE')
 OVH_APPLICATION_KEY = os.environ.get('OVH_APPLICATION_KEY')
 OVH_APPLICATION_SECRET = os.environ.get('OVH_APPLICATION_SECRET')
