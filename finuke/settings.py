@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'phones'
+    'phonenumber_field',
+    'phones',
+    'votes',
 ]
 
 MIDDLEWARE = [
@@ -123,6 +125,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # OVH Settings
+OVH_SMS_DISABLE = True
 OVH_SMS_SERVICE = os.environ.get('OVH_SMS_SERVICE')
 OVH_APPLICATION_KEY = os.environ.get('OVH_APPLICATION_KEY')
 OVH_APPLICATION_SECRET = os.environ.get('OVH_APPLICATION_SECRET')
