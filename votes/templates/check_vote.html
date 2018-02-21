@@ -1,0 +1,6 @@
+{% extends 'layout.html' %}
+
+{% block content_central %}
+    La personne ayant l'identifiant <strong>{{ vote.id }}</strong> a voté
+    &laquo;&nbsp;{{ vote.get_vote_display }}&nbsp;&raquo;.
+{% endblock %}

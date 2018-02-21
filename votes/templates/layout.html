@@ -8,6 +8,13 @@
 </head>
 <body>
     {% block content %}
+        <main class="container">
+            <div class="row">
+                <div class="col-responsive">
+                    {% block content_central %}{% endblock %}
+                </div>
+            </div>
+        </main>
     {% endblock %}
     <footer class="container padtopmore text-center margintopmore" style="background-color:#f5f5f5;">
         Footer avec infos, conclusion, illustration...
