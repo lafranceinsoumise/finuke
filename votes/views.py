@@ -1,12 +1,13 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.postgres.search import TrigramSimilarity, SearchVector
+from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
 from django.db.models import F, Value, CharField, ExpressionWrapper
-from django.db.models.functions import Concat
+from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
-from django.views.generic import FormView, TemplateView, DetailView, ListView
+from django.views.generic import FormView, TemplateView, DetailView
 
 from phones.models import PhoneNumber
+from votes.data.geodata import communes, communes_names
 from votes.forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
 from votes.models import Vote, VoterListItem
 
@@ -25,39 +26,41 @@ class FindPersonInListView(FormView):
     success_url = reverse_lazy('validate_phone')
 
 
-class PickPersonInListView(ListView):
-    template_name = 'pick_person.html'
-
-    def get_queryset(self):
-        departement = self.request.GET.get('departement')
-        commune = self.request.GET.get('commune')
-        search = self.request.GET.get('search')
-
-        qs = VoterListItem.objects.filter(departement=departement)
-        if commune:
-            qs = qs.filter(commune=commune)
-
-        class CF(F):
-            ADD = '||'
-
-        class CV(Value):
-            ADD = '||'
-
-        class CC(ExpressionWrapper):
-            ADD = '||'
-
-            def __init__(self, expression):
-                return super().__init__(expression, output_field=CharField())
+def commune_json_search(request, departement):
+    return JsonResponse(list(filter(lambda commune: commune['dep'] == departement, communes)), safe=False)
 
 
-        coumpound_field = CC(CC(CC(CF('first_names') + CV(' ')) + CF('use_last_name')) + CV(' ')) + CF('last_name')
-        qs = qs.annotate(
-            similarity=TrigramSimilarity(coumpound_field, str(search)),
-            full_name=coumpound_field
-        ).filter(full_name__trigram_similar=str(search)).order_by('-similarity')[:20]
+def person_json_search(request, departement, search):
+    commune = request.GET.get('commune')
 
-        return qs
+    qs = VoterListItem.objects.filter(departement=departement)
+    if commune:
+        qs = qs.filter(commune=commune)
 
+    class CF(F):
+        ADD = '||'
+
+    class CV(Value):
+        ADD = '||'
+
+    class CC(ExpressionWrapper):
+        ADD = '||'
+
+        def __init__(self, expression):
+            super().__init__(expression, output_field=CharField())
+
+    coumpound_field = CC(CC(CC(CF('first_names') + CV(' ')) + CF('use_last_name')) + CV(' ')) + CF('last_name')
+    qs = qs.annotate(
+        similarity=TrigramSimilarity(coumpound_field, str(search)),
+        full_name=coumpound_field
+    ).filter(full_name__trigram_similar=str(search)).order_by('-similarity')[:20]
+    response = list(map(lambda item: {
+        'first_names': item.first_names,
+        'last_name': item.last_name,
+        'commune_name': communes_names[item.commune]
+    }, qs))
+
+    return JsonResponse(response, safe=False)
 
 
 class ValidatePhoneView(FormView):

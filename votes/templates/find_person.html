@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% load render_bundle from webpack_loader %}
+
+{% block content %}
+    <main class="container">
+        <div id="react-root"></div>
+    </main>
+    {% render_bundle 'listSearch' %}
+{% endblock %}
