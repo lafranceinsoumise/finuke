@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'phonenumber_field',
+    'webpack_loader',
     'crispy_forms',
     'phones',
     'votes',
@@ -79,10 +81,8 @@ WSGI_APPLICATION = 'finuke.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'finuke',
-        'USER': 'root',
-        'PASSWORD': 'root'
     }
 }
 
@@ -125,10 +125,26 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Django webpack loader config
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'assets'),
+)
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'STATS_FILE': os.path.join(BASE_DIR, 'assets', 'webpack_bundles', 'webpack-stats.json'),
+    }
+}
+
 # Cripsy settings
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 CRISPY_FAIL_SILENTLY = not DEBUG
+
+# Debug toolbar settings
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    INTERNAL_IPS = ['127.0.0.1']
 
 # OVH Settings
 OVH_SMS_DISABLE = os.environ.get('OVH_SMS_DISABLE', True)

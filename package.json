@@ -1,0 +1,31 @@
+{
+  "name": "finuke",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "watch": "webpack --watch --config webpack.common.js",
+    "build": "webpack --config webpack.production.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lafranceinsoumise/finuke.git"
+  },
+  "author": "Guillaume Royer",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/lafranceinsoumise/finuke/issues"
+  },
+  "homepage": "https://github.com/lafranceinsoumise/finuke#readme",
+  "dependencies": {
+    "babel-loader": "^7.1.3",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "webpack": "^4.0.1",
+    "webpack-bundle-tracker": "^0.2.1",
+    "webpack-cli": "^2.0.9",
+    "webpack-merge": "^4.1.2"
+  }
+}

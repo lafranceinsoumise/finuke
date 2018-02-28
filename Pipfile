@@ -13,6 +13,10 @@ ovh = "*"
 ipython = "*"
 django-phonenumber-field = "*"
 django-crispy-forms = "*"
+"progressbar2" = "*"
+"psycopg2" = "*"
+django-debug-toolbar = "*"
+django-webpack-loader = "*"
 
 
 [dev-packages]
