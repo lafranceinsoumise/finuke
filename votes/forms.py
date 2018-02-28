@@ -16,6 +16,13 @@ class BaseForm(Form):
         self.helper.add_input(Submit('submit', 'Valider'))
 
 
+class FindPersonInListForm(BaseForm):
+    departement = CharField(label='Département')
+    commune = CharField(label='Code INSEE de la commune')
+    nom = CharField(label='Nom de la personne')
+    prenom = CharField(label='Prénom de la personne')
+
+
 class ValidatePhoneForm(BaseForm):
     phone_number = PhoneNumberField(label='Numéro de téléphone portable')
 
