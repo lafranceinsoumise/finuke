@@ -5,7 +5,7 @@ from phones.models import PhoneNumber, SMS
 
 @admin.register(PhoneNumber, site=admin_site)
 class PhoneNumberAdmin(admin.ModelAdmin):
-    list_display = ('phone_number', 'validated', 'sms_bucket', 'created', 'updated')
+    list_display = ('phone_number', 'validated', 'created', 'updated')
     search_fields = ('phone_number',)
     list_filter = ('validated',)
 

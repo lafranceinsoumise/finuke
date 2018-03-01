@@ -43,9 +43,8 @@ class SMSCodeException(Exception):
 
 
 def send_new_code(phone_number):
-    phone_number.update_bucket()
 
-    if phone_number.sms_bucket == 0:
+    if not phone_number.can_send_sms:
         raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)
@@ -56,11 +55,7 @@ def send_new_code(phone_number):
     else:
         print('SMS envoyé à {0} : {1}'.format(str(phone_number.phone_number), message))
 
-    with transaction.atomic():
-        sms.save()
-        phone_number.sms_bucket = phone_number.sms_bucket - 1
-        phone_number.save()
-
+    sms.save()
     return sms.code
 
 
