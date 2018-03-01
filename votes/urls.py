@@ -1,10 +1,10 @@
 from django.urls import path
 
-from votes.views import ValidatePhoneView, ValidateCodeView, HomeView, VoteView, CheckVoteView, CheckOwnVoteView, \
-    commune_json_search, person_json_search, FindPersonInListView
+from votes.views import ValidatePhoneView, ValidateCodeView, VoteView, CheckVoteView, CheckOwnVoteView, \
+    commune_json_search, person_json_search, FindPersonInListView, CleanSessionView
 
 urlpatterns = [
-    path('', HomeView.as_view(), name='home'),
+    path('clean_session', CleanSessionView.as_view(), name='clean_session'),
     path('json/communes/<departement>', commune_json_search, name='commune_json_search'),
     path('json/listes/<departement>/<search>', person_json_search, name='person_json_search'),
     path('validation/listes', FindPersonInListView.as_view(), name='validate_list'),

@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
-from django.views.generic import FormView, TemplateView, DetailView
+from django.views.generic import FormView, DetailView, RedirectView
 
 from phones.models import PhoneNumber
 from votes.data.geodata import communes, communes_names
@@ -12,12 +12,13 @@ from votes.forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPerso
 from votes.models import Vote, VoterListItem
 
 
-class HomeView(TemplateView):
-    template_name = 'home.html'
+class CleanSessionView(RedirectView):
+    permanent = False
 
-    def get(self, request, *args, **kwargs):
-        request.session.flush()
-        return super().get(request, *args, **kwargs)
+    def get_redirect_url(self, *args, **kwargs):
+        self.request.session.flush()
+        return '/'
+
 
 def commune_json_search(request, departement):
     return JsonResponse(list(filter(lambda commune: commune['dep'] == departement, communes)), safe=False)
@@ -60,16 +61,28 @@ def person_json_search(request, departement, search):
 class FindPersonInListView(FormView):
     template_name = 'find_person.html'
     form_class = FindPersonInListForm
-    success_url = reverse_lazy('validate_phone')
+    success_url = reverse_lazy('validate_phone_number')
+
+    def form_invalid(self, form):
+        print(form)
 
     def form_valid(self, form):
-        self.request.session['list_voter'] = form.cleaned_data['list_voter'].id
+        self.request.session['list_voter'] = form.cleaned_data['person'].id
+        return super().form_valid(form)
 
 
 class ValidatePhoneView(FormView):
     template_name = 'validate_phone.html'
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        list_voter_id = self.request.session.get('list_voter', None)
+        if list_voter_id:
+            data['person'] = VoterListItem.objects.filter(has_voted=False).get(pk=list_voter_id)
+
+        return data
 
     def form_valid(self, form):
         self.request.session['phone_number'] = str(form.cleaned_data['phone_number'])
