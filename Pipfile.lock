@@ -5,14 +5,14 @@
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
-            "implementation_version": "3.6.3",
+            "implementation_version": "3.6.4",
             "os_name": "posix",
             "platform_machine": "x86_64",
             "platform_python_implementation": "CPython",
             "platform_release": "4.13.0-36-generic",
             "platform_system": "Linux",
             "platform_version": "#40-Ubuntu SMP Fri Feb 16 20:07:48 UTC 2018",
-            "python_full_version": "3.6.3",
+            "python_full_version": "3.6.4",
             "python_version": "3.6",
             "sys_platform": "linux"
         },
@@ -126,6 +126,13 @@
             ],
             "markers": "sys_platform != 'win32'",
             "version": "==4.4.0"
+        },
+        "phonenumberslite": {
+            "hashes": [
+                "sha256:cfbb6ecb1716c253fa68e6a803af3ee62e26ab584daea537af6bb1269fbb1995",
+                "sha256:083d20d69090e7899e7e4e07c0459ac4dac87898c1284fec5be2f854884b0192"
+            ],
+            "version": "==8.9.0"
         },
         "pickleshare": {
             "hashes": [
