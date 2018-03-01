@@ -2,6 +2,7 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Select from 'react-select';
+import {Async} from 'react-select';
 import 'react-select/dist/react-select.css';
 import 'babel-polyfill';
 
@@ -27,9 +28,11 @@ function findDepartement(number) {
 class App extends React.Component {
   constructor() {
     super();
-    this.state = {departement: '', commune: ''};
+    this.state = {departement: '', commune: null, communesLoaded: false, person: null};
     this.departementChange = this.departementChange.bind(this);
     this.communeChange = this.communeChange.bind(this);
+    this.searchPeople = this.searchPeople.bind(this);
+    this.personChange = this.personChange.bind(this);
   }
 
   async departementChange(event) {
@@ -42,6 +45,7 @@ class App extends React.Component {
     this.setState({
       departement: event.target.value,
       departementInfo : departementInfo,
+      commune: null,
       communesLoaded: false,
     });
 
@@ -55,28 +59,58 @@ class App extends React.Component {
   }
 
   communeChange(commune) {
-    this.setState({commune: commune.value});
+    this.setState({commune});
+  }
+
+  async searchPeople(input) {
+    if (input.length < 4) return [];
+
+    console.log(input);
+
+    let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
+
+    let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
+      .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
+
+    return {options};
+  }
+
+  personChange(person) {
+    this.setState({person});
   }
 
   render() {
     return (
       <div className="row">
         <div className="col-responsive">
-          <p>
+          <div className="form-group">
             <input placeholder="Numéro de département" type="text" className="text-center form-control input-lg" value={this.state.departement} onChange={this.departementChange} />
-          </p>
+          </div>
           <p className="text-center">
             { this.state.departementInfo ? this.state.departementInfo.name : 'Recherchez votre département ci-dessus.' }
           </p>
-          <p>
-          {this.state.communesLoaded ?
-          <Select
-            value={this.state.commune}
-            onChange={this.communeChange}
-            options={this.communesChoice}
-          /> : '' }
-          </p>
-          <input className="text-center form-control input-lg" placeholder="Prénoms et nom" />
+          <div className="form-group">
+            <Select
+              value={this.state.commune}
+              onChange={this.communeChange}
+              options={this.communesChoice}
+              disabled={!this.state.communesLoaded}
+              placeholder="Commune d'inscription"
+              searchPromptText="Tapez le nom de votre commune d'inscription" />
+          </div>
+          <div className="form-group">
+            <Async
+              name="person"
+              autoload={false}
+              value={this.state.person}
+              disabled={!this.state.departementInfo || (this.state.communesLoaded && !this.state.commune)}
+              onChange={this.personChange}
+              loadOptions={this.searchPeople}
+              placeholder="Recherchez vous sur les listes"
+              searchPromptText="Tapez votre nom et prénom"
+              loadingPlaceholder="Chargement..." />
+          </div>
+          <input className="btn btn-primary" type="submit" value="Valider" />
         </div>
       </div>
     );

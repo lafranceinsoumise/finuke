@@ -43,6 +43,8 @@ class VoterListItem(models.Model):
     def get_commune_display(self):
         return communes_names.get(self.commune, 'Commune inconnue')
 
+    has_voted = fields.BooleanField('La personne a voté', default=False)
+
     origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
     file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')
     list_type = fields.CharField('Type de liste', max_length=1, choices=LIST_TYPE_CHOICES)

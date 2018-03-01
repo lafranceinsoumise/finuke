@@ -4,7 +4,11 @@
 
 {% block content %}
     <main class="container">
-        <div id="react-root"></div>
+        <form action="" methode="post">
+            <div id="react-root"></div>
+            {% csrf_token %}
+        </form>
+
     </main>
     {% render_bundle 'listSearch' %}
 {% endblock %}

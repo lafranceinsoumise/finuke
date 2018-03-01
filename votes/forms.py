@@ -1,12 +1,12 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
-from django.forms import Form, CharField, ChoiceField
+from django.forms import Form, CharField, ChoiceField, ModelChoiceField
 from phonenumber_field.formfields import PhoneNumberField
 
 from phones.models import PhoneNumber
 from phones.sms import send_new_code, is_valid_code, SMSCodeException
-from votes.models import Vote
+from votes.models import Vote, VoterListItem
 
 
 class BaseForm(Form):
@@ -16,11 +16,8 @@ class BaseForm(Form):
         self.helper.add_input(Submit('submit', 'Valider'))
 
 
-class FindPersonInListForm(BaseForm):
-    departement = CharField(label='Département')
-    commune = CharField(label='Code INSEE de la commune')
-    nom = CharField(label='Nom de la personne')
-    prenom = CharField(label='Prénom de la personne')
+class FindPersonInListForm(Form):
+    person = ModelChoiceField(queryset=VoterListItem.objects.filter(has_voted=False), widget=None)
 
 
 class ValidatePhoneForm(BaseForm):

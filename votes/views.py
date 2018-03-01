@@ -19,13 +19,6 @@ class HomeView(TemplateView):
         request.session.flush()
         return super().get(request, *args, **kwargs)
 
-
-class FindPersonInListView(FormView):
-    template_name = 'find_person.html'
-    form_class = FindPersonInListForm
-    success_url = reverse_lazy('validate_phone')
-
-
 def commune_json_search(request, departement):
     return JsonResponse(list(filter(lambda commune: commune['dep'] == departement, communes)), safe=False)
 
@@ -55,12 +48,22 @@ def person_json_search(request, departement, search):
         full_name=coumpound_field
     ).filter(full_name__trigram_similar=str(search)).order_by('-similarity')[:20]
     response = list(map(lambda item: {
+        'id': item.id,
         'first_names': item.first_names,
         'last_name': item.last_name,
         'commune_name': communes_names[item.commune]
     }, qs))
 
     return JsonResponse(response, safe=False)
+
+
+class FindPersonInListView(FormView):
+    template_name = 'find_person.html'
+    form_class = FindPersonInListForm
+    success_url = reverse_lazy('validate_phone')
+
+    def form_valid(self, form):
+        self.request.session['list_voter'] = form.cleaned_data['list_voter'].id
 
 
 class ValidatePhoneView(FormView):
