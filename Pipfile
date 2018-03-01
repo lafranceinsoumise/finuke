@@ -17,6 +17,8 @@ django-crispy-forms = "*"
 "psycopg2" = "*"
 django-debug-toolbar = "*"
 django-webpack-loader = "*"
+redis = "*"
+hiredis = "*"
 
 
 [dev-packages]

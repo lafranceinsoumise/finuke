@@ -168,3 +168,8 @@ OVH_APPLICATION_SECRET = os.environ.get('OVH_APPLICATION_SECRET')
 OVH_CONSUMER_KEY = os.environ.get('OVH_CONSUMER_KEY')
 SMS_BUCKET_MAX = 3
 SMS_BUCKET_INTERVAL = 600
+
+
+# redis settings
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/?db=0')
+REDIS_MAX_CONNECTIONS = 3
