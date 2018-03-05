@@ -30,7 +30,7 @@ class ValidatePhoneForm(BaseForm):
         (phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
 
         if phone_number.validated:
-            raise ValidationError('Ce numéro a déjà été utilisé.')
+            raise ValidationError('Ce numéro a déjà été utilisé pour voter.')
 
         try:
             send_new_code(phone_number)

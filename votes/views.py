@@ -21,7 +21,7 @@ class CleanSessionView(RedirectView):
 
 
 def commune_json_search(request, departement):
-    return JsonResponse(list(filter(lambda commune: commune['dep'] == departement, communes)), safe=False)
+    return JsonResponse([commune for commune in communes if commune['dep'] == departement], safe=False)
 
 
 def person_json_search(request, departement, search):
@@ -71,8 +71,8 @@ class FindPersonInListView(FormView):
         return super().form_valid(form)
 
 
-class ValidatePhoneView(FormView):
-    template_name = 'validate_phone.html'
+class AskForPhoneView(FormView):
+    template_name = 'ask_for_phone.html'
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
 
@@ -93,17 +93,20 @@ class ValidatePhoneView(FormView):
         return super().form_valid(form)
 
 
-class HasNotVotedMixin(object):
+class HasNotVotedMixin(UserPassesTestMixin):
     def test_func(self):
         session_phone = self.request.session.get('phone_number')
+        print(session_phone)
         if session_phone is None:
             return False
         phone_number = PhoneNumber.objects.get(phone_number=session_phone)
         if phone_number.validated:
             return False
 
+        return True
 
-class ValidateCodeView(UserPassesTestMixin, HasNotVotedMixin, FormView):
+
+class ValidateCodeView(HasNotVotedMixin, FormView):
     login_url = '/'
     template_name = 'validate_code.html'
     form_class = ValidateCodeForm
@@ -120,7 +123,7 @@ class ValidateCodeView(UserPassesTestMixin, HasNotVotedMixin, FormView):
         return super().form_valid(form)
 
 
-class VoteView(UserPassesTestMixin, HasNotVotedMixin, FormView):
+class MakeVoteView(HasNotVotedMixin, FormView):
     login_url = '/'
     template_name = 'vote.html'
     form_class = VoteForm
@@ -132,10 +135,12 @@ class VoteView(UserPassesTestMixin, HasNotVotedMixin, FormView):
         return self.request.session.get('phone_valid') is not None and super().test_func()
 
     def form_valid(self, form):
-        phone_number = PhoneNumber.objects.get(phone_number=self.request.session.get('phone_number'))
         self.vote = Vote(vote=form.cleaned_data['choice'])
-        phone_number.validated = True
+
         with transaction.atomic():
+            # use select for update to get a lock on the phone number to make sure no concurrent voting is possible
+            phone_number = PhoneNumber.objects.select_for_update().get(phone_number=self.request.session.get('phone_number'))
+            phone_number.validated = True
             phone_number.save()
             self.vote.save()
             self.request.session['id'] = self.vote.id
@@ -149,15 +154,18 @@ class CheckOwnVoteView(UserPassesTestMixin, DetailView):
     login_url = '/'
     template_name = 'check_own_vote.html'
     context_object_name = 'vote'
+    model = Vote
 
     def test_func(self):
         return self.request.session.get('id') is not None
 
-    def get_object(self):
-        return Vote.objects.get(id=self.request.session.get('id'))
+    def get_object(self, queryset=None):
+        queryset = queryset or self.get_queryset()
+        return queryset.get(id=self.request.session.get('id'))
 
 
 class CheckVoteView(DetailView):
     model = Vote
     context_object_name = 'vote'
     template_name = 'check_vote.html'
+    

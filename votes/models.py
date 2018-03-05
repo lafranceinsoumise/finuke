@@ -30,9 +30,9 @@ class Vote(models.Model):
 
 class VoterListItem(models.Model):
     LIST_TYPE_CHOICES = (
-        ('G', 'List générale'),
+        ('G', 'Liste générale'),
         ('E', 'Liste complémentaire européennes'),
-        ('M', 'Liste complémentaire munucipales'),
+        ('M', 'Liste complémentaire municipales'),
     )
 
     CIVILITE_CHOICES = (

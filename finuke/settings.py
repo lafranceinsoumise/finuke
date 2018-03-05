@@ -173,3 +173,6 @@ SMS_BUCKET_INTERVAL = 600
 # redis settings
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/?db=0')
 REDIS_MAX_CONNECTIONS = 3
+
+
+PHONENUMBER_DEFAULT_REGION = 'FR'
