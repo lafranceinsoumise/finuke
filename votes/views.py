@@ -80,7 +80,7 @@ class AskForPhoneView(FormView):
         data = super().get_context_data(**kwargs)
         list_voter_id = self.request.session.get('list_voter', None)
         if list_voter_id:
-            data['person'] = VoterListItem.objects.filter(has_voted=False).get(pk=list_voter_id)
+            data['person'] = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE).get(pk=list_voter_id)
 
         return data
 
@@ -168,4 +168,3 @@ class CheckVoteView(DetailView):
     model = Vote
     context_object_name = 'vote'
     template_name = 'check_vote.html'
-    

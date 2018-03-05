@@ -17,7 +17,7 @@ class BaseForm(Form):
 
 
 class FindPersonInListForm(Form):
-    person = ModelChoiceField(queryset=VoterListItem.objects.filter(has_voted=False), widget=None)
+    person = ModelChoiceField(queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE), widget=None)
 
 
 class ValidatePhoneForm(BaseForm):

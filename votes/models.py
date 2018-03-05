@@ -40,10 +40,19 @@ class VoterListItem(models.Model):
         ('F', 'MME'),
     )
 
+    VOTE_STATUS_NONE = "N"
+    VOTE_STATUS_ONLINE = "O"
+    VOTE_STATUS_PHYSICAL = "P"
+    VOTED_CHOICES = (
+        (VOTE_STATUS_NONE, 'Pas voté'),
+        (VOTE_STATUS_ONLINE, 'Vote en ligne'),
+        (VOTE_STATUS_PHYSICAL, 'Vote physique')
+    )
+
     def get_commune_display(self):
         return communes_names.get(self.commune, 'Commune inconnue')
 
-    has_voted = fields.BooleanField('La personne a voté', default=False)
+    vote_status = fields.CharField('Statut du vote', max_length=1, choices=VOTED_CHOICES, default=VOTE_STATUS_NONE)
 
     origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
     file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')
