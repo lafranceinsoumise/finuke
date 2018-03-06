@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6ba4a53c44e2fb9881df6ffe20305d2a3751ec2fa1e0a5bcb5a1c1707834d696"
+            "sha256": "f6da0532a6a17d83b71177136ab275dbf1c28590beb708e3a8990dae3b6e585a"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -43,17 +43,17 @@
         },
         "django": {
             "hashes": [
-                "sha256:7c8ff92285406fb349e765e9ade685eec7271d6f5c3f918e495a74768b765c99",
-                "sha256:dc3b61d054f1bced64628c62025d480f655303aea9f408e5996c339a543b45f0"
+                "sha256:3d9916515599f757043c690ae2b5ea28666afa09779636351da505396cbb2f19",
+                "sha256:769f212ffd5762f72c764fa648fca3b7f7dd4ec27407198b68e7c4abf4609fd0"
             ],
-            "version": "==2.0.2"
+            "version": "==2.0.3"
         },
         "django-crispy-forms": {
             "hashes": [
-                "sha256:d37fe72eb550b41ba651c06293fb861d5a9e6e3ada23304718858cd6250d258d",
-                "sha256:b29a9a671194e3a482891f319f69da81e30ae81c075f6e37adb14a83ba2c409b"
+                "sha256:fda07e532835faae1de96aad47faa0cc29bdd6ff2464a475d035fdb9b58e2fa4",
+                "sha256:5ecb13b19f867f45f5120d7e869de0ede19fa04555b04c8a7f7bbac14d739e50"
             ],
-            "version": "==1.7.0"
+            "version": "==1.7.1"
         },
         "django-debug-toolbar": {
             "hashes": [
@@ -149,10 +149,10 @@
         },
         "progressbar2": {
             "hashes": [
-                "sha256:96dfc1e3ed8806dd8ab7716ca042dbb01995617431b84cc0079114ad1d8854ef",
-                "sha256:5eb9445bfffa2f9e09048d7c2d849d769d3111bdb5bb5ee6d2537ddb27a4caf0"
+                "sha256:abf5275650ce803dd9cc0043342882f19925bb41768381715aff9f02b8a26007",
+                "sha256:8600401956fc07852b309483590b424529ada8566447b2900a565218c66ee32c"
             ],
-            "version": "==3.35.2"
+            "version": "==3.36.0"
         },
         "prompt-toolkit": {
             "hashes": [
@@ -271,5 +271,36 @@
             "version": "==0.1.7"
         }
     },
-    "develop": {}
+    "develop": {
+        "psutil": {
+            "hashes": [
+                "sha256:82a06785db8eeb637b349006cc28a92e40cd190fefae9875246d18d0de7ccac8",
+                "sha256:4152ae231709e3e8b80e26b6da20dc965a1a589959c48af1ed024eca6473f60d",
+                "sha256:230eeb3aeb077814f3a2cd036ddb6e0f571960d327298cc914c02385c3e02a63",
+                "sha256:a3286556d4d2f341108db65d8e20d0cd3fcb9a91741cb5eb496832d7daf2a97c",
+                "sha256:94d4e63189f2593960e73acaaf96be235dd8a455fe2bcb37d8ad6f0e87f61556",
+                "sha256:c91eee73eea00df5e62c741b380b7e5b6fdd553891bee5669817a3a38d036f13",
+                "sha256:779ec7e7621758ca11a8d99a1064996454b3570154277cc21342a01148a49c28",
+                "sha256:8a15d773203a1277e57b1d11a7ccdf70804744ef4a9518a87ab8436995c31a4b",
+                "sha256:e2467e9312c2fa191687b89ff4bc2ad8843be4af6fb4dc95a7cc5f7d7a327b18"
+            ],
+            "version": "==5.4.3"
+        },
+        "redis": {
+            "hashes": [
+                "sha256:8a1900a9f2a0a44ecf6e8b5eb3e967a9909dfed219ad66df094f27f7d6f330fb",
+                "sha256:a22ca993cea2962dbb588f9f30d0015ac4afcc45bee27d3978c0dbe9e97c6c0f"
+            ],
+            "version": "==2.10.6"
+        },
+        "redislite": {
+            "hashes": [
+                "sha256:aa00d05280cc737217a18e6e240ac1808e1709e3e32df1f309b51f520690eef3",
+                "sha256:144e4f6b5c24d8bc999c6eeaf542a7179d9dee19ff8367b95559432159872445",
+                "sha256:f51402ec893df3554e336cf7e5c628e998cbb1fba8b6be9c4a56f55f0d6c4296",
+                "sha256:120c4e2a95bef3a83d6efa07d1be13650c853f0c3d640c9bbd86f6ef0fe71229"
+            ],
+            "version": "==3.2.311"
+        }
+    }
 }

@@ -44,7 +44,7 @@ class SMSCodeException(Exception):
 
 def send_new_code(phone_number):
 
-    if not phone_number.can_send_sms:
+    if not phone_number.can_send_sms():
         raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)

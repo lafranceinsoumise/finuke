@@ -1,20 +1,26 @@
-from datetime import timedelta
+import redislite
 
 from django.test import TestCase
 
+from finuke.test_utils import RedisLiteMixin
+
 from phones.models import PhoneNumber, SMS
-from phones.sms import send_new_code, is_valid_code
+from phones.sms import send_new_code, is_valid_code, SMSCodeException
 
 
-class ModelsTestCase(TestCase):
-    def test_update_bucket(self):
-        phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
-        phone_number.updated = phone_number.updated - timedelta(minutes=21)
-        phone_number.sms_bucket = 1
-        phone_number.update_bucket()
-        self.assertEqual(phone_number.sms_bucket, 3)
-        phone_number.update_bucket()
-        self.assertEqual(phone_number.sms_bucket, 3)
+
+class ModelsTestCase(RedisLiteMixin, TestCase):
+
+    def test_can_send_limited_codes(self):
+        with self.settings(SMS_BUCKET_MAX=3, SMS_BUCKET_INTERVAL=600, OVH_SMS_DISABLE=True):
+            phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
+            send_new_code(phone_number)
+            send_new_code(phone_number)
+            send_new_code(phone_number)
+
+            with self.assertRaises(SMSCodeException):
+                send_new_code(phone_number)
+
 
     def test_sms_had_random_8_digit_code(self):
         phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
@@ -24,7 +30,10 @@ class ModelsTestCase(TestCase):
 
     def test_sms_code(self):
         phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
-        code = send_new_code(phone_number)
+
+        with self.settings(OVH_SMS_DISABLE=True):
+            code = send_new_code(phone_number)
+
         self.assertTrue(is_valid_code(phone_number, code))
         self.assertFalse(is_valid_code(phone_number, '0'))
 

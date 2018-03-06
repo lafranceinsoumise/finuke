@@ -38,6 +38,10 @@ class TokenBucket:
 
         return bool(res)
 
+    def reset(self, id):
+        key_prefix = f"TokenBucket:{self.name}:{str(id)}:"
+        get_redis_client().pipeline().delete(f"{key_prefix}v").delete(f"{key_prefix}t").execute()
+
 
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'token_bucket.lua'), mode='rb') as f:
     token_bucket_script = Script(None, f.read())
