@@ -20,10 +20,15 @@ class BureauOperator(models.Model):
         return self.email
 
 
+def new_assistant_code():
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(choice(alphabet) for i in range(10))
+
+
 class Bureau(models.Model):
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux')
-    lieu = fields.CharField("Lieu", max_length=255)
-    start_time = fields.DateTimeField("Heure de d'ouverture du bureau", editable=False)
+    place = fields.CharField("Lieu", max_length=255)
+    start_time = fields.DateTimeField("Heure de d'ouverture du bureau", auto_now_add=True, editable=False)
     end_time = fields.DateTimeField("Heure de fermeture du bureau", blank=True, null=True, editable=False)
     result1_yes = fields.IntegerField("Bulletins verts : oui", blank=True, null=True)
     result1_no = fields.IntegerField("Bulletins verts : non", blank=True, null=True)
@@ -33,12 +38,12 @@ class Bureau(models.Model):
     result2_no = fields.IntegerField("Bulletins rouge : non", blank=True, null=True)
     result2_blank = fields.IntegerField("Bulletins rouge : blancs", blank=True, null=True)
     result2_null = fields.IntegerField("Bulletins rouge : nuls", blank=True, null=True)
-
-    def new_assistant_code(self):
-        alphabet = string.ascii_letters + string.digits
-        return ''.join(choice(alphabet) for i in range(10))
+    results_comment = fields.TextField("Remarques", blank=True)
 
     assistant_code = fields.CharField("Code d'accès pour les assistant⋅e⋅s", default=new_assistant_code, max_length=10)
+
+    def has_results(self):
+        return self.result1_yes is not None
 
 
 class Operation(models.Model):

@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 ('result2_no', models.IntegerField(blank=True, null=True, verbose_name='Bulletins rouge : non')),
                 ('result2_blank', models.IntegerField(blank=True, null=True, verbose_name='Bulletins rouge : blancs')),
                 ('result2_null', models.IntegerField(blank=True, null=True, verbose_name='Bulletins rouge : nuls')),
-                ('assistant_code', models.CharField(default=bureaux.models.Bureau.new_assistant_code, max_length=10, verbose_name="Code d'accès pour les assistant⋅e⋅s")),
+                ('assistant_code', models.CharField(max_length=10, verbose_name="Code d'accès pour les assistant⋅e⋅s")),
             ],
         ),
         migrations.CreateModel(

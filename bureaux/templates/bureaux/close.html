@@ -1,0 +1,9 @@
+{% extends 'layout.html' %}
+{% load crispy_forms_tags %}
+
+{% block content_central %}
+    <p>
+        Voulez-vous vraiment fermer le bureau de {{ bureau.place }}
+    </p>
+    {% crispy form %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block content_central %}
+    Bonjour {{ request.operator.email }}&nbsp;!
+    {% for bureau in bureaux %}
+        <p>
+            <a href="{% url 'detail_bureau' bureau.id %}">{{ bureau.place }}</a>
+            ({{ bureau.end_time|yesno:'Fermé,Ouvert,Ouvert' }})
+        </p>
+    {% endfor %}
+    <p>
+        <a href="{% url 'open_bureau' %}">Ouvrir un bureau</a>
+    </p>
+{% endblock %}

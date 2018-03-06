@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% load crispy_forms_tags %}
+
+{% block content_central %}
+    <p>
+        {{ bureau.place }} ({{ bureau.end_time|yesno:'Fermé,Ouvert,Ouvert' }})
+    </p>
+    <p>
+        Heure d'ouverture : {{ bureau.start_time }}
+    </p>
+    <p>
+        Code de connexion pour les assistants : {{ bureau.assistant_code }}
+    </p>
+    {% if not bureau.end_time %}
+        <p>
+            <a href="{% url 'close_bureau' bureau.id %}">Fermer le bureau</a>
+        </p>
+    {% elif not bureau.has_results %}
+        <p>
+            <a href="{%  url 'results_bureau' bureau.id %}">Remonter les résultats</a>
+        </p>
+    {% endif %}
+{% endblock %}

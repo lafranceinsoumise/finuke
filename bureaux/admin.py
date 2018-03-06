@@ -23,9 +23,14 @@ class BureauOperatorAdmin(admin.ModelAdmin):
 
 @admin.register(Bureau, site=admin_site)
 class BureauAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results')
+    readonly_fields = ('has_results',)
+
+    def has_results(self, obj):
+        return 'Oui' if obj.result1_yes is not None else 'Non'
+    has_results.short_description = "Résultats remontés"
 
 
 @admin.register(Operation, site=admin_site)
 class OperationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('created', 'type', 'details')

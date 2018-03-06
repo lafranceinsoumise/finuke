@@ -21,7 +21,8 @@ from finuke.admin import admin_site
 
 urlpatterns = [
     path('admin/', admin_site.urls),
-    path('', include('votes.urls'))
+    path('', include('votes.urls')),
+    path('bureaux/', include('bureaux.urls')),
 ]
 
 if settings.DEBUG:
