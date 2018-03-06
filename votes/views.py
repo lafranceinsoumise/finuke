@@ -1,15 +1,15 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db import transaction
 from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 
 from phones.models import PhoneNumber
-from votes.data.geodata import communes, communes_names
-from votes.forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
-from votes.models import Vote, VoterListItem
+from .data.geodata import communes, communes_names
+from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
+from .models import Vote, VoterListItem
+from .actions import make_online_vote, AlreadyVotedException
 
 
 class CleanSessionView(RedirectView):
@@ -135,19 +135,14 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         return self.request.session.get('phone_valid') is not None and super().test_func()
 
     def form_valid(self, form):
-        self.vote = Vote(vote=form.cleaned_data['choice'])
-
-        with transaction.atomic():
-            # use select for update to get a lock on the phone number to make sure no concurrent voting is possible
-            phone_number = PhoneNumber.objects.select_for_update().get(phone_number=self.request.session.get('phone_number'))
-            phone_number.validated = True
-            phone_number.save()
-            self.vote.save()
-            self.request.session['id'] = self.vote.id
-            del self.request.session['phone_valid']
-            del self.request.session['phone_number']
-
-            return super().form_valid(form)
+        try:
+            make_online_vote(
+                phone_number=self.request.session['phone_number'],
+                voter_list_id=self.request.session['list_voter'],
+                vote=form.cleaned_date['choice']
+            )
+        except AlreadyVotedException:
+            return JsonResponse({'error': 'already voted'})
 
 
 class CheckOwnVoteView(UserPassesTestMixin, DetailView):
