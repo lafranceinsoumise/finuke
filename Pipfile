@@ -24,6 +24,7 @@ django-webpack-loader = "*"
 redis = "*"
 hiredis = "*"
 phonenumbers = "*"
+uwsgi = "*"
 
 
 [dev-packages]
