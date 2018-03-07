@@ -139,10 +139,12 @@ class MakeVoteView(HasNotVotedMixin, FormView):
             make_online_vote(
                 phone_number=self.request.session['phone_number'],
                 voter_list_id=self.request.session['list_voter'],
-                vote=form.cleaned_date['choice']
+                vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
+
+        return super().form_valid(form)
 
 
 class CheckOwnVoteView(UserPassesTestMixin, DetailView):
