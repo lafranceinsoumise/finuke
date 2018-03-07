@@ -8,12 +8,14 @@ class AlreadyVotedException(Exception):
     pass
 
 
-def check_voter_list_item(voter_list_id, vote_type):
+def check_voter_list_item(voter_list_id, vote_type, bureau=None):
     voter_list = VoterListItem.objects.select_for_update().get(pk=voter_list_id)
     if voter_list.vote_status != VoterListItem.VOTE_STATUS_NONE:
         raise AlreadyVotedException()
 
     voter_list.vote_status = vote_type
+    if bureau is not None:
+        voter_list.vote_bureau = bureau
     voter_list.save()
 
 
@@ -38,10 +40,9 @@ def make_online_vote(phone_number, voter_list_id, vote):
         raise AlreadyVotedException()
 
 
-def make_physical_vote(voter_list_id, vote):
+def make_physical_vote(voter_list_id, bureau):
     try:
         with transaction.atomic():
-            check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL)
-            Vote.objects.create(vote=vote)
+            check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL, bureau)
     except DatabaseError:
         AlreadyVotedException()

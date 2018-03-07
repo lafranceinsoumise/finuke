@@ -7,9 +7,11 @@ const DISTPATH = path.resolve(__dirname, 'assets/webpack_bundles');
 
 module.exports = {
   mode: 'development',
+  devtool: 'inline-source-map',
   context: path.resolve(__dirname, 'assets/js'),
   entry: {
-    listSearch: './listSearch',
+    publicListSearch: './publicListSearch',
+    bureauListSearch: './bureauListSearch'
   },
   plugins: [
     new CleanWebpackPlugin([DISTPATH]),

@@ -1,12 +1,15 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db import transaction
+from django.http import JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import RedirectView, ListView, DetailView, FormView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 
-from bureaux.forms import OpenBureauForm, CloseBureauForm, BureauResultsForm
+from bureaux.forms import OpenBureauForm, CloseBureauForm, BureauResultsForm, AssistantCodeForm
 from bureaux.models import LoginLink, Bureau, Operation
+from votes.actions import make_physical_vote, AlreadyVotedException
+from votes.forms import FindPersonInListForm
 
 
 def request_to_json(request):
@@ -108,8 +111,53 @@ class CloseBureauView(OperatorViewMixin, SingleObjectMixin, FormView):
 class BureauResultsView(OperatorViewMixin, UpdateView):
     model = Bureau
     form_class = BureauResultsForm
-
     template_name = 'bureaux/results.html'
 
     def get_success_url(self):
         return reverse('detail_bureau', args=[self.object.id])
+
+
+class AssistantLoginView(FormView):
+    form_class = AssistantCodeForm
+    template_name = 'bureaux/assistant_login.html'
+
+    def get(self, *args, **kwargs):
+        self.request.session['assistant_code'] = None
+        return super().get(*args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('vote_bureau', args=[self.bureau.id])
+
+    def form_valid(self, form):
+        self.request.session['assistant_code'] = form.cleaned_data['code']
+        self.bureau = Bureau.objects.get(assistant_code=form.cleaned_data['code'])
+        return super().form_valid(form)
+
+
+class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
+    model = Bureau
+    login_url = reverse_lazy('assistant_login')
+    template_name = 'bureaux/vote.html'
+
+    def get_success_url(self):
+        return reverse('vote_bureau', args=[self.object.id])
+
+    def test_func(self):
+        self.object = self.get_object()
+        is_operator = super().test_func()
+        if is_operator and self.object in self.request.operator.bureaux.all():
+            return True
+        if self.request.session.get('assistant_code') == self.object.assistant_code:
+            return True
+        return False
+
+    form_class = FindPersonInListForm
+
+    # TODO: ajouter une page de confirmation ou un flash message ?
+    def form_valid(self, form):
+        try:
+            make_physical_vote(form.cleaned_data['person'].id, self.object)
+        except AlreadyVotedException:
+            return JsonResponse({'error': 'already voted'})
+
+        return super().form_valid(form)

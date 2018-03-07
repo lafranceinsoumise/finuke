@@ -3,7 +3,6 @@ import secrets
 from django.conf import settings
 from django.db import models
 from django.db.models import fields
-from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 from token_bucket import TokenBucket

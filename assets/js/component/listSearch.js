@@ -1,6 +1,5 @@
 import axios from 'axios';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import Select from 'react-select';
 import {Async} from 'react-select';
 import 'react-select/dist/react-select.css';
@@ -25,9 +24,9 @@ function findDepartement(number) {
   return departements.find(line => line.code == number);
 }
 
-class App extends React.Component {
-  constructor() {
-    super();
+class ListSearch extends React.Component {
+  constructor(props) {
+    super(props);
     this.state = {departement: '', commune: null, communesLoaded: false, person: null};
     this.departementChange = this.departementChange.bind(this);
     this.communeChange = this.communeChange.bind(this);
@@ -65,8 +64,6 @@ class App extends React.Component {
   async searchPeople(input) {
     if (input.length < 4) return [];
 
-    console.log(input);
-
     let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
 
     let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
@@ -77,47 +74,44 @@ class App extends React.Component {
 
   personChange(person) {
     this.setState({person});
+    if (this.props.onChange) {
+      this.props.onChange(person);
+    }
   }
 
   render() {
     return (
-      <div className="row">
-        <div className="col-responsive">
-          <div className="form-group">
-            <input placeholder="Numéro de département" type="text" className="text-center form-control input-lg" value={this.state.departement} onChange={this.departementChange} />
-          </div>
-          <p className="text-center">
-            { this.state.departementInfo ? this.state.departementInfo.name : 'Recherchez votre département ci-dessus.' }
-          </p>
-          <div className="form-group">
-            <Select
-              value={this.state.commune}
-              onChange={this.communeChange}
-              options={this.communesChoice}
-              disabled={!this.state.communesLoaded}
-              placeholder="Commune d'inscription"
-              searchPromptText="Tapez le nom de votre commune d'inscription" />
-          </div>
-          <div className="form-group">
-            <Async
-              name="person"
-              autoload={false}
-              value={this.state.person}
-              disabled={!this.state.departementInfo || (this.state.communesLoaded && !this.state.commune)}
-              onChange={this.personChange}
-              loadOptions={this.searchPeople}
-              placeholder="Recherchez vous sur les listes"
-              searchPromptText="Tapez votre nom et prénom"
-              loadingPlaceholder="Chargement..." />
-          </div>
-          <input className="btn btn-primary" type="submit" value="Valider" />
+      <div>
+        <div className="form-group">
+          <input placeholder="Numéro de département" type="text" className="text-center form-control input-lg" value={this.state.departement} onChange={this.departementChange} />
+        </div>
+        <p className="text-center">
+          { this.state.departementInfo ? this.state.departementInfo.name : 'Recherchez votre département ci-dessus.' }
+        </p>
+        <div className="form-group">
+          <Select
+            value={this.state.commune}
+            onChange={this.communeChange}
+            options={this.communesChoice}
+            disabled={!this.state.communesLoaded}
+            placeholder="Commune d'inscription"
+            searchPromptText="Tapez le nom de votre commune d'inscription" />
+        </div>
+        <div className="form-group">
+          <Async
+            name="person"
+            autoload={false}
+            value={this.state.person}
+            disabled={!this.state.departementInfo || (this.state.communesLoaded && !this.state.commune)}
+            onChange={this.personChange}
+            loadOptions={this.searchPeople}
+            placeholder="Recherchez vous sur les listes"
+            searchPromptText="Tapez votre nom et prénom"
+            loadingPlaceholder="Chargement..." />
         </div>
       </div>
     );
   }
 }
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('react-root')
-);
+export default ListSearch;

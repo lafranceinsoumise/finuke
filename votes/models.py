@@ -3,8 +3,9 @@ import string
 
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
-from django.db.models import fields
+from django.db.models import fields, ForeignKey
 
+from bureaux.models import Bureau
 from votes.data.geodata import communes_names
 
 
@@ -53,6 +54,7 @@ class VoterListItem(models.Model):
         return communes_names.get(self.commune, 'Commune inconnue')
 
     vote_status = fields.CharField('Statut du vote', max_length=1, choices=VOTED_CHOICES, default=VOTE_STATUS_NONE)
+    vote_bureau = ForeignKey(Bureau, on_delete=models.CASCADE, null=True)
 
     origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
     file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')

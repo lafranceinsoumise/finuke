@@ -27,7 +27,7 @@ def commune_json_search(request, departement):
 def person_json_search(request, departement, search):
     commune = request.GET.get('commune')
 
-    qs = VoterListItem.objects.filter(departement=departement)
+    qs = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE, departement=departement)
     if commune:
         qs = qs.filter(commune=commune)
 
