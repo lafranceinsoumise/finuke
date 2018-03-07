@@ -12,7 +12,7 @@ python_version = "3.6"
 
 [packages]
 
-Django = "*"
+django = "*"
 ovh = "*"
 ipython = "*"
 django-phonenumber-field = "*"
@@ -23,6 +23,7 @@ django-debug-toolbar = "*"
 django-webpack-loader = "*"
 redis = "*"
 hiredis = "*"
+phonenumbers = "*"
 
 
 [dev-packages]

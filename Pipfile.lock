@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bd711f11ec6774dc9d279574c5fa4e0a11f9264cd319cedb464fb32e9f466eaf"
+            "sha256": "f0598a01fc9e87f28ec7b9e5958e4c582645c1d765663c45867b89635e6e7a5c"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -124,6 +124,13 @@
             ],
             "markers": "sys_platform != 'win32'",
             "version": "==4.4.0"
+        },
+        "phonenumbers": {
+            "hashes": [
+                "sha256:a607fb823cead1164a65253ddeac690e05205b5fee4d04f1c4a9bed30a6d2912",
+                "sha256:2cb4822ba895200b06f46a788e852d6ae8200fdc97e1d7c86b0ee10c99d4ff3a"
+            ],
+            "version": "==8.9.0"
         },
         "pickleshare": {
             "hashes": [
