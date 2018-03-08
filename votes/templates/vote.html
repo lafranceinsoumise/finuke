@@ -1,8 +1,6 @@
 {% extends 'layout.html' %}
 {% load crispy_forms_tags %}
 
-{% block content %}
-    <main class="container">
-        {% crispy form %}
-    </main>
+{% block content_central %}
+    {% crispy form %}
 {% endblock %}

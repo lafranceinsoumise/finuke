@@ -80,7 +80,10 @@ class AskForPhoneView(FormView):
         data = super().get_context_data(**kwargs)
         list_voter_id = self.request.session.get('list_voter', None)
         if list_voter_id:
-            data['person'] = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE).get(pk=list_voter_id)
+            try:
+                data['person'] = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE).get(pk=list_voter_id)
+            except VoterListItem.DoesNotExist:
+                pass
 
         return data
 

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../lib/axios';
 import React from 'react';
 import Select from 'react-select';
 import {Async} from 'react-select';
@@ -32,6 +32,18 @@ class ListSearch extends React.Component {
     this.communeChange = this.communeChange.bind(this);
     this.searchPeople = this.searchPeople.bind(this);
     this.personChange = this.personChange.bind(this);
+    this.opMode = this.props.mode === 'operator';
+
+    this.labels = {
+      departementHelp: this.opMode ? 'Département d\'inscription de la personne': 'Recherchez votre département ci-dessus.',
+      communePlaceholder: 'Commune d\'inscription',
+      communePromptText: 'Tapez le nom de la commune d\'inscription',
+      personPlaceholder : 'Prénom NOM',
+      personPromptText: this.opMode ? 'Prénom et nom de la personne': 'Tapez votre prénom et votre nom',
+      noListHint: this.opMode ?
+        'Vous devez faire voter la personne avec un bulletin orange.'
+        : (<span>Vous pouvez voter en <a href="telephone">validant votre numéro de téléphone</a>.</span>)
+    }
   }
 
   async departementChange(event) {
@@ -86,29 +98,41 @@ class ListSearch extends React.Component {
           <input placeholder="Numéro de département" type="text" className="text-center form-control input-lg" value={this.state.departement} onChange={this.departementChange} />
         </div>
         <p className="text-center">
-          { this.state.departementInfo ? this.state.departementInfo.name : 'Recherchez votre département ci-dessus.' }
+          { this.state.departementInfo ? this.state.departementInfo.name : this.labels.departementHelp }
         </p>
-        <div className="form-group">
-          <Select
-            value={this.state.commune}
-            onChange={this.communeChange}
-            options={this.communesChoice}
-            disabled={!this.state.communesLoaded}
-            placeholder="Commune d'inscription"
-            searchPromptText="Tapez le nom de votre commune d'inscription" />
-        </div>
+        {this.state.departementInfo && this.state.departementInfo.details == 'D' ?
+          <div className="alert alert-warning">
+            Nous ne disposons malheureusement pas du détail par communes des listes électorales de ce département.
+            Effectuez une recherche sur tout le département.
+          </div>
+          : <div className="form-group">
+            <Select
+              value={this.state.commune}
+              onChange={this.communeChange}
+              options={this.communesChoice}
+              disabled={!this.state.communesLoaded}
+              placeholder={this.labels.communePlaceholder}
+              searchPromptText={this.labels.communePromptText}/>
+          </div>
+        }
         <div className="form-group">
           <Async
             name="person"
             autoload={false}
             value={this.state.person}
-            disabled={!this.state.departementInfo || (this.state.communesLoaded && !this.state.commune)}
+            disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details == 'C' && !this.state.commune)}
             onChange={this.personChange}
             loadOptions={this.searchPeople}
-            placeholder="Recherchez vous sur les listes"
-            searchPromptText="Tapez votre nom et prénom"
+            placeholder={this.labels.personPlaceholder}
+            searchPromptText={this.labels.personPromptText}
             loadingPlaceholder="Chargement..." />
         </div>
+        { this.state.departementInfo && !this.state.departementInfo.details ?
+          <div className="alert alert-warning">
+            Nous ne disposons malheureusement pas des listes électorales de ce département.
+            {this.labels.noListHint}
+          </div>
+        : '' }
       </div>
     );
   }
