@@ -16,7 +16,7 @@ class App extends React.Component {
 
   render() {
     if (!this.state.person) {
-      return <ListSearch onChange={(person) => this.personChange(person)} />;
+      return <ListSearch mode="operator" onChange={(person) => this.personChange(person)} />;
     }
 
     return (

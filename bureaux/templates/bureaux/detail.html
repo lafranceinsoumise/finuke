@@ -2,22 +2,31 @@
 {% load crispy_forms_tags %}
 
 {% block content_central %}
+    <h3>{{ bureau.place }} <small>Bureau de vote</small></h3>
     <p>
-        {{ bureau.place }} ({{ bureau.end_time|yesno:'Fermé,Ouvert,Ouvert' }})
+        <a href="{% url 'vote_bureau' bureau.id %}">Accéder aux listes électorales.</a>
     </p>
     <p>
-        Heure d'ouverture : {{ bureau.start_time }}
+        Code de connexion pour les assistant⋅e⋅s&nbsp;: <strong>{{ bureau.assistant_code }}</strong>.
     </p>
+    <h4>Ouverture</h4>
     <p>
-        Code de connexion pour les assistants : {{ bureau.assistant_code }}
+        {{ bureau.start_time }}
     </p>
+
     {% if not bureau.end_time %}
+        <h4>Fermeture</h4>
         <p>
-            <a href="{% url 'close_bureau' bureau.id %}">Fermer le bureau</a>
+            Le bureau est actuellement ouvert. <a href="{% url 'close_bureau' bureau.id %}">Fermer le bureau</a>
         </p>
-    {% elif not bureau.has_results %}
+    {% else %}
         <p>
-            <a href="{%  url 'results_bureau' bureau.id %}">Remonter les résultats</a>
+            Heure de fermeture : {{ bureau.end_time }}
         </p>
+        {% if not bureau.has_results %}
+            <p>
+                <a href="{%  url 'results_bureau' bureau.id %}">Remonter les résultats</a>
+            </p>
+        {% endif %}
     {% endif %}
 {% endblock %}

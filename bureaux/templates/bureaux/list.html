@@ -1,14 +1,37 @@
 {% extends 'layout.html' %}
 
 {% block content_central %}
-    Bonjour {{ request.operator.email }}&nbsp;!
-    {% for bureau in bureaux %}
+    <div class="alert alert-info">
         <p>
-            <a href="{% url 'detail_bureau' bureau.id %}">{{ bureau.place }}</a>
-            ({{ bureau.end_time|yesno:'Fermé,Ouvert,Ouvert' }})
+            Bonjour {{ request.operator.email }}&nbsp&nbsp;! Voici votre espace de gestion des bureaux de vote. Sur cette
+            page, tout au long de la semaine, vous pourrez ouvrir, fermer et remonter les résultats de vos bureaux.
         </p>
-    {% endfor %}
-    <p>
-        <a href="{% url 'open_bureau' %}">Ouvrir un bureau</a>
-    </p>
+
+        <p>
+            Il est inutile d'ouvrir à l'avance vos bureaux. Installez vous d'abord sur le lieu de votation, et une fois
+            l'urne en place, rendez-vous simplement avec votre smartphone sur cette page pour annoncer l'ouverture et
+            accéder aux listes électorales en ligne.
+        </p>
+    </div>
+
+    <ul class="list-group">
+        {% for bureau in bureaux %}
+            <li class="list-group-item">
+                <a href="{% url 'detail_bureau' bureau.id %}">{{ bureau.place }}</a>
+                {% if not bureau.end_time %}
+                    (Bureau ouvert le {{ bureau.start_time }})
+                {% elif not bureau.has_results %}
+                    (Bureau fermé le {{ bureau.end_time }}.
+                    <a href="{% url 'results_bureau' bureau.id %}">Remonter les résultats</a>.)
+                {% else %}
+                    (Résultats remontés, merci !)
+                {% endif %}
+            </li>
+        {% empty %}
+            <li class="list-group-item">Vous n'avez pas encore ouvert de bureau.</li>
+        {% endfor %}
+        <li class="list-group-item">
+            <a href="{% url 'open_bureau' %}">+ Ouvrir un nouveau bureau</a>
+        </li>
+    </ul>
 {% endblock %}
