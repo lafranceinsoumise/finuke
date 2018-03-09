@@ -128,6 +128,32 @@ USE_TZ = True
 STATIC_URL = '/' + (BASE_URL or '') + 'static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT')
 
+# Loggers
+
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'journald': {
+                'level': 'DEBUG',
+                'class': 'systemd.journal.JournaldLogHandler' if not LOG_DISABLE_JOURNALD else 'logging.StreamHandler',
+            }
+        },
+        'loggers': {
+            'django.template': {
+                'handlers': ['journald'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'django': {
+                'handlers': ['journald'],
+                'level': 'DEBUG',
+                'propagate': True
+        },
+    }
+}
+
 # Django webpack loader config
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'assets'),
