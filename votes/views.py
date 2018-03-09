@@ -115,7 +115,6 @@ class ResendSms(RedirectView):
 class HasNotVotedMixin(UserPassesTestMixin):
     def test_func(self):
         session_phone = self.request.session.get('phone_number')
-        print(session_phone)
         if session_phone is None:
             return False
         phone_number = PhoneNumber.objects.get(phone_number=session_phone)
