@@ -26,6 +26,7 @@ SECRET_KEY = os.environ.get('SECRET', 'h4otg99cb_n4y3^gc6xab)zojyt5_l%==(nig4uoc
 DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+FORCE_SCRIPT_NAME = os.environ.get('FORCE_SCRIPT_NAME', None)
 
 
 # Application definition
