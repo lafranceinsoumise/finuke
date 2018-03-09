@@ -15,6 +15,7 @@ class LoginLink(models.Model):
 
 class BureauOperator(models.Model):
     email = fields.EmailField("Adresse email")
+    created = fields.DateTimeField("Date d'import", auto_now_add=True)
 
     def __str__(self):
         return self.email
