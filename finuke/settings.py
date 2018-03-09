@@ -27,6 +27,7 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 FORCE_SCRIPT_NAME = os.environ.get('FORCE_SCRIPT_NAME', None)
+SITE_ID = 1
 
 
 # Application definition
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'django.contrib.sites',
     'phonenumber_field',
     'webpack_loader',
     'crispy_forms',
