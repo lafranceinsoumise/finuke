@@ -29,9 +29,5 @@ class PhoneNumber(models.Model):
 
 class SMS(models.Model):
     phone_number = models.ForeignKey('phones.PhoneNumber', on_delete=models.CASCADE, editable=False)
-    code = fields.CharField(max_length=8, editable=False)
+    code = fields.CharField(max_length=8, editable=False, default=lambda :str(secrets.randbelow(100000000)).zfill(8))
     created = fields.DateTimeField(auto_now_add=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.code = str(secrets.randbelow(100000000)).zfill(8)

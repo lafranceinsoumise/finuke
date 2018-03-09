@@ -48,7 +48,7 @@ def send_new_code(phone_number):
         raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)
-    message = 'Votre code est {0}'.format(sms.code)
+    message = 'Votre code de validation pour nucleaire.vote est {0}'.format(sms.code)
 
     if not settings.OVH_SMS_DISABLE:
         send(message, phone_number.phone_number)
