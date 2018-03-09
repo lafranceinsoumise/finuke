@@ -32,7 +32,8 @@ def check_phone_number_status(phone_number):
 def make_online_vote(phone_number, voter_list_id, vote):
     try:
         with transaction.atomic():
-            check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
+            if voter_list_id:
+                check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
             check_phone_number_status(phone_number)
             Vote.objects.create(vote=vote)
 

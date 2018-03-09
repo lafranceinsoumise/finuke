@@ -156,7 +156,7 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         try:
             make_online_vote(
                 phone_number=self.request.session['phone_number'],
-                voter_list_id=self.request.session['list_voter'],
+                voter_list_id=self.request.session.get('list_voter', None),
                 vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:

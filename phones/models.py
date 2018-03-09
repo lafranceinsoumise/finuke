@@ -11,6 +11,9 @@ from token_bucket import TokenBucket
 SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
 SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 
+def generate_code():
+    str(secrets.randbelow(100000000)).zfill(8)
+
 
 class PhoneNumber(models.Model):
     phone_number = PhoneNumberField('Numéro de mobile', editable=False, unique=True)
@@ -29,5 +32,5 @@ class PhoneNumber(models.Model):
 
 class SMS(models.Model):
     phone_number = models.ForeignKey('phones.PhoneNumber', on_delete=models.CASCADE, editable=False)
-    code = fields.CharField(max_length=8, editable=False, default=lambda :str(secrets.randbelow(100000000)).zfill(8))
+    code = fields.CharField(max_length=8, editable=False, default=generate_code)
     created = fields.DateTimeField(auto_now_add=True)
