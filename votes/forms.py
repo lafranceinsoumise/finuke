@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+from crispy_forms.layout import Submit, Field
 from django.core.exceptions import ValidationError
 from django.forms import Form, CharField, ChoiceField, ModelChoiceField
 from phonenumber_field.formfields import PhoneNumberField
@@ -43,10 +43,9 @@ class ValidatePhoneForm(BaseForm):
 class ValidateCodeForm(BaseForm):
     code = CharField(label='Code reçu par SMS')
 
-    def __init__(self, *args, **kwargs):
-        self.phone_number = PhoneNumber.objects.get(phone_number=kwargs['phone_number'])
-        del kwargs['phone_number']
+    def __init__(self, *args, phone_number, **kwargs):
         super().__init__(*args, **kwargs)
+        self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
 
     def clean_code(self):
         if not is_valid_code(self.phone_number, self.cleaned_data['code']):

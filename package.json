@@ -24,7 +24,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "clean-webpack-plugin": "^0.1.18",
-    "cleave.js": "^1.1.1",
+    "cleave.js": "^1.1.2",
     "css-loader": "^0.28.10",
     "csv-loader": "^2.1.1",
     "js-cookie": "^2.2.0",

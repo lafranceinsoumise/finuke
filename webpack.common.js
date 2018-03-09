@@ -11,7 +11,8 @@ module.exports = {
   context: path.resolve(__dirname, 'assets/js'),
   entry: {
     publicListSearch: './publicListSearch',
-    bureauListSearch: './bureauListSearch'
+    bureauListSearch: './bureauListSearch',
+    formUtils: './formUtils'
   },
   plugins: [
     new CleanWebpackPlugin([DISTPATH]),

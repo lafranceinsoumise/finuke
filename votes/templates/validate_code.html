@@ -1,10 +1,21 @@
 {% extends 'layout.html' %}
 {% load crispy_forms_tags %}
+{% load webpack_loader %}
 
 {% block content_central %}
-    <p>
-        Vous allez recevoir dans les prochaines secondes un code par SMS. Merci de le recopier ci-dessous.
-        Vous pourrez-voter sur l'écran suivant.
-    </p>
+    <div>
+        <p>Vous allez recevoir un SMS sur le numéro que vous avez indiqué. Ce SMS comprend un code à 8 chiffres qui
+        nous permet de vérifier la bonne réception de ce message. Merci de nous l'indiquer ci-dessous.</p>
+    </div>
+
+    <div class="alert alert-info">
+        <p>Ce SMS peut prendre quelques minutes à arriver. Si vous ne le recevez pas dans les 10
+            minutes, vous pouvez en demander un autre via le bouton ci-dessous.</p>
+        <form method="post" action="{% url "resend_sms" %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning" disabled>Je n'ai pas reçu le SMS</button>
+        </form>
+    </div>
     {% crispy form %}
+    {% render_bundle "formUtils" %}
 {% endblock %}

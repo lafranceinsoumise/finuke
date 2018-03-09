@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% load crispy_forms_tags %}
+{% load webpack_loader %}
 
 {% block content_central %}
     {% if person %}
@@ -23,4 +24,12 @@
         </div>
     {% endif %}
     {% crispy form %}
+    {% render_bundle "formUtils" %}
+    <div class="alert alert-info">
+        <h4>Pourquoi un numéro de téléphone mobile ?</h4>
+        <p>
+            Nous vous demandons votre numéro de téléphone pour des raisons de sécurité. Nous n'utiliserons pas ce
+            numéro à d'autres usages que l'envoi de votre code de vérification.
+        </p>
+    </div>
 {% endblock %}
