@@ -8,7 +8,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 from token_bucket import TokenBucket
 
 
-SMSTokenBucket = TokenBucket('SMS', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
+SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
+SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 
 
 class PhoneNumber(models.Model):
@@ -21,7 +22,9 @@ class PhoneNumber(models.Model):
         return str(self.phone_number)
 
     def can_send_sms(self):
-        return SMSTokenBucket.has_tokens(self)
+        # order is important, as 'and' is short circuit
+        # empty the short term bucket first
+        return SMSShortTokenBucket.has_tokens(self) and SMSLongTokenBucket.has_tokens(self)
 
 
 class SMS(models.Model):
