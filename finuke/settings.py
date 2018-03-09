@@ -164,7 +164,7 @@ if DEBUG:
     ]
 
 # OVH Settings
-OVH_SMS_DISABLE = os.environ.get('OVH_SMS_DISABLE', True)
+OVH_SMS_DISABLE = os.environ.get('OVH_SMS_DISABLE', 'true').lower() == 'true'
 OVH_SMS_SERVICE = os.environ.get('OVH_SMS_SERVICE')
 OVH_APPLICATION_KEY = os.environ.get('OVH_APPLICATION_KEY')
 OVH_APPLICATION_SECRET = os.environ.get('OVH_APPLICATION_SECRET')
