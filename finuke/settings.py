@@ -26,8 +26,7 @@ SECRET_KEY = os.environ.get('SECRET', 'h4otg99cb_n4y3^gc6xab)zojyt5_l%==(nig4uoc
 DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
-FORCE_SCRIPT_NAME = os.environ.get('FORCE_SCRIPT_NAME', None)
-SITE_ID = 1
+BASE_URL = os.environ.get('BASE_URL', None)
 
 
 # Application definition
@@ -40,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'django.contrib.sites',
     'phonenumber_field',
     'webpack_loader',
     'crispy_forms',

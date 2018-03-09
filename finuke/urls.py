@@ -25,6 +25,11 @@ urlpatterns = [
     path('bureaux/', include('bureaux.urls')),
 ]
 
+if settings.BASE_URL:
+    urlpatterns = [
+        path(settings.BASE_URL, include(urlpatterns))
+    ]
+
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [
