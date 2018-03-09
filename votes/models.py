@@ -77,6 +77,6 @@ class VoterListItem(models.Model):
     street_type = fields.CharField('Type de voie', max_length=255, blank=True)
     street_label = fields.CharField('Nom de la voie', max_length=255, blank=True)
     place_name = fields.CharField('Lieu-dit', max_length=255, blank=True)
-    zipcode = fields.CharField('Code postal', max_length=10, blank=True)
+    zipcode = fields.CharField('Code postal', max_length=255, blank=True)
     local_city_name = fields.CharField('Ville ou localité', max_length=255, blank=True)
     country = fields.CharField('Pays', max_length=255, blank=True)
