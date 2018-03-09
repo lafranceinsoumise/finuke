@@ -4,8 +4,10 @@ from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
+from django.contrib import messages
 
 from phones.models import PhoneNumber
+from phones.sms import send_new_code, SMSSendException
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
 from .models import Vote, VoterListItem
@@ -59,7 +61,7 @@ def person_json_search(request, departement, search):
 
 
 class FindPersonInListView(FormView):
-    template_name = 'find_person.html'
+    template_name = 'votes/find_person.html'
     form_class = FindPersonInListForm
     success_url = reverse_lazy('validate_phone_number')
 
@@ -72,7 +74,7 @@ class FindPersonInListView(FormView):
 
 
 class AskForPhoneView(FormView):
-    template_name = 'ask_for_phone.html'
+    template_name = 'votes/ask_for_phone.html'
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
 
@@ -96,6 +98,20 @@ class AskForPhoneView(FormView):
         return super().form_valid(form)
 
 
+class ResendSms(RedirectView):
+    url = reverse_lazy('validate_code')
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # TODO check that phone_number does exist!
+            send_new_code(PhoneNumber.objects.get(phone_number=self.request.session['phone_number']))
+            messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
+        except SMSSendException:
+            messages.add_message(request, messages.ERROR, 'Vous avez demandé trop de SMS. Merci de patienter un peu.')
+
+        return super().get(request, *args, **kwargs)
+
+
 class HasNotVotedMixin(UserPassesTestMixin):
     def test_func(self):
         session_phone = self.request.session.get('phone_number')
@@ -111,7 +127,7 @@ class HasNotVotedMixin(UserPassesTestMixin):
 
 class ValidateCodeView(HasNotVotedMixin, FormView):
     login_url = '/'
-    template_name = 'validate_code.html'
+    template_name = 'votes/validate_code.html'
     form_class = ValidateCodeForm
     success_url = reverse_lazy('vote')
 
@@ -128,7 +144,7 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
 
 class MakeVoteView(HasNotVotedMixin, FormView):
     login_url = '/'
-    template_name = 'vote.html'
+    template_name = 'votes/vote.html'
     form_class = VoteForm
 
     def get_success_url(self):
@@ -152,7 +168,7 @@ class MakeVoteView(HasNotVotedMixin, FormView):
 
 class CheckOwnVoteView(UserPassesTestMixin, DetailView):
     login_url = '/'
-    template_name = 'check_own_vote.html'
+    template_name = 'votes/check_own_vote.html'
     context_object_name = 'vote'
     model = Vote
 
@@ -167,4 +183,4 @@ class CheckOwnVoteView(UserPassesTestMixin, DetailView):
 class CheckVoteView(DetailView):
     model = Vote
     context_object_name = 'vote'
-    template_name = 'check_vote.html'
+    template_name = 'votes/check_vote.html'

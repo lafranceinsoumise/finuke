@@ -43,6 +43,11 @@
         <main class="container">
             <div class="row">
                 <div class="col-responsive">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                     {% block content_central %}{% endblock %}
                 </div>
             </div>

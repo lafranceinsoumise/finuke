@@ -1,4 +1,4 @@
-{% extends 'layout.html' %}
+{% extends 'votes/layout.html' %}
 {% load crispy_forms_tags %}
 {% load webpack_loader %}
 
@@ -13,8 +13,26 @@
             minutes, vous pouvez en demander un autre via le bouton ci-dessous.</p>
         <form method="post" action="{% url "resend_sms" %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-warning" disabled>Je n'ai pas reçu le SMS</button>
+            <button id='resend' type="submit" class="btn btn-warning" disabled>Je n'ai pas reçu le SMS</button>
         </form>
+        <script>
+            let i = 60;
+            const button = document.getElementById('resend');
+            const text = button.innerText;
+            update();
+            const interval = setInterval(update, 1000);
+
+            function update() {
+              if (i > 0) {
+                button.innerText = text + ' (' + i-- + ')';
+              } else {
+                button.innerText = text;
+                button.disabled = false;
+                clearInterval(interval);
+              }
+            }
+        </script>
+
     </div>
     {% crispy form %}
     {% render_bundle "formUtils" %}
