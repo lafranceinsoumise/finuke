@@ -138,7 +138,7 @@ if not DEBUG:
         'handlers': {
             'journald': {
                 'level': 'DEBUG',
-                'class': 'systemd.journal.JournaldLogHandler' if not LOG_DISABLE_JOURNALD else 'logging.StreamHandler',
+                'class': 'systemd.journal.JournaldLogHandler',
             }
         },
         'loggers': {
