@@ -144,6 +144,9 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
 
     def test_func(self):
         self.object = self.get_object()
+
+        if self.object.end_time is not None:
+            return False
         is_operator = super().test_func()
         if is_operator and self.object in self.request.operator.bureaux.all():
             return True
