@@ -1,7 +1,7 @@
 from django.urls import path
 
 from votes.views import AskForPhoneView, ValidateCodeView, MakeVoteView, CheckVoteView, CheckOwnVoteView, \
-    commune_json_search, person_json_search, FindPersonInListView, CleanSessionView
+    commune_json_search, person_json_search, FindPersonInListView, CleanSessionView, ResendSms
 
 urlpatterns = [
     path('clean_session', CleanSessionView.as_view(), name='clean_session'),
@@ -9,6 +9,7 @@ urlpatterns = [
     path('json/listes/<departement>/<search>', person_json_search, name='person_json_search'),
     path('validation/listes', FindPersonInListView.as_view(), name='validate_list'),
     path('validation/telephone', AskForPhoneView.as_view(), name='validate_phone_number'),
+    path('validation/telephone/renvoyer', ResendSms.as_view(), name='resend_sms'),
     path('validation/telephone/code', ValidateCodeView.as_view(), name='validate_code'),
     path('vote', MakeVoteView.as_view(), name='vote'),
     path('vote/confirmation', CheckOwnVoteView.as_view(), name='check_own_vote'),

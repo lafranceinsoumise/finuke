@@ -7,7 +7,7 @@ from django.views.generic import FormView, DetailView, RedirectView
 from django.contrib import messages
 
 from phones.models import PhoneNumber
-from phones.sms import send_new_code, SMSSendException
+from phones.sms import send_new_code, SMSCodeException
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
 from .models import Vote, VoterListItem
@@ -106,7 +106,7 @@ class ResendSms(RedirectView):
             # TODO check that phone_number does exist!
             send_new_code(PhoneNumber.objects.get(phone_number=self.request.session['phone_number']))
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
-        except SMSSendException:
+        except SMSCodeException:
             messages.add_message(request, messages.ERROR, 'Vous avez demandé trop de SMS. Merci de patienter un peu.')
 
         return super().get(request, *args, **kwargs)
