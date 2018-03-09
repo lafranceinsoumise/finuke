@@ -12,7 +12,7 @@ SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
 SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 
 def generate_code():
-    str(secrets.randbelow(100000000)).zfill(8)
+    return str(secrets.randbelow(100000000)).zfill(8)
 
 
 class PhoneNumber(models.Model):

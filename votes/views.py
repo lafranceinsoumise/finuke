@@ -85,7 +85,7 @@ class AskForPhoneView(FormView):
             try:
                 data['person'] = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE).get(pk=list_voter_id)
             except VoterListItem.DoesNotExist:
-                pass
+                del self.request.session['list_voter']
 
         return data
 
@@ -154,7 +154,7 @@ class MakeVoteView(HasNotVotedMixin, FormView):
 
     def form_valid(self, form):
         try:
-            make_online_vote(
+            self.request.session['id'] = make_online_vote(
                 phone_number=self.request.session['phone_number'],
                 voter_list_id=self.request.session.get('list_voter', None),
                 vote=form.cleaned_data['choice']
