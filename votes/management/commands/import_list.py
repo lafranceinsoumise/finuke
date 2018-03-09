@@ -83,7 +83,7 @@ class Command(BaseCommand):
                     continue
 
                 row['list_type'] = row['list_type'].replace('\ufeff', '')
-                row['civilite'] = dict(map(reversed, VoterListItem.CIVILITE_CHOICES))[row['civilite']]
+                row['civilite'] = dict(map(reversed, VoterListItem.CIVILITE_CHOICES)).get(row['civilite'], '')
                 row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
 
                 items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
