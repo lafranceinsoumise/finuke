@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'webpack_loader',
     'crispy_forms',
+    'custom_messages',
     'phones',
     'votes',
     'bureaux',
@@ -209,6 +210,7 @@ REDIS_MAX_CONNECTIONS = 3
 
 PHONENUMBER_DEFAULT_REGION = 'FR'
 
+MESSAGE_STORAGE = 'custom_messages.storage.CustomStorage'
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }

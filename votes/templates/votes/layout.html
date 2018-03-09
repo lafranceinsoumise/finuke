@@ -45,9 +45,22 @@
                 <div class="col-responsive">
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }}">
+                            {% if message.closing_link %}
+                                <button type="button" class="close message" aria-label="Fermer"
+                                        data-closing-link="{{ message.closing_link }}">
+                                    <span aria-hidden="true">&times;</span></button>
+                            {% endif %}
                             {{ message }}
                         </div>
                     {% endfor %}
+                    <script>
+                        document.querySelector('button.close.message').addEventListener('click', function(e) {
+                          var r = new XMLHttpRequest();
+                          r.open('GET', e.target.dataset.closingLink, true);
+                          r.send();
+                          e.target.parentNode.remove();
+                        });
+                    </script>
                     {% block content_central %}{% endblock %}
                 </div>
             </div>

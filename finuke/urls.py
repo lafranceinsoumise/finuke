@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin_site.urls),
     path('', include('votes.urls')),
     path('bureaux/', include('bureaux.urls')),
+    path('', include('custom_messages.urls')),
 ]
 
 if settings.BASE_URL:
