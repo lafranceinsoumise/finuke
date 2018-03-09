@@ -48,10 +48,12 @@ class ValidateCodeForm(BaseForm):
         self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
 
     def clean_code(self):
-        if not is_valid_code(self.phone_number, self.cleaned_data['code']):
+        code = self.cleaned_data['code'].replace(' ', '')
+
+        if not is_valid_code(self.phone_number, code):
             raise ValidationError('Votre code est invalide ou expiré.')
 
-        return self.cleaned_data['code']
+        return code
 
 
 class VoteForm(BaseForm):

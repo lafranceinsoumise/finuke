@@ -61,8 +61,8 @@ def send_new_code(phone_number):
 
 def is_valid_code(phone_number, code):
     try:
+        # TODO: possible timing attack here
         SMS.objects.get(phone_number=phone_number, code=code, created__gt=timezone.now()-timedelta(minutes=30))
         return True
     except SMS.DoesNotExist:
         return False
-
