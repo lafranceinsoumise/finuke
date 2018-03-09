@@ -5,6 +5,7 @@ from secrets import choice
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import fields
+from django.urls import reverse
 
 
 class LoginLink(models.Model):
@@ -12,9 +13,12 @@ class LoginLink(models.Model):
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='login_links')
     valid = models.BooleanField("Valide", default=True)
 
+    def get_absolute_url(self):
+        return reverse('login', args=[str(self.uuid)])
+
 
 class BureauOperator(models.Model):
-    email = fields.EmailField("Adresse email")
+    email = fields.EmailField("Adresse email", unique=True)
     created = fields.DateTimeField("Date d'import", auto_now_add=True)
 
     def __str__(self):
