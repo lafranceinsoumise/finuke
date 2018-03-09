@@ -25,6 +25,7 @@ redis = "*"
 hiredis = "*"
 phonenumbers = "*"
 uwsgi = "*"
+systemd = "*"
 
 
 [dev-packages]
