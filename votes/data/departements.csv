@@ -48,15 +48,15 @@
 "46";"LOT";"Lot";2;"76";"46042";1;"O";"B";"C"
 "47";"LOT-ET-GARONNE";"Lot-et-Garonne";2;"75";"47001";1;"O";"B";"C"
 "48";"LOZERE";"Lozère";3;"76";"48095";1;"O";"B";"C"
-"49";"MAINE-ET-LOIRE";"Maine-et-Loire";2;"52";"49007";1;;;
+"49";"MAINE-ET-LOIRE";"Maine-et-Loire";2;"52";"49007";1;"O";"H";"C"
 "50";"MANCHE";"Manche";3;"28";"50502";1;"O";"B";"C"
 "51";"MARNE";"Marne";3;"44";"51108";1;;;
 "52";"HAUTE-MARNE";"Haute-Marne";3;"44";"52121";1;;;
-"53";"MAYENNE";"Mayenne";3;"52";"53130";1;;;
+"53";"MAYENNE";"Mayenne";3;"52";"53130";1;"O";"F";"C"
 "54";"MEURTHE-ET-MOSELLE";"Meurthe-et-Moselle";0;"44";"54395";1;"O";"G";"C"
 "55";"MEUSE";"Meuse";3;"44";"55029";1;;;
 "56";"MORBIHAN";"Morbihan";2;"53";"56260";1;"O";"B";"C"
-"57";"MOSELLE";"Moselle";3;"44";"57463";1;;;"D"
+"57";"MOSELLE";"Moselle";3;"44";"57463";1;"O";"H";"D"
 "58";"NIEVRE";"Nièvre";3;"27";"58194";1;"O";"F";"C"
 "59";"NORD";"Nord";2;"32";"59350";1;"O";"G";"C"
 "60";"OISE";"Oise";5;"32";"60057";1;;;
@@ -74,22 +74,22 @@
 "72";"SARTHE";"Sarthe";3;"52";"72181";1;"O";"E";"C"
 "73";"SAVOIE";"Savoie";3;"84";"73065";1;"O";"C";"C"
 "74";"HAUTE-SAVOIE";"Haute-Savoie";3;"84";"74010";1;"O";"C";"C"
-"75";"PARIS";"Paris";0;"11";"75056";1;"O";"D";"D"
+"75";"PARIS";"Paris";0;"11";"75056";1;"O";"D";"C"
 "76";"SEINE-MARITIME";"Seine-Maritime";3;"28";"76540";1;"O";"E";"C"
-"77";"SEINE-ET-MARNE";"Seine-et-Marne";0;"11";"77288";1;;;
+"77";"SEINE-ET-MARNE";"Seine-et-Marne";0;"11";"77288";1;"O";"H";"C"
 "78";"YVELINES";"Yvelines";4;"11";"78646";1;"O";"B";"C"
 "79";"DEUX-SEVRES";"Deux-Sèvres";4;"75";"79191";1;"O";"E";"C"
 "80";"SOMME";"Somme";3;"32";"80021";1;"O";"C";"C"
 "81";"TARN";"Tarn";2;"76";"81004";1;"O";"D";"C"
 "82";"TARN-ET-GARONNE";"Tarn-et-Garonne";2;"76";"82121";1;"O";"A";"C"
-"83";"VAR";"Var";2;"93";"83137";1;;;
+"83";"VAR";"Var";2;"93";"83137";1;"O";"H";"C"
 "84";"VAUCLUSE";"Vaucluse";2;"93";"84007";1;"O";"D";"C"
-"85";"VENDEE";"Vendée";3;"52";"85191";1;;;
+"85";"VENDEE";"Vendée";3;"52";"85191";1;"O";"H";"C"
 "86";"VIENNE";"Vienne";3;"75";"86194";1;;;
-"87";"HAUTE-VIENNE";"Haute-Vienne";3;"75";"87085";1;;;
+"87";"HAUTE-VIENNE";"Haute-Vienne";3;"75";"87085";1;"O";"H";"C"
 "88";"VOSGES";"Vosges";4;"44";"88160";1;"O";"C";"C"
 "89";"YONNE";"Yonne";5;"27";"89024";1;"O";"C";"C"
-"90";"TERRITOIRE DE BELFORT";"Territoire de Belfort";2;"27";"90010";1;;;
+"90";"TERRITOIRE DE BELFORT";"Territoire de Belfort";2;"27";"90010";1;"O";"H";"C"
 "91";"ESSONNE";"Essonne";5;"11";"91228";1;"O";"F";"C"
 "92";"HAUTS-DE-SEINE";"Hauts-de-Seine";4;"11";"92050";1;"O";"E";"C"
 "93";"SEINE-SAINT-DENIS";"Seine-Saint-Denis";3;"11";"93008";1;"O";"C";"C"
@@ -106,4 +106,4 @@
 "986";"WALLIS-ET-FUTUNA";"Wallis-Et-Futuna";0;"ZW";"98601";0;;;
 "987";"POLYNESIE FRANCAISE";"Polynésie française";3;"ZP";"98735";0;;;
 "988";"NOUVELLE-CALEDONIE";"Nouvelle-Calédonie";3;"ZN";"98818";0;;;
-"ZZ";"FRANCAIS ETABLIS HORS DE FRANCE";"Français établis hors de France";4;"ZZ";"ZZ079";1;;;
+"ZZ";"FRANCAIS ETABLIS HORS DE FRANCE";"Français établis hors de France";4;"ZZ";"ZZ079";1;"O";"H";"C"
