@@ -6,6 +6,28 @@
         <a href="{% url 'list_bureaux' %}">&larr;&nbsp;Retour à la liste de mes bureaux</a>
     </p>
     <hr />
+    <div class="alert alert-info">
+        <p>
+            Vous avez ouvert un nouveau bureau de vote&nbsp!
+        </p>
+        <p>
+            Pour rappel, le scrutin est ouvert à toutes les personnes de plus de 16 ans, étrangères ou françaises,
+            inscrites ou non sur les listes électorales. Les personnes inscrites doivent obligatoirement être
+            recherchées sur les listes électorales sur la plateforme.
+        </p>
+        <p>
+            Une personne doit se tenir près de l’urne et s’assurer que personne n’y glisse d’enveloppe sans être passée
+            par la vérification sur les listes. Une ou plusieurs autres personnes ont en leur possession les bulletins
+            et le ou les smartphones ou ordinateurs permettant de rechercher les personnes sur les listes électorales.
+            Elles ne distribuent qu’un bulletin et une enveloppe par personne, uniquement après avoir effectué la
+            vérification sur les listes.
+        </p>
+        <p class="text-right">
+            <a class="btn btn-default" href="https://lafranceinsoumise.fr/app/uploads/2018/03/tenir_un_bureau_de_vote.pdf">Retrouvez le manuel
+            complet de tenue de bureaux de vote.</a>
+        </p>
+    </div>
+
     <h3>{{ bureau.place }} <small>Bureau de vote</small></h3>
     <p>
         <a href="{% url 'vote_bureau' bureau.id %}">Accéder aux listes électorales.</a>
