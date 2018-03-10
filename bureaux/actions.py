@@ -2,10 +2,17 @@ from django.db import transaction, DatabaseError
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
+from token_bucket import TokenBucket
 from votes.actions import check_voter_list_item, AlreadyVotedException
 from votes.models import VoterListItem
 
 from . import models
+
+OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
+
+
+class BureauException(Exception):
+    pass
 
 
 def request_to_json(request):
@@ -41,6 +48,8 @@ def login_assistant(request, bureau):
 
 
 def open_bureau(request, place):
+    if not OpenBureauTokenBucket.has_tokens(request.operator):
+        raise BureauException("Trop de bureaux ouverts.")
     with transaction.atomic():
         bureau = models.Bureau.objects.create(
             place=place,

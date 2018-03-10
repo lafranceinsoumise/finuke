@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.views.generic import RedirectView, ListView, DetailView, FormView, UpdateView, TemplateView
 from django.views.generic.detail import SingleObjectMixin
 
+from bureaux.actions import BureauException
 from bureaux.forms import OpenBureauForm, BureauResultsForm, AssistantCodeForm
 from bureaux.models import LoginLink, Bureau
 from . import actions
@@ -63,8 +64,12 @@ class OpenBureauView(OperatorViewMixin, FormView):
         return reverse('detail_bureau', args=[self.bureau.id])
 
     def form_valid(self, form):
-        self.bureau = actions.open_bureau(self.request, form.cleaned_data['place'])
-        messages.add_message(self.request, messages.SUCCESS, "Le bureau a bien été créé.")
+        try:
+            self.bureau = actions.open_bureau(self.request, form.cleaned_data['place'])
+            messages.add_message(self.request, messages.SUCCESS, "Le bureau a bien été créé.")
+        except BureauException:
+            messages.add_message(self.request, messages.ERROR, "Vous avez ouvert trop de bureaux aujourd'hui, vous êtes bloqué par mesure de sécurité.")
+            return super().form_invalid(form)
         return super().form_valid(form)
 
 
