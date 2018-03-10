@@ -19,4 +19,4 @@ class VoterListItemAdmin(admin.ModelAdmin):
 
 @admin.register(Vote, site=admin_site)
 class VoteAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'vote', 'with_list')
