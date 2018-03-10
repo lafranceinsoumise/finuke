@@ -1,13 +1,15 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.postgres.search import TrigramSimilarity
+from django.core.exceptions import PermissionDenied
 from django.db.models import F, Value, CharField, ExpressionWrapper
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 from django.contrib import messages
 
 from phones.models import PhoneNumber
 from phones.sms import send_new_code, SMSCodeException
+from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
 from .models import Vote, VoterListItem
@@ -17,6 +19,8 @@ PHONE_NUMBER_KEY = 'phone_number'
 PHONE_NUMBER_VALID_KEY = 'phone_valid'
 VOTER_ID_KEY = 'list_voter'
 SESSIONS_KEY = [PHONE_NUMBER_KEY, PHONE_NUMBER_VALID_KEY, VOTER_ID_KEY]
+
+ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
 
 
 def clean_session(request):
@@ -38,6 +42,12 @@ def commune_json_search(request, departement):
 
 
 def person_json_search(request, departement, search):
+    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code')):
+        raise PermissionDenied("not allowed")
+
+    if not ListSearchTokenBucket.has_tokens(request.session.session_key):
+        return HttpResponse(status=429)
+
     commune = request.GET.get('commune')
 
     qs = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE, departement=departement)

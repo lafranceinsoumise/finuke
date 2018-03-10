@@ -74,14 +74,26 @@ class ListSearch extends React.Component {
   }
 
   async searchPeople(input) {
-    if (input.length < 4) return [];
+    return new Promise((resolve, reject) => {
+      if (input.length < 4) return resolve({options: []});
 
-    let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
 
-    let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
-      .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
+      this.searchTimeout = setTimeout(async () => {
+        let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
 
-    return {options};
+        try {
+          let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
+          .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
+
+          return resolve(null, {options});
+        } catch (e) {
+          return reject(e);
+        }
+      }, 500);
+    });
   }
 
   personChange(person) {
