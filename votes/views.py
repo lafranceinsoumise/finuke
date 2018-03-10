@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import F, Value, CharField, ExpressionWrapper
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 from django.contrib import messages
@@ -13,12 +13,23 @@ from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInLi
 from .models import Vote, VoterListItem
 from .actions import make_online_vote, AlreadyVotedException
 
+PHONE_NUMBER_KEY = 'phone_number'
+PHONE_NUMBER_VALID_KEY = 'phone_valid'
+VOTER_ID_KEY = 'list_voter'
+SESSIONS_KEY = [PHONE_NUMBER_KEY, PHONE_NUMBER_VALID_KEY, VOTER_ID_KEY]
+
+
+def clean_session(request):
+    for key in SESSIONS_KEY:
+        if key in request.session:
+            del request.session[key]
+
 
 class CleanSessionView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        self.request.session.flush()
+        clean_session(self.request)
         return '/'
 
 
@@ -72,13 +83,14 @@ class AskForPhoneView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        self.request.session['phone_number'] = str(form.cleaned_data['phone_number'])
-        if self.request.session.get('phone_valid'):
-            del self.request.session['phone_valid']
-        if self.request.session.get('id'):
-            del self.request.session['id']
-        if self.request.session.get('list_voter'):
-            del self.request.session['list_voter']
+        clean_session(self.request)
+        code = form.send_code()
+
+        if code is None:
+            return super().form_invalid(form)
+
+        messages.add_message(self.request, messages.DEBUG, f'Le code envoyé est {code}')
+        self.request.session[PHONE_NUMBER_KEY] = str(form.cleaned_data['phone_number'])
         return super().form_valid(form)
 
 
@@ -86,10 +98,12 @@ class ResendSms(RedirectView):
     url = reverse_lazy('validate_code')
 
     def get(self, request, *args, **kwargs):
+        if PHONE_NUMBER_KEY not in request.session:
+            return HttpResponseRedirect(reverse('validate_phone_number'))
         try:
-            # TODO check that phone_number does exist!
-            send_new_code(PhoneNumber.objects.get(phone_number=self.request.session['phone_number']), request.META['REMOTE_ADDR'])
+            code = send_new_code(PhoneNumber.objects.get(phone_number=request.session[PHONE_NUMBER_KEY]), request.META['REMOTE_ADDR'])
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
+            messages.add_message(request, messages.DEBUG, f'Le code envoyé est {code}')
         except SMSCodeException:
             messages.add_message(request, messages.ERROR, 'Vous avez demandé trop de SMS. Merci de patienter un peu.')
 
@@ -97,8 +111,10 @@ class ResendSms(RedirectView):
 
 
 class HasNotVotedMixin(UserPassesTestMixin):
+    login_url = reverse_lazy('validate_phone_number')
+
     def test_func(self):
-        session_phone = self.request.session.get('phone_number')
+        session_phone = self.request.session.get(PHONE_NUMBER_KEY)
         if session_phone is None:
             return False
         phone_number = PhoneNumber.objects.get(phone_number=session_phone)
@@ -116,12 +132,12 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['phone_number'] = self.request.session['phone_number']
+        kwargs['phone_number'] = self.request.session[PHONE_NUMBER_KEY]
 
         return kwargs
 
     def form_valid(self, form):
-        self.request.session['phone_valid'] = True
+        self.request.session[PHONE_NUMBER_VALID_KEY] = True
         return super().form_valid(form)
 
 
@@ -134,7 +150,7 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
         return super().form_invalid(form)
 
     def form_valid(self, form):
-        self.request.session['list_voter'] = form.cleaned_data['person'].id
+        self.request.session[VOTER_ID_KEY] = form.cleaned_data['person'].id
         return super().form_valid(form)
 
 
@@ -147,15 +163,15 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         return '/merci?id=' + self.vote_id
 
     def test_func(self):
-        return self.request.session.get('phone_valid') is not None and super().test_func()
+        return self.request.session.get(PHONE_NUMBER_VALID_KEY) is not None and super().test_func()
 
     def get_context_data(self, **kwargs):
-        list_voter_id = self.request.session.get('list_voter', None)
+        list_voter_id = self.request.session.get(VOTER_ID_KEY, None)
         if list_voter_id:
             try:
                 kwargs['person'] = VoterListItem.objects.get(pk=list_voter_id)
             except VoterListItem.DoesNotExist:
-                del self.request.session['list_voter']
+                del self.request.session[VOTER_ID_KEY]
 
         return super().get_context_data(**kwargs)
 
@@ -163,7 +179,7 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         try:
             self.vote_id = make_online_vote(
                 phone_number=self.request.session['phone_number'],
-                voter_list_id=self.request.session.get('list_voter', None),
+                voter_list_id=self.request.session.get(VOTER_ID_KEY, None),
                 vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:

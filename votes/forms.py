@@ -31,17 +31,19 @@ class ValidatePhoneForm(BaseForm):
         if self.cleaned_data['phone_number'].country_code != 33:
             raise ValidationError('Le numéro doit être un numéro de téléphone français.')
 
-        (phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
+        (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
 
-        if phone_number.validated:
+        if self.phone_number.validated:
             raise ValidationError('Ce numéro a déjà été utilisé pour voter.')
 
-        try:
-            send_new_code(phone_number, self.ip)
-        except SMSCodeException:
-            raise ValidationError('Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
-
         return self.cleaned_data['phone_number']
+
+    def send_code(self):
+        try:
+            return send_new_code(self.phone_number, self.ip)
+        except SMSCodeException:
+            self.add_error('phone_number', 'Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
+            return None
 
 
 class ValidateCodeForm(BaseForm):

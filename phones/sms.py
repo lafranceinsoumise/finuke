@@ -59,8 +59,6 @@ def send_new_code(phone_number, ip):
 
     if not settings.OVH_SMS_DISABLE:
         send(message, phone_number.phone_number)
-    else:
-        print('SMS envoyé à {0} : {1}'.format(str(phone_number.phone_number), message))
 
     sms.save()
     return sms.code

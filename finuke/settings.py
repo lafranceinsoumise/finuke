@@ -214,3 +214,4 @@ MESSAGE_STORAGE = 'custom_messages.storage.CustomStorage'
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }
+MESSAGE_LEVEL = messages.DEBUG if DEBUG else messages.INFO
