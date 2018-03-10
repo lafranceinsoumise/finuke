@@ -3,6 +3,7 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.db.models import Q
 from django.shortcuts import reverse
 from django.urls import resolve
+from django.utils.safestring import mark_safe
 
 from . import SESSION_KEY
 from .models import PersistantMessage
@@ -10,7 +11,7 @@ from .models import PersistantMessage
 
 class PersistantMessageWrapper(Message):
     def __init__(self, message_model):
-        super().__init__(message_model.level, message_model.text)
+        super().__init__(message_model.level, mark_safe(message_model.text))
         self.closing_link = reverse('mark_as_read', args=[message_model.id])
 
 
