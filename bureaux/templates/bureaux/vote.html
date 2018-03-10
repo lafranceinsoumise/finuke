@@ -3,21 +3,6 @@
 {% load render_bundle from webpack_loader %}
 
 {% block content_central %}
-    <div class="alert alert-info">
-        <p>
-            Bonjour&nbsp&nbsp;! Vous effectuez le travail d'assesseur⋅e sur le bureau {{ object.name }}.
-        </p>
-
-        <p>
-            Lorsqu’une personne se présente à vous, vous devez lui demander elle est inscrite sur les liste électorales
-            pour savoir si elle doit voter avec un bulletin vert ou orange. Si elle est inscrite, vous devez
-            obligatoirement la rechercher sur la plateforme et suivre les instructions qui vous sont données.
-        </p>
-        <p class="text-right">
-            <a class="btn btn-default" href="https://lafranceinsoumise.fr/app/uploads/2018/03/tenir_un_bureau_de_vote.pdf">Retrouvez le manuel
-            complet de tenue de bureaux de vote.</a>
-        </p>
-    </div>
     <div id="react-root"></div>
     {% render_bundle 'bureauListSearch' %}
 {% endblock %}
