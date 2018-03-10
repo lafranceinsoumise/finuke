@@ -147,14 +147,14 @@ class MakeVoteView(HasNotVotedMixin, FormView):
     form_class = VoteForm
 
     def get_success_url(self):
-        return reverse('check_own_vote')
+        return '/merci?id=' + self.vote_id
 
     def test_func(self):
         return self.request.session.get('phone_valid') is not None and super().test_func()
 
     def form_valid(self, form):
         try:
-            self.request.session['id'] = make_online_vote(
+            self.vote_id = make_online_vote(
                 phone_number=self.request.session['phone_number'],
                 voter_list_id=self.request.session.get('list_voter', None),
                 vote=form.cleaned_data['choice']
@@ -163,20 +163,6 @@ class MakeVoteView(HasNotVotedMixin, FormView):
             return JsonResponse({'error': 'already voted'})
 
         return super().form_valid(form)
-
-
-class CheckOwnVoteView(UserPassesTestMixin, DetailView):
-    login_url = '/'
-    template_name = 'votes/check_own_vote.html'
-    context_object_name = 'vote'
-    model = Vote
-
-    def test_func(self):
-        return self.request.session.get('id') is not None
-
-    def get_object(self, queryset=None):
-        queryset = queryset or self.get_queryset()
-        return queryset.get(id=self.request.session.get('id'))
 
 
 class CheckVoteView(DetailView):
