@@ -60,7 +60,7 @@ class VoterListItem(models.Model):
     origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
     file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')
     list_type = fields.CharField('Type de liste', max_length=1, choices=LIST_TYPE_CHOICES)
-    departement = fields.CharField('Code INSEE département', max_length=2, db_index=True)
+    departement = fields.CharField('Code INSEE département', max_length=5, db_index=True)
     commune = fields.CharField('Code INSEE commune', max_length=5, db_index=True)
     civilite = fields.CharField('Civilité', max_length=1, choices=CIVILITE_CHOICES, blank=True)
     last_name = fields.CharField('Nom de naissance', max_length=255)
