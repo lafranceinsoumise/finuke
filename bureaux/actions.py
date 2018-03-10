@@ -10,6 +10,7 @@ from . import models
 
 OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
 LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 20, 600)
+LoginAssistantIPTokenBucket = TokenBucket('LoginAssistant', 100, 60)
 
 
 class BureauException(Exception):
@@ -41,6 +42,8 @@ def login_operator(request, login_link):
 
 
 def login_assistant(request, bureau):
+    if not LoginAssistantIPTokenBucket.has_tokens(request.META['REMOTE_ADDR']):
+        raise BureauException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
     if not LoginAssistantTokenBucket.has_tokens(bureau):
         raise BureauException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
     request.session['assistant_code'] = bureau.assistant_code
