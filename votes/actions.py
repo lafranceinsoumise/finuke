@@ -1,7 +1,14 @@
 from django.db import transaction, DatabaseError
 
+from token_bucket import TokenBucket
 from .models import VoterListItem, Vote
 from phones.models import PhoneNumber
+
+VoteIPTokenBucket = TokenBucket('VoteIP', 10, 60)
+
+
+class VoteLimitException(Exception):
+    pass
 
 
 class AlreadyVotedException(Exception):
@@ -29,7 +36,9 @@ def check_phone_number_status(phone_number):
     phone_number.save()
 
 
-def make_online_vote(phone_number, voter_list_id, vote):
+def make_online_vote(ip, phone_number, voter_list_id, vote):
+    if not VoteIPTokenBucket.has_tokens(ip):
+        raise VoteLimitException("Trop de votes sur cette IP.")
     try:
         with transaction.atomic():
             if voter_list_id is not None:

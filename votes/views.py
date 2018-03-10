@@ -11,7 +11,7 @@ from phones.sms import send_new_code, SMSCodeException
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
 from .models import Vote, VoterListItem
-from .actions import make_online_vote, AlreadyVotedException
+from .actions import make_online_vote, AlreadyVotedException, VoteLimitException
 
 PHONE_NUMBER_KEY = 'phone_number'
 PHONE_NUMBER_VALID_KEY = 'phone_valid'
@@ -178,12 +178,16 @@ class MakeVoteView(HasNotVotedMixin, FormView):
     def form_valid(self, form):
         try:
             self.vote_id = make_online_vote(
+                ip=self.request.META['REMOTE_ADDR'],
                 phone_number=self.request.session['phone_number'],
                 voter_list_id=self.request.session.get(VOTER_ID_KEY, None),
                 vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
+        except VoteLimitException:
+            messages.add_message(self.request, messages.ERROR, "Trop de votes sur cette connexion, merci de réessayer plus tard.")
+            return super().form_invalid(form)
 
         return super().form_valid(form)
 

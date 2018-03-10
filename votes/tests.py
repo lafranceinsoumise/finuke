@@ -19,16 +19,16 @@ class VoteActionsTestCase(TestCase):
         self.bureau = Bureau.objects.create(place="In the database", operator=self.operator)
 
     def test_can_only_vote_once_with_phone_number(self):
-        make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote(str(self.phone1.phone_number), self.identity2.id, Vote.NO)
+            make_online_vote('randomip', str(self.phone1.phone_number), self.identity2.id, Vote.NO)
 
     def test_can_only_vote_once_online_with_identity(self):
-        make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote(str(self.phone2.phone_number), self.identity1.id, Vote.NO)
+            make_online_vote('randomip', str(self.phone2.phone_number), self.identity1.id, Vote.NO)
 
     def test_cannot_vote_physically_twice(self):
         request_factory = RequestFactory()
@@ -45,7 +45,7 @@ class VoteActionsTestCase(TestCase):
         request = request_factory.get('/')
         request.session = {}
 
-        make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
             mark_as_voted(request, self.identity1.id, self.bureau)
@@ -58,4 +58,4 @@ class VoteActionsTestCase(TestCase):
         mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+            make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
