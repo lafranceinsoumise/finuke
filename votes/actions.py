@@ -33,7 +33,6 @@ def make_online_vote(phone_number, voter_list_id, vote):
     try:
         with transaction.atomic():
             if voter_list_id is not None:
-                print(voter_list_id)
                 check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
             check_phone_number_status(phone_number)
             vote = Vote.objects.create(vote=vote, with_list=voter_list_id is not None)

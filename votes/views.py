@@ -131,7 +131,7 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
     success_url = reverse_lazy('vote')
 
     def form_invalid(self, form):
-        print(form)
+        return super().form_invalid(form)
 
     def form_valid(self, form):
         self.request.session['list_voter'] = form.cleaned_data['person'].id
