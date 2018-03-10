@@ -5,11 +5,6 @@ from django.db import models
 from django.db.models import fields
 from phonenumber_field.modelfields import PhoneNumberField
 
-from token_bucket import TokenBucket
-
-
-SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
-SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 
 def generate_code():
     return str(secrets.randbelow(100000000)).zfill(8)
@@ -23,11 +18,6 @@ class PhoneNumber(models.Model):
 
     def __str__(self):
         return str(self.phone_number)
-
-    def can_send_sms(self):
-        # order is important, as 'and' is short circuit
-        # empty the short term bucket first
-        return SMSShortTokenBucket.has_tokens(self) and SMSLongTokenBucket.has_tokens(self)
 
 
 class SMS(models.Model):

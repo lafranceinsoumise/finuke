@@ -65,6 +65,12 @@ class AskForPhoneView(FormView):
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['ip'] = self.request.META['REMOTE_ADDR']
+
+        return kwargs
+
     def form_valid(self, form):
         self.request.session['phone_number'] = str(form.cleaned_data['phone_number'])
         if self.request.session.get('phone_valid'):
@@ -82,7 +88,7 @@ class ResendSms(RedirectView):
     def get(self, request, *args, **kwargs):
         try:
             # TODO check that phone_number does exist!
-            send_new_code(PhoneNumber.objects.get(phone_number=self.request.session['phone_number']))
+            send_new_code(PhoneNumber.objects.get(phone_number=self.request.session['phone_number']), request.META['REMOTE_ADDR'])
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
         except SMSCodeException:
             messages.add_message(request, messages.ERROR, 'Vous avez demandé trop de SMS. Merci de patienter un peu.')

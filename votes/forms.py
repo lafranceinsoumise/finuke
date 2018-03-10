@@ -23,6 +23,10 @@ class FindPersonInListForm(Form):
 class ValidatePhoneForm(BaseForm):
     phone_number = PhoneNumberField(label='Numéro de téléphone portable')
 
+    def __init__(self, ip, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ip = ip
+
     def clean_phone_number(self):
         if self.cleaned_data['phone_number'].country_code != 33:
             raise ValidationError('Le numéro doit être un numéro de téléphone français.')
@@ -33,7 +37,7 @@ class ValidatePhoneForm(BaseForm):
             raise ValidationError('Ce numéro a déjà été utilisé pour voter.')
 
         try:
-            send_new_code(phone_number)
+            send_new_code(phone_number, self.ip)
         except SMSCodeException:
             raise ValidationError('Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
 

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from phones.models import SMS
+from token_bucket import TokenBucket
 
 client = ovh.Client(
     endpoint='ovh-eu',
@@ -13,6 +14,10 @@ client = ovh.Client(
     application_secret=settings.OVH_APPLICATION_SECRET,
     consumer_key=settings.OVH_CONSUMER_KEY,
 )
+
+SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
+SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
+SMSIPTokenBucket = TokenBucket('SMSIp', settings.SMS_IP_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 
 
 class SMSSendException(Exception):
@@ -42,9 +47,11 @@ class SMSCodeException(Exception):
     pass
 
 
-def send_new_code(phone_number):
+def send_new_code(phone_number, ip):
+    if ip and not SMSIPTokenBucket.has_tokens(ip):
+        raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
-    if not phone_number.can_send_sms():
+    if not (SMSShortTokenBucket.has_tokens(phone_number) and SMSLongTokenBucket.has_tokens(phone_number)):
         raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)
