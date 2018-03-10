@@ -1,12 +1,11 @@
-from django.test import TestCase
-from django.urls import reverse
+from django.test import TestCase, RequestFactory
 
 from bureaux.models import Bureau, BureauOperator
 from phones.models import PhoneNumber
+from bureaux.actions import mark_as_voted
 
 from .models import VoterListItem, Vote
-from .actions import make_online_vote, make_physical_vote, AlreadyVotedException
-
+from .actions import make_online_vote, AlreadyVotedException
 
 class VoteActionsTestCase(TestCase):
     fixtures = ['voter_list']
@@ -32,19 +31,31 @@ class VoteActionsTestCase(TestCase):
             make_online_vote(str(self.phone2.phone_number), self.identity1.id, Vote.NO)
 
     def test_cannot_vote_physically_twice(self):
-        make_physical_vote(self.identity1.id, self.bureau)
+        request_factory = RequestFactory()
+        request = request_factory.get('/')
+        request.session = {}
+
+        mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
-            make_physical_vote(self.identity1.id, self.bureau)
+            mark_as_voted(request, self.identity1.id, self.bureau)
 
     def test_cannot_vote_physically_when_already_voted_online(self):
+        request_factory = RequestFactory()
+        request = request_factory.get('/')
+        request.session = {}
+
         make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_physical_vote(self.identity1.id, self.bureau)
+            mark_as_voted(request, self.identity1.id, self.bureau)
 
     def test_cannot_vote_online_when_already_voted_physically(self):
-        make_physical_vote(self.identity1.id, self.bureau)
+        request_factory = RequestFactory()
+        request = request_factory.get('/')
+        request.session = {}
+
+        mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
             make_online_vote(str(self.phone1.phone_number), self.identity1.id, Vote.YES)

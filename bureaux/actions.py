@@ -1,5 +1,6 @@
 from django.db import transaction, DatabaseError
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from votes.actions import check_voter_list_item, AlreadyVotedException
 from votes.models import VoterListItem
@@ -18,16 +19,16 @@ def request_to_json(request):
 def authenticate_operator(uuid):
     try:
         return models.LoginLink.objects.select_related('operator').get(uuid=uuid, valid=True)
-    except models.LoginLink.DoesNotExist:
+    except (models.LoginLink.DoesNotExist, ValidationError):
         return None
 
 
 def login_operator(request, login_link):
     models.Operation.objects.create(
         type=models.Operation.OPERATOR_LOGIN,
-        details={**request_to_json(request), 'login_link': login_link, 'operator': login_link.operator.email},
+        details={**request_to_json(request), 'login_link': str(login_link.uuid), 'operator': login_link.operator.email},
     )
-    request.session['login_uuid'] = login_link.uuid
+    request.session['login_uuid'] = str(login_link.uuid)
     return True
 
 

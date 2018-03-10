@@ -5,8 +5,8 @@ from bureaux.views import LoginView, ListBureauxView, DetailBureauView, CloseBur
     OpenBureauView, AssistantLoginView, FindVoterInListView
 
 urlpatterns = [
-    path('login/<uuid>', LoginView.as_view(), name='login'),
     path('login/error', TemplateView.as_view(template_name='bureaux/login_error.html'), name='login_error'),
+    path('login/<uuid>', LoginView.as_view(), name='login'),
     path('', ListBureauxView.as_view(), name='list_bureaux'),
     path('ouvrir', OpenBureauView.as_view(), name='open_bureau'),
     path('assister', AssistantLoginView.as_view(), name='assistant_login'),
