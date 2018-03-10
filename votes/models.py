@@ -8,6 +8,10 @@ from django.db.models import fields, ForeignKey
 from bureaux.models import Bureau
 from votes.data.geodata import communes_names
 
+def generate_vote_id():
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for i in range(32))
+
 
 class Vote(models.Model):
     YES = 'Y'
@@ -20,14 +24,9 @@ class Vote(models.Model):
         (BLANK, 'Blanc'),
     )
 
-    id = fields.CharField(max_length=32, primary_key=True, editable=False)
+    id = fields.CharField(max_length=32, primary_key=True, editable=False, default=generate_vote_id)
     vote = fields.CharField(max_length=1, choices=VOTE_CHOICES, editable=False)
     with_list = fields.BooleanField(editable=False)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        alphabet = string.ascii_letters + string.digits
-        self.id = ''.join(secrets.choice(alphabet) for i in range(32))
 
 
 class VoterListItem(models.Model):
