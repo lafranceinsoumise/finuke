@@ -131,6 +131,7 @@ class ListSearch extends React.Component {
           <Async
             name="person"
             autoload={false}
+            cache={false}
             value={this.state.person}
             disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details == 'C' && !this.state.commune)}
             onChange={this.personChange}
