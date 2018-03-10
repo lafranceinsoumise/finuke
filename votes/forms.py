@@ -1,3 +1,5 @@
+import re
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
@@ -7,6 +9,8 @@ from phonenumber_field.formfields import PhoneNumberField
 from phones.models import PhoneNumber
 from phones.sms import send_new_code, is_valid_code, SMSCodeException
 from votes.models import Vote, VoterListItem
+
+MOBILE_PHONE_RE = re.compile(r'^0[67]')
 
 
 class BaseForm(Form):
@@ -28,8 +32,15 @@ class ValidatePhoneForm(BaseForm):
         self.ip = ip
 
     def clean_phone_number(self):
-        if self.cleaned_data['phone_number'].country_code != 33:
+        phone_number = self.cleaned_data['phone_number']
+        if phone_number.country_code != 33:
             raise ValidationError('Le numéro doit être un numéro de téléphone français.')
+
+        if not phone_number.is_valid():
+            raise ValidationError('Le numéro doit être un numéro de téléphone valide.')
+
+        if not MOBILE_PHONE_RE.match(phone_number.as_national):
+            raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
 
         (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
 
