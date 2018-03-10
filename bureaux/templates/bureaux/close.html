@@ -5,5 +5,8 @@
     <p>
         Voulez-vous vraiment fermer le bureau &laquo;&nbsp;{{ bureau.place }}&nbsp;&raquo; ?
     </p>
-    {% crispy form %}
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning">Fermer le bureau</button>
+    </form>
 {% endblock %}

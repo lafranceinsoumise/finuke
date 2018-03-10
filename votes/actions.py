@@ -41,11 +41,3 @@ def make_online_vote(phone_number, voter_list_id, vote):
 
     except DatabaseError:
         raise AlreadyVotedException()
-
-
-def make_physical_vote(voter_list_id, bureau):
-    try:
-        with transaction.atomic():
-            check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL, bureau)
-    except DatabaseError:
-        AlreadyVotedException()

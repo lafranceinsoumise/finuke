@@ -3,33 +3,16 @@ from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm, Form, fields
 
-from bureaux.models import Bureau
+from bureaux.models import Bureau, Operation
 
 
-class OpenBureauForm(ModelForm):
+class OpenBureauForm(Form):
+    place = fields.CharField(label='Lieu', max_length=255)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Valider'))
-
-    class Meta:
-        model = Bureau
-        fields = ('place',)
-
-
-class CloseBureauForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.add_input(Submit('submit', 'Fermer le bureau'))
-
-    def clean(self):
-        if self.instance.end_time is not None:
-            raise ValidationError("Ce bureau est déjà fermé.")
-
-    class Meta:
-        model = Bureau
-        fields = []
 
 
 class BureauResultsForm(ModelForm):
@@ -69,7 +52,7 @@ class AssistantCodeForm(Form):
 
     def clean_code(self):
         try:
-            Bureau.objects.get(assistant_code=self.cleaned_data['code'])
+            self.bureau = Bureau.objects.get(assistant_code=self.cleaned_data['code'])
         except Bureau.DoesNotExist:
             raise ValidationError("Ce code n'existe pas ou est invalide.")
 

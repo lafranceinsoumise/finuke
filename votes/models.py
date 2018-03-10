@@ -79,3 +79,6 @@ class VoterListItem(models.Model):
     zipcode = fields.CharField('Code postal', max_length=255, blank=True)
     local_city_name = fields.CharField('Ville ou localité', max_length=255, blank=True)
     country = fields.CharField('Pays', max_length=255, blank=True)
+
+    def get_full_name(self):
+        return '{}, {}'.format(self.last_name, self.first_names)

@@ -30,7 +30,17 @@ def new_assistant_code():
     return ''.join(choice(alphabet) for i in range(10))
 
 
+class BureauQueryset(models.QuerySet):
+    def open_only(self):
+        return self.filter(end_time__isnull=True)
+
+    def closed_only(self):
+        return self.filter(end_time__isnull=False)
+
+
 class Bureau(models.Model):
+    objects = BureauQueryset.as_manager()
+
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux')
     place = fields.CharField("Lieu", max_length=255)
     start_time = fields.DateTimeField("Heure de d'ouverture du bureau", auto_now_add=True, editable=False)
@@ -49,6 +59,10 @@ class Bureau(models.Model):
 
     def has_results(self):
         return self.result1_yes is not None
+
+    class Meta:
+        verbose_name = 'Bureau de vote'
+        verbose_name_plural = 'Bureaux de vote'
 
 
 class Operation(models.Model):

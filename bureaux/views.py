@@ -1,14 +1,15 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone
-from django.views.generic import RedirectView, ListView, DetailView, FormView, UpdateView
+from django.contrib import messages
+from django.views.generic import RedirectView, ListView, DetailView, FormView, UpdateView, TemplateView
 from django.views.generic.detail import SingleObjectMixin
 
-from bureaux.forms import OpenBureauForm, CloseBureauForm, BureauResultsForm, AssistantCodeForm
-from bureaux.models import LoginLink, Bureau, Operation
-from votes.actions import make_physical_vote, AlreadyVotedException
+from bureaux.forms import OpenBureauForm, BureauResultsForm, AssistantCodeForm
+from bureaux.models import LoginLink, Bureau
+from . import actions
+
+from votes.actions import AlreadyVotedException
 from votes.forms import FindPersonInListForm
 
 
@@ -36,14 +37,13 @@ class OperatorViewMixin(UserPassesTestMixin):
 
 class LoginView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            LoginLink.objects.get(uuid=kwargs['uuid'], valid=True)
-        except LoginLink.DoesNotExist:
+        login_link = actions.authenticate_operator(kwargs['uuid'])
+
+        if login_link is not None:
+            actions.login_operator(self.request, login_link)
+            return reverse('list_bureaux')
+        else:
             return reverse('login_error')
-
-        self.request.session['login_uuid'] = kwargs['uuid']
-
-        return reverse('list_bureaux')
 
 
 class ListBureauxView(OperatorViewMixin, ListView):
@@ -63,14 +63,8 @@ class OpenBureauView(OperatorViewMixin, FormView):
         return reverse('detail_bureau', args=[self.bureau.id])
 
     def form_valid(self, form):
-        with transaction.atomic():
-            self.bureau = form.save(commit=False)
-            self.bureau.operator = self.request.operator
-            self.bureau.save()
-            Operation.objects.create(
-                type=Operation.START_BUREAU,
-                details={**request_to_json(self.request), 'bureau': self.bureau.id}
-            )
+        self.bureau = actions.open_bureau(self.request, form.cleaned_data['place'])
+        messages.add_message(self.request, messages.SUCCESS, "Le bureau a bien été créé.")
         return super().form_valid(form)
 
 
@@ -80,11 +74,10 @@ class DetailBureauView(OperatorViewMixin, DetailView):
     context_object_name = 'bureau'
 
 
-class CloseBureauView(OperatorViewMixin, SingleObjectMixin, FormView):
+class CloseBureauView(OperatorViewMixin, SingleObjectMixin, TemplateView):
     template_name = 'bureaux/close.html'
-    model = Bureau
+    queryset = Bureau.objects.open_only()
     context_object_name = 'bureau'
-    form_class = CloseBureauForm
     success_url = reverse_lazy('list_bureaux')
 
     def get(self, request, *args, **kwargs):
@@ -93,19 +86,9 @@ class CloseBureauView(OperatorViewMixin, SingleObjectMixin, FormView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return super().post(request, *args, **kwargs)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        if hasattr(self, 'object'):
-            kwargs.update({'instance': self.object})
-        return kwargs
-
-    def form_valid(self, form):
-        form.instance.end_time = timezone.now()
-        form.save()
-
-        return super().form_valid(form)
+        actions.close_bureau(request, self.object)
+        messages.add_message(request, messages.SUCCESS, 'Le bureau de vote a été correctement fermé.')
+        return HttpResponseRedirect(self.success_url)
 
 
 class BureauResultsView(OperatorViewMixin, UpdateView):
@@ -129,15 +112,16 @@ class AssistantLoginView(FormView):
         return reverse('vote_bureau', args=[self.bureau.id])
 
     def form_valid(self, form):
-        self.request.session['assistant_code'] = form.cleaned_data['code']
-        self.bureau = Bureau.objects.get(assistant_code=form.cleaned_data['code'])
+        self.bureau = form.bureau
+        actions.login_assistant(self.request, self.bureau)
         return super().form_valid(form)
 
 
 class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
-    model = Bureau
+    queryset = Bureau.objects.open_only()
     login_url = reverse_lazy('assistant_login')
     template_name = 'bureaux/vote.html'
+    form_class = FindPersonInListForm
 
     def get_success_url(self):
         return reverse('vote_bureau', args=[self.object.id])
@@ -145,8 +129,6 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
     def test_func(self):
         self.object = self.get_object()
 
-        if self.object.end_time is not None:
-            return False
         is_operator = super().test_func()
         if is_operator and self.object in self.request.operator.bureaux.all():
             return True
@@ -154,13 +136,16 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
             return True
         return False
 
-    form_class = FindPersonInListForm
-
-    # TODO: ajouter une page de confirmation ou un flash message ?
     def form_valid(self, form):
+        person = form.cleaned_data['person']
         try:
-            make_physical_vote(form.cleaned_data['person'].id, self.object)
+            actions.mark_as_voted(self.request, person.id, self.object)
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
+
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            f'{person.get_full_name()} a bien été marqué⋅e comme votant⋅e. Vous pouvez lui donner enveloppe et bulletin'
+            f' vert.')
 
         return super().form_valid(form)
