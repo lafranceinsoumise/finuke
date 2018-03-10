@@ -1,7 +1,7 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit, Field
+from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
-from django.forms import Form, CharField, ChoiceField, ModelChoiceField
+from django.forms import Form, CharField, ChoiceField, ModelChoiceField, RadioSelect
 from phonenumber_field.formfields import PhoneNumberField
 
 from phones.models import PhoneNumber
@@ -57,4 +57,4 @@ class ValidateCodeForm(BaseForm):
 
 
 class VoteForm(BaseForm):
-    choice = ChoiceField(label='Vote', choices=Vote.VOTE_CHOICES)
+    choice = ChoiceField(label='Vote', choices=Vote.VOTE_CHOICES, widget=RadioSelect, required=True)
