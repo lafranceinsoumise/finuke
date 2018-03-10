@@ -26,8 +26,8 @@ class BureauOperator(models.Model):
 
 
 def new_assistant_code():
-    alphabet = string.ascii_letters + string.digits
-    return ''.join(choice(alphabet) for i in range(10))
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(choice(alphabet) for i in range(8))
 
 
 class BureauQueryset(models.QuerySet):

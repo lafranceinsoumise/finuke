@@ -51,9 +51,10 @@ class AssistantCodeForm(Form):
         self.helper.add_input(Submit('submit', 'Me connecter à mon bureau de vote'))
 
     def clean_code(self):
+        code = self.cleaned_data['code'].upper().strip().replace(' ', '')
         try:
             self.bureau = Bureau.objects.get(assistant_code=self.cleaned_data['code'])
         except Bureau.DoesNotExist:
             raise ValidationError("Ce code n'existe pas ou est invalide.")
 
-        return self.cleaned_data['code']
+        return code
