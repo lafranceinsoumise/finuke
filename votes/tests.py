@@ -8,12 +8,6 @@ from .models import VoterListItem, Vote
 from .actions import make_online_vote, make_physical_vote, AlreadyVotedException
 
 
-class DisplayPageTestCase(TestCase):
-    def test_validate_list_display(self):
-        response = self.client.get(reverse('validate_list'))
-        self.assertEqual(response.status_code, 200)
-
-
 class VoteActionsTestCase(TestCase):
     fixtures = ['voter_list']
 

@@ -17,6 +17,9 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin([DISTPATH]),
     new BundleTracker({path: DISTPATH}),
+    new webpack.DefinePlugin({
+        'BASE_URL': JSON.stringify(process.env.BASE_URL || '')
+    })
   ],
   resolve: {
     alias: {

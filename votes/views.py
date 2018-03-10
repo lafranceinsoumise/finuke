@@ -60,34 +60,10 @@ def person_json_search(request, departement, search):
     return JsonResponse(response, safe=False)
 
 
-class FindPersonInListView(FormView):
-    template_name = 'votes/find_person.html'
-    form_class = FindPersonInListForm
-    success_url = reverse_lazy('validate_phone_number')
-
-    def form_invalid(self, form):
-        print(form)
-
-    def form_valid(self, form):
-        self.request.session['list_voter'] = form.cleaned_data['person'].id
-        return super().form_valid(form)
-
-
 class AskForPhoneView(FormView):
     template_name = 'votes/ask_for_phone.html'
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
-
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        list_voter_id = self.request.session.get('list_voter', None)
-        if list_voter_id:
-            try:
-                data['person'] = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE).get(pk=list_voter_id)
-            except VoterListItem.DoesNotExist:
-                del self.request.session['list_voter']
-
-        return data
 
     def form_valid(self, form):
         self.request.session['phone_number'] = str(form.cleaned_data['phone_number'])
@@ -95,6 +71,8 @@ class AskForPhoneView(FormView):
             del self.request.session['phone_valid']
         if self.request.session.get('id'):
             del self.request.session['id']
+        if self.request.session.get('list_voter'):
+            del self.request.session['list_voter']
         return super().form_valid(form)
 
 
@@ -128,7 +106,7 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
     login_url = '/'
     template_name = 'votes/validate_code.html'
     form_class = ValidateCodeForm
-    success_url = reverse_lazy('vote')
+    success_url = reverse_lazy('validate_list')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -138,6 +116,19 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
 
     def form_valid(self, form):
         self.request.session['phone_valid'] = True
+        return super().form_valid(form)
+
+
+class FindPersonInListView(HasNotVotedMixin, FormView):
+    template_name = 'votes/find_person.html'
+    form_class = FindPersonInListForm
+    success_url = reverse_lazy('vote')
+
+    def form_invalid(self, form):
+        print(form)
+
+    def form_valid(self, form):
+        self.request.session['list_voter'] = form.cleaned_data['person'].id
         return super().form_valid(form)
 
 
@@ -151,6 +142,16 @@ class MakeVoteView(HasNotVotedMixin, FormView):
 
     def test_func(self):
         return self.request.session.get('phone_valid') is not None and super().test_func()
+
+    def get_context_data(self, **kwargs):
+        list_voter_id = self.request.session.get('list_voter', None)
+        if list_voter_id:
+            try:
+                kwargs['person'] = VoterListItem.objects.get(pk=list_voter_id)
+            except VoterListItem.DoesNotExist:
+                del self.request.session['list_voter']
+
+        return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         try:

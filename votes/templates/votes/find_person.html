@@ -5,4 +5,14 @@
 {% block content_central %}
     <div id="react-root"></div>
     {% render_bundle 'publicListSearch' %}
+    <div class="alert alert-info margintopmore">
+        <p>
+            La votation est ouverte à toutes les personnes de plus de 16 ans résidant en France, quelque soit leur
+            nationalité. Vous pouvez-donc voter même si vous n'êtes pas inscrit⋅e sur les listes électorales.
+        </p>
+        <p class="text-right">
+            <a class="btn btn-default" href="{% url 'vote' %}">Je ne suis pas inscrit⋅e sur les listes électorales.</a>
+        </p>
+    </div>
+
 {% endblock %}

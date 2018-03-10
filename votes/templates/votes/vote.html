@@ -2,6 +2,27 @@
 {% load crispy_forms_tags %}
 
 {% block content_central %}
+    {% if person %}
+        <div class="alert alert-info">
+            <p>
+                {{  person.first_names }} {{ person.lastname }}, c'est à vous de voter&nbsp;!
+                Si vous n'êtes pas {{ person.first_names }} {{ person.last_name }}, merci de
+                <a href="{%  url 'clean_session' %}">cliquez ici</a>.
+            </p>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <p>
+                Vous votez par la procédure &laquo;&nbsp;Non-inscrit⋅e&nbsp;&raquo;, soit parce que
+                vous n'êtes effectivement pas inscrit⋅e sur les listes électorales, soit parce que nous ne disposons
+                pas des listes électorales de  votre département. Les résultats de cette procédure seront décomptés
+                séparément.
+            </p>
+            <p>
+                <a href="{% url 'validate_list' %}">Retourner à la procédure normale</a>
+            </p>
+        </div>
+    {% endif %}
     <h3>Êtes vous favorable à la sortie du nucléaire&nbsp;?</h3>
     <p class="lead">
         Il s’agit du nucléaire civil et militaire : l’arrêt de tous les réacteurs nucléaires dans les meilleurs
