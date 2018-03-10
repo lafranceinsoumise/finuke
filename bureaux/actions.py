@@ -9,6 +9,7 @@ from votes.models import VoterListItem
 from . import models
 
 OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
+LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 20, 600)
 
 
 class BureauException(Exception):
@@ -40,6 +41,8 @@ def login_operator(request, login_link):
 
 
 def login_assistant(request, bureau):
+    if not LoginAssistantTokenBucket.has_tokens(bureau):
+        raise BureauException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
     request.session['assistant_code'] = bureau.assistant_code
     models.Operation.objects.create(
         type=models.Operation.ASSISTANT_LOGIN,

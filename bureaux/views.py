@@ -117,8 +117,14 @@ class AssistantLoginView(FormView):
         return reverse('vote_bureau', args=[self.bureau.id])
 
     def form_valid(self, form):
-        self.bureau = form.bureau
-        actions.login_assistant(self.request, self.bureau)
+        try:
+            self.bureau = form.bureau
+            actions.login_assistant(self.request, self.bureau)
+        except BureauException:
+            messages.add_message(self.request, messages.ERROR,
+                                 "Trop d'assesseur⋅e⋅s connectés sur ce bureau. Si vous avez plusieurs urnes, "
+                                 "demandez au président ou à la présidente d'ouvrir un nouveau bureau.")
+            return super().form_invalid(form)
         return super().form_valid(form)
 
 
