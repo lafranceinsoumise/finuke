@@ -8,7 +8,10 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from phones.models import PhoneNumber
 from phones.sms import send_new_code, is_valid_code, SMSCodeException
+from token_bucket import TokenBucket
 from votes.models import Vote, VoterListItem
+
+CodeValidationTokenBucket = TokenBucket('CodeValidation', 5, 60)
 
 MOBILE_PHONE_RE = re.compile(r'^0[67]')
 
@@ -65,6 +68,8 @@ class ValidateCodeForm(BaseForm):
         self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
 
     def clean_code(self):
+        if not CodeValidationTokenBucket.has_tokens(self.phone_number):
+            raise ValidationError('Trop de tentative échouées. Veuillez patienter une minute par mesure de sécurité.')
         code = self.cleaned_data['code'].replace(' ', '')
 
         if not is_valid_code(self.phone_number, code):
