@@ -1,6 +1,8 @@
 from django.contrib.messages.storage.base import BaseStorage, Message
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.db.models import Q
 from django.shortcuts import reverse
+from django.urls import resolve
 
 from . import SESSION_KEY
 from .models import PersistantMessage
@@ -33,7 +35,8 @@ class CustomStorage(BaseStorage):
             return []
         if not hasattr(self, '_other_messages_data'):
             seen_messages = self.request.session.get(SESSION_KEY, [])
-            global_messages = PersistantMessage.objects.filter(enabled=True)
+            url_name = resolve(self.request.path_info).url_name
+            global_messages = PersistantMessage.objects.filter(Q(enabled=True) & (Q(url_name='') | Q(url_name=url_name)))
             self._other_messages_data = [PersistantMessageWrapper(m) for m in global_messages if m.pk not in seen_messages]
         return self._other_messages_data
 

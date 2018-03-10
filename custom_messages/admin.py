@@ -6,6 +6,6 @@ from .models import PersistantMessage
 
 @admin.register(PersistantMessage, site=admin_site)
 class PersistantMessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'level', 'enabled')
-    fields = ('pk', 'level', 'text', 'enabled')
+    list_display = ('pk', 'level', 'enabled', 'url_name')
+    fields = ('pk', 'level', 'text', 'enabled', 'url_name')
     readonly_fields = ('pk',)

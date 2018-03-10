@@ -6,3 +6,4 @@ class PersistantMessage(models.Model):
     level = models.PositiveSmallIntegerField(default=INFO)
     text = models.TextField(blank=False)
     enabled = models.BooleanField(default=True)
+    url_name = models.CharField(max_length=255, blank=True)
