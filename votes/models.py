@@ -1,10 +1,10 @@
 import secrets
 import string
 
-from django.contrib.postgres.search import SearchVectorField
 from django.db import models
 from django.db.models import fields, ForeignKey
 
+from finuke.model_mixins import TimestampedModel
 from bureaux.models import Bureau
 from votes.data.geodata import communes_names
 
@@ -13,7 +13,7 @@ def generate_vote_id():
     return ''.join(secrets.choice(alphabet) for i in range(32))
 
 
-class Vote(models.Model):
+class Vote(TimestampedModel):
     YES = 'Y'
     NO = 'N'
     BLANK = 'B'

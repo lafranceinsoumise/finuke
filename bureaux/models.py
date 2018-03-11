@@ -2,13 +2,14 @@ import string
 import uuid as uuid
 from secrets import choice
 
+from finuke.model_mixins import TimestampedModel
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import fields
 from django.urls import reverse
 
 
-class LoginLink(models.Model):
+class LoginLink(TimestampedModel):
     uuid = fields.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='login_links')
     valid = models.BooleanField("Valide", default=True)
@@ -17,9 +18,8 @@ class LoginLink(models.Model):
         return reverse('login', args=[str(self.uuid)])
 
 
-class BureauOperator(models.Model):
+class BureauOperator(TimestampedModel):
     email = fields.EmailField("Adresse email", unique=True)
-    created = fields.DateTimeField("Date d'import", auto_now_add=True)
 
     def __str__(self):
         return self.email
@@ -65,7 +65,7 @@ class Bureau(models.Model):
         verbose_name_plural = 'Bureaux de vote'
 
 
-class Operation(models.Model):
+class Operation(TimestampedModel):
     OPERATOR_LOGIN = "OPERATOR_LOGIN"
     START_BUREAU = "START_BUREAU"
     END_BUREAU = "END_BUREAU"
@@ -82,6 +82,5 @@ class Operation(models.Model):
         (PERSON_VOTE, "Validation du vote d'un⋅e personne inscrite sur les listes")
     )
 
-    created = fields.DateTimeField("Date et heure", auto_now_add=True, editable=False)
     details = JSONField("Détails", editable=False)
     type = fields.CharField("Type d'opération", choices=OPERATION_CHOICES, max_length=255, editable=False)
