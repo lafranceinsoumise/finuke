@@ -53,7 +53,7 @@ class ValidatePhoneForm(BaseForm):
     def send_code(self):
         try:
             return send_new_code(self.phone_number, self.ip)
-        except SMSCodeException:
+        except RateLimitedException:
             self.add_error('phone_number', 'Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
             return None
 
