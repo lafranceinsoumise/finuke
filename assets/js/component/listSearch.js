@@ -120,6 +120,8 @@ class ListSearch extends React.Component {
           : <div className="form-group">
             <Select
               value={this.state.commune}
+              onBlurResetsInput={false}
+              onCloseResetsInput={false}
               onChange={this.communeChange}
               options={this.communesChoice}
               disabled={!this.state.communesLoaded}
@@ -130,6 +132,9 @@ class ListSearch extends React.Component {
         <div className="form-group">
           <Async
             name="person"
+            onBlurResetsInput={false}
+            onCloseResetsInput={false}
+            required={true}
             autoload={false}
             cache={false}
             filterOptions={(options, filter, currentValues) => {

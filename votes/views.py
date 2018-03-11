@@ -159,6 +159,10 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
     success_url = reverse_lazy('vote')
 
     def form_invalid(self, form):
+        messages.add_message(
+            self.request, messages.ERROR,
+            "Vous n'avez pas sélectionné de nom dans la liste."
+        )
         return super().form_invalid(form)
 
     def form_valid(self, form):

@@ -149,6 +149,13 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
             return True
         return False
 
+    def form_invalid(self, form):
+        messages.add_message(
+            self.request, messages.ERROR,
+            "Vous n'avez pas sélectionné de personne dans la liste."
+        )
+        return super().form_invalid(form)
+
     def form_valid(self, form):
         person = form.cleaned_data['person']
         try:
