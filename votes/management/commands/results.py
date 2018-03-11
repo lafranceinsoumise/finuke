@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         print("## Votes inscrits")
 
-        for choice in non_inscrits:
+        for choice in inscrits:
             print(f"{choice['count']} votes {dict(Vote.VOTE_CHOICES)[choice['vote']]}")
 
         print("\n# Votes en bureau")
