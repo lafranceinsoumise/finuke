@@ -5,6 +5,7 @@ from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
+from django.views.decorators.cache import cache_control
 from django.contrib import messages
 
 from bureaux import actions
@@ -39,6 +40,7 @@ class CleanSessionView(RedirectView):
         return '/'
 
 
+@cache_control(max_age=3600, public=True)
 def commune_json_search(request, departement):
     return JsonResponse([commune for commune in communes if commune['dep'] == departement], safe=False)
 
