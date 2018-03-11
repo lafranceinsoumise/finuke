@@ -42,7 +42,7 @@ class ListSearch extends React.Component {
       personPromptText: this.opMode ? 'Prénom et nom de la personne': 'Tapez votre prénom et votre nom',
       noListHint: this.opMode ?
         'Vous devez faire voter la personne avec un bulletin orange.'
-        : (<span>Vous pouvez <a href="vote">voter directement ici</a>.</span>)
+        : (<span>Vous pouvez <a href={BASE_URL + '/vote'}>voter directement ici</a>.</span>)
     }
   }
 
