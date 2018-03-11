@@ -7,6 +7,7 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 from django.contrib import messages
 
+from bureaux import actions
 from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber
 from phones.sms import send_new_code
@@ -43,7 +44,7 @@ def commune_json_search(request, departement):
 
 
 def person_json_search(request, departement, search):
-    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code')):
+    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code') or request.session.get(actions.OPERATOR_LOGIN_SESSION_KEY)):
         raise PermissionDenied("not allowed")
 
     if not ListSearchTokenBucket.has_tokens(request.session.session_key):
