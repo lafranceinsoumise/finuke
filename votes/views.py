@@ -77,7 +77,7 @@ def person_json_search(request, departement, search):
         'id': item.id,
         'first_names': item.first_names,
         'last_name': item.last_name,
-        'commune_name': communes_names[item.commune]
+        'commune_name': communes_names.get(item.commune, 'Commune inconnue')
     }, qs))
 
     return JsonResponse(response, safe=False)
