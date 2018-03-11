@@ -88,7 +88,7 @@ class ListSearch extends React.Component {
           let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
           .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
 
-          return resolve(null, {options});
+          return resolve({options});
         } catch (e) {
           return reject(e);
         }
