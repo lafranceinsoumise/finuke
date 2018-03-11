@@ -132,6 +132,10 @@ class ListSearch extends React.Component {
             name="person"
             autoload={false}
             cache={false}
+            filterOptions={(options, filter, currentValues) => {
+              // Do no filtering, just return all options
+              return options;
+            }}
             value={this.state.person}
             disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details == 'C' && !this.state.commune)}
             onChange={this.personChange}
