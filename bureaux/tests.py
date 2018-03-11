@@ -4,6 +4,8 @@ from django.shortcuts import reverse
 
 from finuke.test_utils import RedisLiteMixin
 
+from votes.models import VoterListItem
+from .actions import OPERATOR_LOGIN_SESSION_KEY, ASSISTANT_LOGIN_SESSION_KEY
 from .models import BureauOperator, LoginLink, Bureau, Operation
 
 
@@ -12,6 +14,8 @@ class TestCase(RedisLiteMixin, DjangoTestCase):
 
 
 class OperationLoggingTestCase(TestCase):
+    fixtures = ['voter_list.json']
+
     def setUp(self):
         super().setUp()
 
@@ -23,7 +27,7 @@ class OperationLoggingTestCase(TestCase):
             operator=self.operator
         )
 
-        self.bureau = Bureau(
+        self.bureau = Bureau.objects.create(
             place="DTC",
             operator=self.operator
         )
@@ -42,3 +46,73 @@ class OperationLoggingTestCase(TestCase):
         self.assertEqual(operation.type, Operation.OPERATOR_LOGIN)
         self.assertEqual(details['operator'], self.operator.email)
         self.assertEqual(details['login_link'], str(self.login_link.uuid))
+
+    def test_can_login_as_assistant(self):
+        res = self.client.get(reverse('assistant_login'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('assistant_login'), {'code': self.bureau.assistant_code})
+        self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
+
+    def test_cannot_login_with_random_assistant_code(self):
+        res = self.client.post(reverse('assistant_login'), {'code': '00000000'})
+        self.assertEqual(res.status_code, 200)
+
+    def test_cannot_open_bureau_when_not_logged_in(self):
+        res = self.client.get(reverse('open_bureau'))
+        self.assertEqual(res.status_code, 302)
+        res = self.client.post(reverse('open_bureau'), data={'place': 'Somewhere'})
+        self.assertEqual(res.status_code, 302)
+
+    def test_can_open_bureau(self):
+        session = self.client.session
+        session[OPERATOR_LOGIN_SESSION_KEY] = str(self.login_link.uuid)
+        session.save()
+        res = self.client.get(reverse('open_bureau'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('open_bureau'), data={'place': 'Somewhere'})
+
+        self.assertEqual(Bureau.objects.count(), 2)
+        bureau = Bureau.objects.order_by('-start_time').first()
+
+        self.assertRedirects(res, reverse('detail_bureau', args=[bureau.pk]))
+
+    def test_cannot_close_bureau_when_not_logged_in(self):
+        res = self.client.get(reverse('close_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 302)
+
+        res = self.client.post(reverse('close_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res['location'][:2], '/?')
+
+    def test_can_close_bureau(self):
+        session = self.client.session
+        session[OPERATOR_LOGIN_SESSION_KEY] = str(self.login_link.uuid)
+        session.save()
+        res = self.client.get(reverse('close_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('close_bureau', args=[self.bureau.pk]))
+        self.assertRedirects(res, reverse('list_bureaux'))
+
+    def test_cannot_see_voting_view_when_unlogged(self):
+        res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 302)
+
+    def test_can_mark_someone_as_voting(self):
+        voter = VoterListItem.objects.order_by('?').first()
+        session = self.client.session
+        session[ASSISTANT_LOGIN_SESSION_KEY] = self.bureau.assistant_code
+        session.save()
+
+        res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'person': voter.pk})
+        self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
+
+        voter.refresh_from_db()
+
+        self.assertEqual(voter.vote_status, VoterListItem.VOTE_STATUS_PHYSICAL)
+        self.assertEqual(voter.vote_bureau, self.bureau)

@@ -1,4 +1,5 @@
 from django.test import TestCase, RequestFactory
+from finuke.test_utils import RedisLiteMixin
 
 from bureaux.models import Bureau, BureauOperator
 from phones.models import PhoneNumber
@@ -7,10 +8,11 @@ from bureaux.actions import mark_as_voted
 from .models import VoterListItem, Vote
 from .actions import make_online_vote, AlreadyVotedException
 
-class VoteActionsTestCase(TestCase):
+class VoteActionsTestCase(RedisLiteMixin, TestCase):
     fixtures = ['voter_list']
 
     def setUp(self):
+        super().setUp()
         self.phone1 = PhoneNumber.objects.create(phone_number='+33612345678')
         self.phone2 = PhoneNumber.objects.create(phone_number='+33712345678')
         self.identity1 = VoterListItem.objects.all()[0]

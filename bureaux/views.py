@@ -14,23 +14,17 @@ from votes.actions import AlreadyVotedException
 from votes.forms import FindPersonInListForm
 
 
-def request_to_json(request):
-    return {
-        'ip': request.META['REMOTE_ADDR'],
-        'operator': request.operator.id if getattr(request, 'operator', False) else None,
-        'link_uuid': request.session.get('link_uuid', None),
-    }
-
-
 class OperatorViewMixin(UserPassesTestMixin):
     login_url = '/'
 
     def test_func(self):
-        if self.request.session.get('login_uuid') is None:
+        login_uuid = self.request.session.get(actions.OPERATOR_LOGIN_SESSION_KEY)
+
+        if login_uuid is None:
             return False
 
         try:
-            self.request.operator = LoginLink.objects.get(uuid=self.request.session['login_uuid'], valid=True).operator
+            self.request.operator = LoginLink.objects.select_related('operator').get(uuid=login_uuid, valid=True).operator
             return True
         except LoginLink.DoesNotExist:
             return False
@@ -111,7 +105,7 @@ class AssistantLoginView(FormView):
     template_name = 'bureaux/assistant_login.html'
 
     def get(self, *args, **kwargs):
-        self.request.session['assistant_code'] = None
+        self.request.session[actions.ASSISTANT_LOGIN_SESSION_KEY] = None
         return super().get(*args, **kwargs)
 
     def get_success_url(self):
@@ -151,7 +145,7 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
         is_operator = super().test_func()
         if is_operator and self.object in self.request.operator.bureaux.all():
             return True
-        if self.request.session.get('assistant_code') == self.object.assistant_code:
+        if self.request.session.get(actions.ASSISTANT_LOGIN_SESSION_KEY) == self.object.assistant_code:
             return True
         return False
 

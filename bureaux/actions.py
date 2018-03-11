@@ -11,6 +11,9 @@ from votes.models import VoterListItem
 
 from . import models
 
+OPERATOR_LOGIN_SESSION_KEY = 'login_uuid'
+ASSISTANT_LOGIN_SESSION_KEY = 'assistant_code'
+
 OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
 LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 20, 600)
 LoginAssistantIPTokenBucket = TokenBucket('LoginAssistant', 100, 60)
@@ -27,7 +30,8 @@ def request_to_json(request):
     return {
         'ip': request.META['REMOTE_ADDR'],
         'operator': request.operator.id if getattr(request, 'operator', False) else None,
-        'link_uuid': request.session.get('link_uuid', None),
+        'link_uuid': request.session.get(OPERATOR_LOGIN_SESSION_KEY, None),
+        'assistant_code': request.session.get(ASSISTANT_LOGIN_SESSION_KEY, None),
     }
 
 
@@ -46,7 +50,7 @@ def login_operator(request, login_link):
         type=models.Operation.OPERATOR_LOGIN,
         details={**request_to_json(request), 'login_link': str(login_link.uuid), 'operator': login_link.operator.email},
     )
-    request.session['login_uuid'] = str(login_link.uuid)
+    request.session[OPERATOR_LOGIN_SESSION_KEY] = str(login_link.uuid)
     return True
 
 
@@ -69,7 +73,7 @@ def authenticate_assistant(request, code):
 
 
 def login_assistant(request, bureau):
-    request.session['assistant_code'] = bureau.assistant_code
+    request.session[ASSISTANT_LOGIN_SESSION_KEY] = bureau.assistant_code
 
     models.Operation.objects.create(
         type=models.Operation.ASSISTANT_LOGIN,
