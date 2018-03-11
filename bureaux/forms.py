@@ -3,7 +3,7 @@ from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm, Form, fields
 
-from bureaux.models import Bureau, Operation
+from bureaux.models import Bureau
 
 
 class OpenBureauForm(Form):
@@ -52,9 +52,5 @@ class AssistantCodeForm(Form):
 
     def clean_code(self):
         code = self.cleaned_data['code'].upper().strip().replace(' ', '')
-        try:
-            self.bureau = Bureau.objects.get(assistant_code=self.cleaned_data['code'])
-        except Bureau.DoesNotExist:
-            raise ValidationError("Ce code n'existe pas ou est invalide.")
 
         return code

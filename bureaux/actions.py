@@ -2,6 +2,9 @@ from django.db import transaction, DatabaseError
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
+from prometheus_client import Counter
+
+from finuke.exceptions import RateLimitedException
 from token_bucket import TokenBucket
 from votes.actions import check_voter_list_item, AlreadyVotedException
 from votes.models import VoterListItem
@@ -12,9 +15,12 @@ OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
 LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 20, 600)
 LoginAssistantIPTokenBucket = TokenBucket('LoginAssistant', 100, 60)
 
-
-class BureauException(Exception):
-    pass
+operator_login_counter = Counter('finuke_operator_auths_total', 'The number of operator auth trials', ['result'])
+assistant_login_counter = Counter('finuke_assistant_auths_total', 'The number of assistant auth trials', ['result'])
+marked_as_voted_counter = Counter('finuke_marked_as_voted_total', 'The number of persons marked as votes by an assistant')
+bureaux_opened_counter = Counter('finuke_bureaux_opened_total', 'The number of bureaux openings')
+bureaux_closed_counter = Counter('finuke_bureaux_closed_total', 'The number of bureaux closings')
+bureaux_results_submitted = Counter('finuke_bureaux_results_total', 'The number of bureaux for which results have been submitted')
 
 
 def request_to_json(request):
@@ -27,8 +33,11 @@ def request_to_json(request):
 
 def authenticate_operator(uuid):
     try:
-        return models.LoginLink.objects.select_related('operator').get(uuid=uuid, valid=True)
+        login_link = models.LoginLink.objects.select_related('operator').get(uuid=uuid, valid=True)
+        operator_login_counter.labels('success').inc()
+        return login_link
     except (models.LoginLink.DoesNotExist, ValidationError):
+        operator_login_counter.labels('failure').inc()
         return None
 
 
@@ -41,12 +50,27 @@ def login_operator(request, login_link):
     return True
 
 
-def login_assistant(request, bureau):
+def authenticate_assistant(request, code):
+    try:
+        bureau =  models.Bureau.objects.get(assistant_code=code)
+    except models.Bureau.DoesNotExist:
+        assistant_login_counter.labels('failure').inc()
+        return None
+
     if not LoginAssistantIPTokenBucket.has_tokens(request.META['REMOTE_ADDR']):
-        raise BureauException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
+        assistant_login_counter.labels('ip_limited').inc()
+        raise RateLimitedException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
     if not LoginAssistantTokenBucket.has_tokens(bureau):
-        raise BureauException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
+        assistant_login_counter.labels('bureau_limited').inc()
+        raise RateLimitedException("Trop d'assesseur⋅e⋅s connecté⋅e⋅s")
+
+    assistant_login_counter.labels('success').inc()
+    return bureau
+
+
+def login_assistant(request, bureau):
     request.session['assistant_code'] = bureau.assistant_code
+
     models.Operation.objects.create(
         type=models.Operation.ASSISTANT_LOGIN,
         details={**request_to_json(request), 'bureau': bureau.pk, 'assistant_code': bureau.assistant_code}
@@ -55,7 +79,7 @@ def login_assistant(request, bureau):
 
 def open_bureau(request, place):
     if not OpenBureauTokenBucket.has_tokens(request.operator):
-        raise BureauException("Trop de bureaux ouverts.")
+        raise RateLimitedException("Trop de bureaux ouverts.")
     with transaction.atomic():
         bureau = models.Bureau.objects.create(
             place=place,
@@ -66,6 +90,8 @@ def open_bureau(request, place):
             type=models.Operation.START_BUREAU,
             details={**request_to_json(request), 'bureau': bureau.id}
         )
+
+    bureaux_opened_counter.inc()
 
     return bureau
 
@@ -82,6 +108,8 @@ def close_bureau(request, bureau):
             details={**request_to_json(request), 'bureau': bureau.id}
         )
 
+    bureaux_closed_counter.inc()
+
 
 def mark_as_voted(request, voter_list_id, bureau):
     try:
@@ -91,5 +119,6 @@ def mark_as_voted(request, voter_list_id, bureau):
                 details={**request_to_json(request), 'voter_list_item': voter_list_id, 'bureau': bureau.id}
             )
             check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL, bureau)
+        marked_as_voted_counter.inc()
     except DatabaseError:
         AlreadyVotedException()

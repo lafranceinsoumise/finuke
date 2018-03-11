@@ -215,3 +215,7 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }
 MESSAGE_LEVEL = messages.DEBUG if DEBUG else messages.INFO
+
+
+PROMETHEUS_USER = os.environ.get('PROMETHEUS_USER', 'prometheus')
+PROMETHEUS_PASSWORD = os.environ.get('PROMETHEUS_PASSWORD', 'password')

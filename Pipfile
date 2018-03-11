@@ -26,6 +26,7 @@ hiredis = "*"
 phonenumbers = "*"
 uwsgi = "*"
 systemd = "*"
+prometheus-client = "*"
 
 
 [dev-packages]

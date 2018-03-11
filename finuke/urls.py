@@ -18,6 +18,7 @@ from django.conf.urls import url
 from django.urls import path, include
 
 from finuke.admin import admin_site
+from finuke.metrics import get_metrics
 
 urlpatterns = [
     path('admin/', admin_site.urls),
@@ -28,11 +29,17 @@ urlpatterns = [
 
 if settings.BASE_URL:
     urlpatterns = [
-        path(settings.BASE_URL, include(urlpatterns))
+        path(settings.BASE_URL, include(urlpatterns)),
+        path('metrics', get_metrics)
+    ]
+else:
+    urlpatterns += [
+        path('metrics', get_metrics),
     ]
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns = [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+                      url(r'^__debug__/', include(debug_toolbar.urls)),
+                  ] + urlpatterns

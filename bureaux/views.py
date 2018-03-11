@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.views.generic import RedirectView, ListView, DetailView, FormView, UpdateView, TemplateView
 from django.views.generic.detail import SingleObjectMixin
 
-from bureaux.actions import BureauException
+from finuke.exceptions import RateLimitedException
 from bureaux.forms import OpenBureauForm, BureauResultsForm, AssistantCodeForm
 from bureaux.models import LoginLink, Bureau
 from . import actions
@@ -67,7 +67,7 @@ class OpenBureauView(OperatorViewMixin, FormView):
         try:
             self.bureau = actions.open_bureau(self.request, form.cleaned_data['place'])
             messages.add_message(self.request, messages.SUCCESS, "Le bureau a bien été créé.")
-        except BureauException:
+        except RateLimitedException:
             messages.add_message(self.request, messages.ERROR, "Vous avez ouvert trop de bureaux aujourd'hui, vous êtes bloqué par mesure de sécurité.")
             return super().form_invalid(form)
         return super().form_valid(form)
@@ -102,6 +102,7 @@ class BureauResultsView(OperatorViewMixin, UpdateView):
     template_name = 'bureaux/results.html'
 
     def get_success_url(self):
+        actions.bureaux_results_submitted.inc()
         return reverse('detail_bureau', args=[self.object.id])
 
 
@@ -117,14 +118,21 @@ class AssistantLoginView(FormView):
         return reverse('vote_bureau', args=[self.bureau.id])
 
     def form_valid(self, form):
+        code = form.cleaned_data['code']
+
         try:
-            self.bureau = form.bureau
-            actions.login_assistant(self.request, self.bureau)
-        except BureauException:
+            self.bureau = actions.authenticate_assistant(self.request, code)
+        except RateLimitedException:
             messages.add_message(self.request, messages.ERROR,
                                  "Trop d'assesseur⋅e⋅s connectés sur ce bureau. Si vous avez plusieurs urnes, "
                                  "demandez au président ou à la présidente d'ouvrir un nouveau bureau.")
-            return super().form_invalid(form)
+            return self.form_invalid(form)
+
+        if self.bureau is None:
+            form.add_error('code', 'Ce code est invalide.')
+            return self.form_invalid(form)
+
+        actions.login_assistant(self.request, self.bureau)
         return super().form_valid(form)
 
 

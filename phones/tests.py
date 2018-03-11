@@ -3,9 +3,9 @@ import redislite
 from django.test import TestCase
 
 from finuke.test_utils import RedisLiteMixin
-
+from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber, SMS
-from phones.sms import send_new_code, is_valid_code, SMSCodeException
+from phones.sms import send_new_code, is_valid_code
 
 
 class ModelsTestCase(RedisLiteMixin, TestCase):
@@ -13,14 +13,14 @@ class ModelsTestCase(RedisLiteMixin, TestCase):
         with self.settings(SMS_BUCKET_MAX=3, SMS_BUCKET_INTERVAL=600, OVH_SMS_DISABLE=True):
             phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
             send_new_code(phone_number, ip='random')
-            with self.assertRaises(SMSCodeException):
+            with self.assertRaises(RateLimitedException):
                 send_new_code(phone_number, ip='random')
 
             # test for ip limiting
             for i in range(1, 31):
                 send_new_code(PhoneNumber.objects.create(phone_number='+336000000{}'.format(str(i).zfill(2))), ip='127.0.0.1')
 
-            with self.assertRaises(SMSCodeException):
+            with self.assertRaises(RateLimitedException):
                 send_new_code(PhoneNumber.objects.create(phone_number='+33600000031'), ip='127.0.0.1')
 
     def test_sms_had_random_8_digit_code(self):

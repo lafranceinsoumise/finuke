@@ -7,8 +7,9 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 from django.contrib import messages
 
+from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber
-from phones.sms import send_new_code, SMSCodeException
+from phones.sms import send_new_code
 from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
@@ -114,7 +115,7 @@ class ResendSms(RedirectView):
             code = send_new_code(PhoneNumber.objects.get(phone_number=request.session[PHONE_NUMBER_KEY]), request.META['REMOTE_ADDR'])
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
             messages.add_message(request, messages.DEBUG, f'Le code envoyé est {code}')
-        except SMSCodeException:
+        except RateLimitedException:
             messages.add_message(request, messages.ERROR, 'Vous avez demandé trop de SMS. Merci de patienter un peu.')
 
         return super().get(request, *args, **kwargs)

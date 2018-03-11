@@ -1,9 +1,8 @@
 import csv
 
 from django.core.management import BaseCommand
-from django.db import transaction, DatabaseError
 
-from bureaux.models import BureauOperator, LoginLink
+from bureaux.models import BureauOperator
 
 
 class Command(BaseCommand):

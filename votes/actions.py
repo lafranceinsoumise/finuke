@@ -1,10 +1,14 @@
 from django.db import transaction, DatabaseError
 
+from prometheus_client import Counter
+
 from token_bucket import TokenBucket
 from .models import VoterListItem, Vote
 from phones.models import PhoneNumber
 
 VoteIPTokenBucket = TokenBucket('VoteIP', 10, 60)
+
+online_vote_counter = Counter('finuke_online_votes_total', 'Number of online votes')
 
 
 class VoteLimitException(Exception):
@@ -45,7 +49,8 @@ def make_online_vote(ip, phone_number, voter_list_id, vote):
                 check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
             check_phone_number_status(phone_number)
             vote = Vote.objects.create(vote=vote, with_list=voter_list_id is not None)
-            return vote.id
-
     except DatabaseError:
         raise AlreadyVotedException()
+
+    online_vote_counter.inc()
+    return vote.id

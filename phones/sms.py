@@ -2,9 +2,11 @@ from datetime import timedelta
 
 import ovh
 from django.conf import settings
-from django.db import transaction
 from django.utils import timezone
 
+from prometheus_client import Counter
+
+from finuke.exceptions import RateLimitedException
 from phones.models import SMS
 from token_bucket import TokenBucket
 
@@ -18,6 +20,10 @@ client = ovh.Client(
 SMSShortTokenBucket = TokenBucket('SMSShort', 1, 60)
 SMSLongTokenBucket = TokenBucket('SMSLong', settings.SMS_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
 SMSIPTokenBucket = TokenBucket('SMSIp', settings.SMS_IP_BUCKET_MAX, settings.SMS_BUCKET_INTERVAL)
+CodeValidationTokenBucket = TokenBucket('CodeValidation', 5, 60)
+
+sms_counter = Counter('finuke_sms_requested_total', 'Number of SMS requested', ['result'])
+code_counter = Counter('finuke_sms_code_checked_total', 'Number of code verifications requested', ['result'])
 
 
 class SMSSendException(Exception):
@@ -43,31 +49,35 @@ def send(message, phone_number):
         raise SMSSendException('Le message n\'a pas été envoyé.')
 
 
-class SMSCodeException(Exception):
-    pass
-
-
 def send_new_code(phone_number, ip):
     if ip and not SMSIPTokenBucket.has_tokens(ip):
-        raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
+        sms_counter.labels('ip_limited').inc()
+        raise RateLimitedException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     if not (SMSShortTokenBucket.has_tokens(phone_number) and SMSLongTokenBucket.has_tokens(phone_number)):
-        raise SMSCodeException('Trop de messages envoyés, réessayer dans quelques minutes.')
+        sms_counter.labels('number_limited').inc()
+        raise RateLimitedException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)
     message = 'Votre code de validation pour nucleaire.vote est {0}'.format(sms.code)
 
     if not settings.OVH_SMS_DISABLE:
         send(message, phone_number.phone_number)
+    sms_counter.labels('sent').inc()
 
     sms.save()
     return sms.code
 
 
 def is_valid_code(phone_number, code):
+    if not CodeValidationTokenBucket.has_tokens(phone_number):
+        code_counter.labels('rate_limited').inc()
+        raise RateLimitedException()
     try:
         # TODO: possible timing attack here
         SMS.objects.get(phone_number=phone_number, code=code, created__gt=timezone.now()-timedelta(minutes=30))
+        code_counter.labels('success').inc()
         return True
     except SMS.DoesNotExist:
+        code_counter.labels('failure').inc()
         return False
