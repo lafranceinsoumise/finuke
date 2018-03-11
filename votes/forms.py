@@ -8,7 +8,7 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber
-from phones.sms import send_new_code, is_valid_code
+from phones.sms import send_new_code, is_valid_code, SMSSendException
 from votes.models import Vote, VoterListItem
 
 MOBILE_PHONE_RE = re.compile(r'^0[67]')
@@ -56,6 +56,8 @@ class ValidatePhoneForm(BaseForm):
         except RateLimitedException:
             self.add_error('phone_number', 'Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
             return None
+        except SMSSendException:
+            self.add_error('phone_number', 'Le SMS n\'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.')
 
 
 class ValidateCodeForm(BaseForm):

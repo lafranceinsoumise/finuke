@@ -31,16 +31,19 @@ class SMSSendException(Exception):
 
 
 def send(message, phone_number):
-    result = client.post('/sms/' + settings.OVH_SMS_SERVICE + '/jobs',
-                         charset='UTF-8',
-                         coding='7bit',
-                         receivers=[str(phone_number)],
-                         message=message,
-                         noStopClause=True,
-                         priority='high',
-                         senderForResponse=True,
-                         validityPeriod=2880
-                         )
+    try:
+        result = client.post('/sms/' + settings.OVH_SMS_SERVICE + '/jobs',
+                             charset='UTF-8',
+                             coding='7bit',
+                             receivers=[str(phone_number)],
+                             message=message,
+                             noStopClause=True,
+                             priority='high',
+                             senderForResponse=True,
+                             validityPeriod=2880
+                             )
+    except Exception:
+        raise SMSSendException('Le message n\'a pas été envoyé.')
 
     if len(result['invalidReceivers']) > 0:
         raise SMSSendException('Destinataire invalide.')
