@@ -15,7 +15,7 @@ OPERATOR_LOGIN_SESSION_KEY = 'login_uuid'
 ASSISTANT_LOGIN_SESSION_KEY = 'assistant_code'
 
 OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
-LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 20, 600)
+LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 50, 60)
 LoginAssistantIPTokenBucket = TokenBucket('LoginAssistant', 100, 60)
 
 operator_login_counter = Counter('finuke_operator_auths_total', 'The number of operator auth trials', ['result'])
