@@ -97,7 +97,7 @@ class ListSearch extends React.Component {
   }
 
   personChange(person) {
-    this.setState({person});
+    this.setState({person, displayNoChoiceHint: false});
     if (this.props.onChange) {
       this.props.onChange(person);
     }
@@ -134,6 +134,8 @@ class ListSearch extends React.Component {
             name="person"
             onBlurResetsInput={false}
             onCloseResetsInput={false}
+            onBlur={() => this.setState({displayNoChoiceHint: true})}
+            autoBlur={true}
             required={true}
             autoload={false}
             cache={false}
@@ -149,6 +151,11 @@ class ListSearch extends React.Component {
             searchPromptText={this.labels.personPromptText}
             loadingPlaceholder="Chargement..." />
         </div>
+        { this.state.displayNoChoiceHint ?
+          <div className="alert alert-danger">
+            Vous devez cliquer sur un nom dans la liste déroulante.
+          </div>
+        : '' }
         { this.state.departementInfo && !this.state.departementInfo.details ?
           <div className="alert alert-warning">
             Nous ne disposons malheureusement pas des listes électorales de ce département.
