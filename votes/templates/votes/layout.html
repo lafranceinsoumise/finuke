@@ -59,13 +59,11 @@
                         </div>
                     {% endif %}
                     <script>
-                        document.querySelector('.messages').addEventListener('click', function(e) {
-                          if (e.target.tagName === 'BUTTON' && e.target.classList.contains('close-message')) {
-                            var r = new XMLHttpRequest();
-                            r.open('GET', e.target.dataset.closingLink, true);
-                            r.send();
-                            e.target.parentNode.remove();
-                          }
+                        document.querySelector('.messages button.close-message').addEventListener('click', function(e) {
+                          var r = new XMLHttpRequest();
+                          r.open('GET', e.currentTarget.dataset.closingLink, true);
+                          r.send();
+                          e.currentTarget.parentNode.remove();
                         });
                     </script>
                     {% block content_central %}{% endblock %}
