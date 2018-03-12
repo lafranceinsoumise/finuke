@@ -57,15 +57,15 @@
                                 </div>
                             {% endfor %}
                         </div>
+                        <script>
+                            document.querySelector('.messages button.close-message').addEventListener('click', function(e) {
+                              var r = new XMLHttpRequest();
+                              r.open('GET', e.currentTarget.dataset.closingLink, true);
+                              r.send();
+                              e.currentTarget.parentNode.remove();
+                            });
+                        </script>
                     {% endif %}
-                    <script>
-                        document.querySelector('.messages button.close-message').addEventListener('click', function(e) {
-                          var r = new XMLHttpRequest();
-                          r.open('GET', e.currentTarget.dataset.closingLink, true);
-                          r.send();
-                          e.currentTarget.parentNode.remove();
-                        });
-                    </script>
                     {% block content_central %}{% endblock %}
                 </div>
             </div>
