@@ -29,15 +29,23 @@ def check_voter_list_item(voter_list_id, vote_type, bureau=None):
         voter_list.vote_bureau = bureau
     voter_list.save()
 
+    return voter_list
 
-def check_phone_number_status(phone_number):
+
+def check_phone_number_status(phone_number, voter=None):
     phone_number = PhoneNumber.objects.select_for_update().get(phone_number=phone_number)
 
     if phone_number.validated:
         raise AlreadyVotedException()
 
+    if voter is not None:
+        phone_number.voter = voter
+
+
     phone_number.validated = True
     phone_number.save()
+
+    return phone_number
 
 
 def make_online_vote(ip, phone_number, voter_list_id, vote):
@@ -45,9 +53,11 @@ def make_online_vote(ip, phone_number, voter_list_id, vote):
         raise VoteLimitException("Trop de votes sur cette IP.")
     try:
         with transaction.atomic():
+            voter = None
+
             if voter_list_id is not None:
-                check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
-            check_phone_number_status(phone_number)
+                voter = check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_ONLINE)
+            check_phone_number_status(phone_number, voter=voter)
             vote = Vote.objects.create(vote=vote, with_list=voter_list_id is not None)
     except DatabaseError:
         raise AlreadyVotedException()

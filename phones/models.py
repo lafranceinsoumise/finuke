@@ -13,7 +13,10 @@ def generate_code():
 class PhoneNumber(TimestampedModel):
     phone_number = PhoneNumberField('Numéro de mobile', editable=False, unique=True)
     updated = models.DateTimeField(auto_now=True)
-    validated = models.BooleanField(default=False, blank=False)
+    validated = models.BooleanField(default=False, null=False)
+    bypass_code = models.BooleanField(default=False, null=False)
+
+    voter = models.OneToOneField('votes.VoterListItem', on_delete=models.PROTECT, null=True)
 
     def __str__(self):
         return str(self.phone_number)
