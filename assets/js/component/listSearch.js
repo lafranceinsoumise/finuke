@@ -18,7 +18,7 @@ const departements = departementsData.map(({
   Intégration,
   PhyFile,
   NivDetail: details
-}) => ({code, name, details}));
+}) => ({code: String(code), name, details}));
 
 function findDepartement(number) {
   return departements.find(line => line.code == number);
@@ -47,10 +47,6 @@ class ListSearch extends React.Component {
   }
 
   async departementChange(event) {
-    if (isNaN(event.target.value)) {
-      return;
-    }
-
     let departementInfo = findDepartement(event.target.value);
 
     this.setState({
