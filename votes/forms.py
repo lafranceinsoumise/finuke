@@ -37,6 +37,18 @@ class ValidatePhoneForm(BaseForm):
         if phone_number.country_code != 33:
             raise ValidationError('Le numéro doit être un numéro de téléphone français.')
 
+        drom = {
+            '639': 269, # Mayotte
+            '690': 590, # Gadeloupe
+            '694': 594, # Guyane
+            '696': 596, # Martinique
+            '692': 262, # Réunion
+            '693': 262, # Réunion
+        }.get(str(phone_number.national_number)[:3], None)
+
+        if drom is not None:
+            phone_number.country_code = drom
+
         if not phone_number.is_valid():
             raise ValidationError('Le numéro doit être un numéro de téléphone valide.')
 
@@ -48,7 +60,7 @@ class ValidatePhoneForm(BaseForm):
         if self.phone_number.validated:
             raise ValidationError('Ce numéro a déjà été utilisé pour voter.')
 
-        return self.cleaned_data['phone_number']
+        return phone_number
 
     def send_code(self):
         try:
