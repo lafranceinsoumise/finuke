@@ -13,7 +13,7 @@ class TestCase(RedisLiteMixin, DjangoTestCase):
     pass
 
 
-class OperationLoggingTestCase(TestCase):
+class BasicFunctionalityTestCase(TestCase):
     fixtures = ['voter_list.json']
 
     def setUp(self):
@@ -54,6 +54,12 @@ class OperationLoggingTestCase(TestCase):
         res = self.client.post(reverse('assistant_login'), {'code': self.bureau.assistant_code})
         self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
 
+        operation = Operation.objects.get()
+        details = operation.details
+
+        self.assertEqual(operation.type, Operation.ASSISTANT_LOGIN)
+        self.assertEqual(details['assistant_code'], self.bureau.assistant_code)
+
     def test_cannot_login_with_random_assistant_code(self):
         res = self.client.post(reverse('assistant_login'), {'code': '00000000'})
         self.assertEqual(res.status_code, 200)
@@ -78,6 +84,14 @@ class OperationLoggingTestCase(TestCase):
 
         self.assertRedirects(res, reverse('detail_bureau', args=[bureau.pk]))
 
+        operation = Operation.objects.get()
+        details = operation.details
+
+        self.assertEqual(operation.type, Operation.START_BUREAU)
+        self.assertEqual(details['operator'], self.operator.id)
+        self.assertEqual(details['link_uuid'], str(self.login_link.uuid))
+        self.assertEqual(details['bureau'], bureau.id)
+
     def test_cannot_close_bureau_when_not_logged_in(self):
         res = self.client.get(reverse('close_bureau', args=[self.bureau.pk]))
         self.assertEqual(res.status_code, 302)
@@ -96,11 +110,46 @@ class OperationLoggingTestCase(TestCase):
         res = self.client.post(reverse('close_bureau', args=[self.bureau.pk]))
         self.assertRedirects(res, reverse('list_bureaux'))
 
+        operation = Operation.objects.get()
+        details = operation.details
+
+        self.assertEqual(operation.type, Operation.END_BUREAU)
+        self.assertEqual(details['operator'], self.operator.id)
+        self.assertEqual(details['link_uuid'], str(self.login_link.uuid))
+        self.assertEqual(details['bureau'], self.bureau.id)
+
+
     def test_cannot_see_voting_view_when_unlogged(self):
         res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
         self.assertEqual(res.status_code, 302)
 
-    def test_can_mark_someone_as_voting(self):
+    def test_can_mark_someone_as_voting_as_operator(self):
+        voter = VoterListItem.objects.order_by('?').first()
+        session = self.client.session
+        session[OPERATOR_LOGIN_SESSION_KEY] = str(self.login_link.uuid)
+        session.save()
+
+        res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'person': voter.pk})
+        self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
+
+        voter.refresh_from_db()
+
+        self.assertEqual(voter.vote_status, VoterListItem.VOTE_STATUS_PHYSICAL)
+        self.assertEqual(voter.vote_bureau, self.bureau)
+
+        operation = Operation.objects.get()
+        details = operation.details
+
+        self.assertEqual(operation.type, Operation.PERSON_VOTE)
+        self.assertEqual(details['operator'], self.operator.id)
+        self.assertEqual(details['link_uuid'], str(self.login_link.uuid))
+        self.assertEqual(details['bureau'], self.bureau.id)
+        self.assertEqual(details['voter_list_item'], voter.id)
+
+    def test_can_mark_someone_as_voting_as_assistant(self):
         voter = VoterListItem.objects.order_by('?').first()
         session = self.client.session
         session[ASSISTANT_LOGIN_SESSION_KEY] = self.bureau.assistant_code
@@ -116,3 +165,11 @@ class OperationLoggingTestCase(TestCase):
 
         self.assertEqual(voter.vote_status, VoterListItem.VOTE_STATUS_PHYSICAL)
         self.assertEqual(voter.vote_bureau, self.bureau)
+
+        operation = Operation.objects.get()
+        details = operation.details
+
+        self.assertEqual(operation.type, Operation.PERSON_VOTE)
+        self.assertEqual(details['assistant_code'], self.bureau.assistant_code)
+        self.assertEqual(details['bureau'], self.bureau.id)
+        self.assertEqual(details['voter_list_item'], voter.id)
