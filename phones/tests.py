@@ -23,11 +23,11 @@ class ModelsTestCase(RedisLiteMixin, TestCase):
             with self.assertRaises(RateLimitedException):
                 send_new_code(PhoneNumber.objects.create(phone_number='+33600000031'), ip='127.0.0.1')
 
-    def test_sms_had_random_8_digit_code(self):
+    def test_sms_had_random_6_digit_code(self):
         phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
         sms = SMS(phone_number=phone_number)
 
-        self.assertRegex(sms.code, '[0-9]{8}')
+        self.assertRegex(sms.code, '[0-9]{6}')
 
     def test_sms_code(self):
         phone_number = PhoneNumber.objects.create(phone_number='+33600000000')
@@ -35,6 +35,7 @@ class ModelsTestCase(RedisLiteMixin, TestCase):
         with self.settings(OVH_SMS_DISABLE=True):
             code = send_new_code(phone_number, ip='random')
 
-        self.assertTrue(is_valid_code(phone_number, code))
-        self.assertFalse(is_valid_code(phone_number, '0'))
+        true_code = code.replace(' ', '')
 
+        self.assertTrue(is_valid_code(phone_number, true_code))
+        self.assertFalse(is_valid_code(phone_number, '0'))
