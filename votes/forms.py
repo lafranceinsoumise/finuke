@@ -68,6 +68,7 @@ class ValidateCodeForm(BaseForm):
         self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
 
     def clean_code(self):
+        # remove spaces added by Cleave.js
         code = self.cleaned_data['code'].replace(' ', '')
 
         try:

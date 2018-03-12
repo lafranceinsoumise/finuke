@@ -7,7 +7,7 @@ from finuke.model_mixins import TimestampedModel
 
 
 def generate_code():
-    return str(secrets.randbelow(100000000)).zfill(8)
+    return str(secrets.randbelow(1000000)).zfill(6)
 
 
 class PhoneNumber(TimestampedModel):

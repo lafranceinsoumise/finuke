@@ -62,6 +62,7 @@ def send_new_code(phone_number, ip):
         raise RateLimitedException('Trop de messages envoyés, réessayer dans quelques minutes.')
 
     sms = SMS(phone_number=phone_number)
+    formatted_code = sms.code[:3] + ' ' + sms.code[3:]
     message = 'Votre code de validation pour nucleaire.vote est {0}'.format(sms.code)
 
     if not settings.OVH_SMS_DISABLE:
@@ -69,7 +70,7 @@ def send_new_code(phone_number, ip):
     sms_counter.labels('sent').inc()
 
     sms.save()
-    return sms.code
+    return formatted_code
 
 
 def is_valid_code(phone_number, code):
