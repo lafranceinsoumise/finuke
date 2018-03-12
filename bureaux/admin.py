@@ -9,12 +9,14 @@ class LoginLinkAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'operator', 'valid')
     fields = ('uuid', 'operator', 'valid')
     readonly_fields = ('uuid',)
+    search_fields = ('operator__email',)
 
 
 @admin.register(BureauOperator, site=admin_site)
 class BureauOperatorAdmin(admin.ModelAdmin):
     list_display = ('email', 'bureau_count')
     readonly_fields = ('bureau_count',)
+    search_fields = ('email',)
 
     def bureau_count(self, obj):
         return obj.bureaux.all().count()
