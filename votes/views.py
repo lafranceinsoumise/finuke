@@ -42,7 +42,7 @@ class CleanSessionView(RedirectView):
 
 @cache_control(max_age=3600, public=True)
 def commune_json_search(request, departement):
-    return JsonResponse([commune for commune in communes if commune['dep'] == departement], safe=False)
+    return JsonResponse([commune for commune in communes if commune['dep'].zfill(2) == departement.zfill(2)], safe=False)
 
 
 def person_json_search(request, departement, search):
