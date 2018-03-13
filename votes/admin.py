@@ -10,12 +10,19 @@ class VoterListItemAdmin(admin.ModelAdmin):
     list_filter = ('departement',)
 
 
+    fieldsets = (
+        (None, {'fields': ('import_id', 'last_name', 'first_names', 'departement')}),
+        ('Informations de vote', {'fields': ('vote_status', 'vote_bureau', 'phonenumber')})
+    )
+
+    readonly_fields = ('import_id', 'last_name', 'first_names', 'departement', 'phonenumber', 'vote_status', 'vote_bureau')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.readonly_fields = [f.name for f in self.model._meta.get_fields()] + ['id']
 
     def import_id(self, obj):
         return str(obj.origin_file) + ' #' + str(obj.file_line)
+    import_id.short_description = "ID importation"
 
 @admin.register(Vote, site=admin_site)
 class VoteAdmin(admin.ModelAdmin):

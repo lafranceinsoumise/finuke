@@ -4,6 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
 from django.forms import Form, CharField, ChoiceField, ModelChoiceField, RadioSelect
+from django.utils.html import mark_safe
 from phonenumber_field.formfields import PhoneNumberField
 
 from finuke.exceptions import RateLimitedException
@@ -41,6 +42,14 @@ class FindPersonInListForm(Form):
 class ValidatePhoneForm(BaseForm):
     phone_number = PhoneNumberField(label='Numéro de téléphone portable')
 
+    error_messages = {
+        'french_only': "Le numéro doit être un numéro de téléphone français.",
+        'mobile_only': "Vous devez donner un numéro de téléphone mobile.",
+        'already_used': "Ce numéro a déjà été utilisé pour voter.",
+        'rate_limited': "Trop de SMS envoyés. Merci de réessayer dans quelques minutes.",
+        'sending_error': "Le SMS n'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.",
+    }
+
     def __init__(self, ip, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ip = ip
@@ -55,20 +64,20 @@ class ValidatePhoneForm(BaseForm):
                 phone_number.country_code = drom
             # if it is not the case, we verify it is a mobile number
             elif not MOBILE_PHONE_RE.match(phone_number.as_national):
-                raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
+                raise ValidationError(self.error_messages['mobile_only'])
 
         elif phone_number.country_code in DROMS_COUNTRY_CODES:
             # if country code is one of the DROM country codes, we check that is is a valid mobile phone number
             if DROMS_PREFIX.get(str(phone_number.national_number)[:3], None) != phone_number.country_code:
-                raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
+                raise ValidationError(self.error_messages['mobile_only'])
 
         else:
-            raise ValidationError('Le numéro doit être un numéro de téléphone français.')
+            raise ValidationError(self.error_messages['french_only'])
 
         (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
 
         if self.phone_number.validated:
-            raise ValidationError('Ce numéro a déjà été utilisé pour voter.')
+            raise ValidationError(self.error_messages['already_used'])
 
         return phone_number
 
@@ -76,11 +85,10 @@ class ValidatePhoneForm(BaseForm):
         try:
             return send_new_code(self.phone_number, self.ip)
         except RateLimitedException:
-            self.add_error('phone_number', 'Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
+            self.add_error('phone_number', self.error_messages['rate_limited'])
             return None
         except SMSSendException:
-            self.add_error('phone_number',
-                           'Le SMS n\'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.')
+            self.add_error('phone_number', self.error_messages['sending_error'])
 
 
 class ValidateCodeForm(BaseForm):

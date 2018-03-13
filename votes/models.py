@@ -82,3 +82,6 @@ class VoterListItem(models.Model):
 
     def get_full_name(self):
         return '{}, {}'.format(self.last_name, self.first_names)
+
+    def __str__(self):
+        return f"{self.get_full_name()} ({self.departement})"

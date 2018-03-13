@@ -60,6 +60,9 @@ class Bureau(models.Model):
     def has_results(self):
         return self.result1_yes is not None
 
+    def __str__(self):
+        return f'Bureau {self.pk} "{self.place}" <{self.operator.email}>'
+
     class Meta:
         verbose_name = 'Bureau de vote'
         verbose_name_plural = 'Bureaux de vote'

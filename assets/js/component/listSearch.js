@@ -154,10 +154,10 @@ class ListSearch extends React.Component {
           <div className="alert alert-danger">
             <p>
               Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2017
-              transmises par la préfecture du déparement {this.state.departement}.
+              transmises par la préfecture du département {this.state.departement}.
             </p>
             <p>
-              Dans de très rare cas, il peut cependant subsister des erreurs. Si après avoir réessayé, vous ne trouviez
+              Dans de très rares cas, il peut cependant subsister des erreurs. Si après avoir réessayé, vous ne trouvez
               toujours pas le nom dans la liste, merci de {this.labels.listErrorHint}.
             </p>
           </div>

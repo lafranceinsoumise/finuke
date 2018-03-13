@@ -28,7 +28,7 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 BASE_URL = os.environ.get('BASE_URL', None)
-
+DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'nucleaire.vote')
 
 # Application definition
 
