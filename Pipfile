@@ -32,3 +32,4 @@ prometheus-client = "*"
 [dev-packages]
 
 redislite = "*"
+"beautifulsoup4" = "*"

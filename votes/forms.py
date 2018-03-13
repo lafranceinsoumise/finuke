@@ -13,6 +13,18 @@ from votes.models import Vote, VoterListItem
 
 MOBILE_PHONE_RE = re.compile(r'^0[67]')
 
+DROMS_PREFIX = {
+    '639': 269,  # Mayotte
+    '690': 590,  # Gadeloupe
+    '691': 590,  # Gadeloupe
+    '694': 594,  # Guyane
+    '696': 596,  # Martinique
+    '697': 596,  # Martinique
+    '692': 262,  # Réunion
+    '693': 262,  # Réunion
+}
+
+DROMS_COUNTRY_CODES = set(DROMS_PREFIX.values())
 
 class BaseForm(Form):
     def __init__(self, *args, **kwargs):
@@ -22,7 +34,8 @@ class BaseForm(Form):
 
 
 class FindPersonInListForm(Form):
-    person = ModelChoiceField(queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE), widget=None)
+    person = ModelChoiceField(queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
+                              widget=None)
 
 
 class ValidatePhoneForm(BaseForm):
@@ -34,26 +47,23 @@ class ValidatePhoneForm(BaseForm):
 
     def clean_phone_number(self):
         phone_number = self.cleaned_data['phone_number']
-        if phone_number.country_code != 33:
+
+        if phone_number.country_code == 33:
+            # if french number, we verifies if it is not actually a DROM mobile number and replace country code in this case
+            drom = DROMS_PREFIX.get(str(phone_number.national_number)[:3], None)
+            if drom is not None:
+                phone_number.country_code = drom
+            # if it is not the case, we verify it is a mobile number
+            elif not MOBILE_PHONE_RE.match(phone_number.as_national):
+                raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
+
+        elif phone_number.country_code in DROMS_COUNTRY_CODES:
+            # if country code is one of the DROM country codes, we check that is is a valid mobile phone number
+            if DROMS_PREFIX.get(str(phone_number.national_number)[:3], None) != phone_number.country_code:
+                raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
+
+        else:
             raise ValidationError('Le numéro doit être un numéro de téléphone français.')
-
-        drom = {
-            '639': 269, # Mayotte
-            '690': 590, # Gadeloupe
-            '694': 594, # Guyane
-            '696': 596, # Martinique
-            '692': 262, # Réunion
-            '693': 262, # Réunion
-        }.get(str(phone_number.national_number)[:3], None)
-
-        if drom is not None:
-            phone_number.country_code = drom
-
-        if not phone_number.is_valid():
-            raise ValidationError('Le numéro doit être un numéro de téléphone valide.')
-
-        if not MOBILE_PHONE_RE.match(phone_number.as_national):
-            raise ValidationError('Vous devez donner un numéro de téléphone mobile.')
 
         (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
 
@@ -69,7 +79,8 @@ class ValidatePhoneForm(BaseForm):
             self.add_error('phone_number', 'Trop de SMS envoyés. Merci de réessayer dans quelques minutes.')
             return None
         except SMSSendException:
-            self.add_error('phone_number', 'Le SMS n\'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.')
+            self.add_error('phone_number',
+                           'Le SMS n\'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.')
 
 
 class ValidateCodeForm(BaseForm):
@@ -92,6 +103,7 @@ class ValidateCodeForm(BaseForm):
             raise ValidationError('Votre code est invalide ou expiré.')
 
         return code
+
 
 class VoteForm(BaseForm):
     choice = ChoiceField(label='Vote', choices=Vote.VOTE_CHOICES, widget=RadioSelect, required=True)
