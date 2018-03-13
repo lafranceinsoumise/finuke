@@ -63,7 +63,7 @@ class ListSearch extends React.Component {
       return;
     }
 
-    this.communesChoice = (await axios('/json/communes/' + event.target.value)).data.map(c => ({value: c.code, label: c.name}));
+    this.communesChoice = (await axios(`/json/communes/${event.target.value}?${__VERSION__}`)).data.map(c => ({value: c.code, label: c.name}));
 
     this.setState({communesLoaded: true});
   }

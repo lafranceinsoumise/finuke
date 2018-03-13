@@ -4,6 +4,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const webpack = require('webpack');
 
 const DISTPATH = path.resolve(__dirname, 'assets/webpack_bundles');
+const __VERSION__ = Math.random().toString(36).substring(2, 10);
 
 module.exports = {
   mode: 'development',
@@ -18,7 +19,8 @@ module.exports = {
     new CleanWebpackPlugin([DISTPATH]),
     new BundleTracker({path: DISTPATH}),
     new webpack.DefinePlugin({
-        'BASE_URL': JSON.stringify(process.env.BASE_URL || '')
+        'BASE_URL': JSON.stringify(process.env.BASE_URL || ''),
+        '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],
   resolve: {
