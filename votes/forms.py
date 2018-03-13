@@ -45,9 +45,11 @@ class ValidatePhoneForm(BaseForm):
     error_messages = {
         'french_only': "Le numéro doit être un numéro de téléphone français.",
         'mobile_only': "Vous devez donner un numéro de téléphone mobile.",
-        'already_used': "Ce numéro a déjà été utilisé pour voter.",
         'rate_limited': "Trop de SMS envoyés. Merci de réessayer dans quelques minutes.",
         'sending_error': "Le SMS n'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.",
+        'already_used': mark_safe("Ce numéro a déjà été utilisé pour voter. Si vous partagez avec une autre personne,"
+                                  " <a href=\"/demander-le-deblocage-dun-numero/\">vous pouvez exceptionnellement"
+                                  " en demander le déblocage</a>."),
     }
 
     def __init__(self, ip, *args, **kwargs):
