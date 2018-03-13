@@ -29,6 +29,13 @@ class Vote(TimestampedModel):
     with_list = fields.BooleanField(editable=False)
 
 
+class FEVoterListItem(models.Model):
+    email = fields.EmailField('Adresse email donnée au consulat', unique=True)
+    first_names = fields.CharField('Prénoms', max_length=255)
+    last_name = fields.CharField('Nom', max_length=255)
+    has_voted = fields.BooleanField('Statut du vote', default=False)
+
+
 class VoterListItem(models.Model):
     LIST_TYPE_CHOICES = (
         ('G', 'Liste générale'),

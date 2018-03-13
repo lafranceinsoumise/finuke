@@ -1,7 +1,12 @@
 from django.contrib import admin
 
 from finuke.admin import admin_site
-from votes.models import VoterListItem, Vote
+from votes.models import VoterListItem, Vote, FEVoterListItem
+
+
+@admin.register(FEVoterListItem, site=admin_site)
+class FEVoterListItemAdmin(admin.ModelAdmin):
+    list_display = ('email', 'last_name', 'first_names')
 
 
 @admin.register(VoterListItem, site=admin_site)
@@ -23,6 +28,7 @@ class VoterListItemAdmin(admin.ModelAdmin):
     def import_id(self, obj):
         return str(obj.origin_file) + ' #' + str(obj.file_line)
     import_id.short_description = "ID importation"
+
 
 @admin.register(Vote, site=admin_site)
 class VoteAdmin(admin.ModelAdmin):
