@@ -42,7 +42,10 @@ class ListSearch extends React.Component {
       personPromptText: this.opMode ? 'Prénom et nom de la personne': 'Tapez votre prénom et votre nom',
       noListHint: this.opMode ?
         'Vous devez faire voter la personne avec un bulletin orange.'
-        : (<span>Vous pouvez <a href={BASE_URL + '/vote'}>voter directement ici</a>.</span>)
+        : (<span>Vous pouvez <a href={BASE_URL + '/vote'}>voter directement ici</a>.</span>),
+      listErrorHint: this.opMode ?
+        'faire voter la personne avec un bulletin orange'
+        : (<a href={BASE_URL + '/vote'}>voter directement ici</a>),
     }
   }
 
@@ -149,7 +152,14 @@ class ListSearch extends React.Component {
         </div>
         { this.state.displayNoChoiceHint ?
           <div className="alert alert-danger">
-            Vous devez cliquer sur un nom dans la liste déroulante.
+            <p>
+              Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2017
+              transmises par la préfecture du déparement {this.state.departement}.
+            </p>
+            <p>
+              Dans de très rare cas, il peut cependant subsister des erreurs. Si après avoir réessayé, vous ne trouviez
+              toujours pas le nom dans la liste, merci de {this.labels.listErrorHint}.
+            </p>
           </div>
         : '' }
         { this.state.departementInfo && !this.state.departementInfo.details ?
