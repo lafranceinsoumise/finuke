@@ -47,9 +47,9 @@ class ValidatePhoneForm(BaseForm):
         'mobile_only': "Vous devez donner un numéro de téléphone mobile.",
         'rate_limited': "Trop de SMS envoyés. Merci de réessayer dans quelques minutes.",
         'sending_error': "Le SMS n'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.",
-        'already_used': mark_safe("Ce numéro a déjà été utilisé pour voter. Si vous partagez avec une autre personne,"
-                                  " <a href=\"/demander-le-deblocage-dun-numero/\">vous pouvez exceptionnellement"
-                                  " en demander le déblocage</a>."),
+        'already_used': mark_safe("Ce numéro a déjà été utilisé pour voter. Si vous le partagez avec une autre"
+                                  " personne, <a href=\"/demander-le-deblocage-dun-numero/\">vous pouvez"
+                                  " exceptionnellement en demander le déblocage</a>."),
     }
 
     def __init__(self, ip, *args, **kwargs):
