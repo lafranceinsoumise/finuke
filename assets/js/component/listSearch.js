@@ -21,7 +21,7 @@ const departements = departementsData.map(({
 }) => ({code: String(code), name, details}));
 
 function findDepartement(number) {
-  return departements.find(line => line.code == number);
+  return departements.find(line => line.code.padStart(2, '0') == number.padStart(2, '0'));
 }
 
 class ListSearch extends React.Component {
