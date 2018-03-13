@@ -6,11 +6,12 @@ from bs4 import BeautifulSoup
 from finuke.test_utils import TestCase
 
 from bureaux.models import Bureau, BureauOperator
-from phones.models import PhoneNumber
+from phones.models import PhoneNumber, SMS
 from bureaux.actions import mark_as_voted
 
 from .models import VoterListItem, Vote
 from .actions import make_online_vote, AlreadyVotedException
+
 
 class VoteActionsTestCase(TestCase):
     fixtures = ['voter_list']
@@ -67,9 +68,27 @@ class VoteActionsTestCase(TestCase):
             make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
 
 
-class VotesRoutesTestCase(TestCase):
+class PhoneNumberViewsTestCase(TestCase):
     def setUp(self):
         super().setUp()
+
+        self.phone_number = PhoneNumber.objects.create(
+            phone_number='+33687217323',
+        )
+
+        self.bypassable_phone_number = PhoneNumber.objects.create(
+            phone_number='+33687217322',
+            bypass_code=True
+        )
+
+        self.already_used_phone_number = PhoneNumber.objects.create(
+            phone_number='+33687217321',
+            validated=True
+        )
+
+        self.sms = SMS.objects.create(
+            phone_number=self.phone_number,
+        )
 
     def test_can_enter_phone_number(self):
         res = self.client.get(reverse('validate_phone_number'))
@@ -109,3 +128,49 @@ class VotesRoutesTestCase(TestCase):
             res = self.client.post(url, {'phone_number': number})
             self.assertEqual(res.status_code, 200)
             self.assertFormFieldHasError(res, 'phone_number', f'Should be an error with number {number}.')
+
+    def test_cannot_use_already_used_number(self):
+        res = self.client.post(
+            reverse('validate_phone_number'),
+            {'phone_number': self.already_used_phone_number.phone_number.as_international}
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertFormFieldHasError(res, 'phone_number')
+
+        # make sure it is the same way if the phone number is bypassable
+        self.already_used_phone_number.bypass_code = True
+        self.already_used_phone_number.save()
+
+        res = self.client.post(
+            reverse('validate_phone_number'),
+            {'phone_number': self.already_used_phone_number.phone_number.as_international}
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertFormFieldHasError(res, 'phone_number')
+
+    def test_can_use_bypassed_number(self):
+        res = self.client.post(
+            reverse('validate_phone_number'),
+            {'phone_number': self.bypassable_phone_number.phone_number.as_international}
+        )
+        self.assertRedirects(res, reverse('validate_list'))
+
+    def test_cannot_access_validate_code_without_providing_number_first(self):
+        res = self.client.get(
+            reverse('validate_code'),
+        )
+
+        self.assertRedirects(res, f'/?next={reverse("validate_code")}', fetch_redirect_response=False)
+
+    def test_can_validate_code(self):
+        res = self.client.post(
+            reverse('validate_phone_number'),
+            {'phone_number': self.phone_number.phone_number.as_international}
+        )
+        self.assertRedirects(res, reverse('validate_code'))
+
+        res = self.client.post(
+            reverse('validate_code'),
+            {'code': self.sms.code}
+        )
+        self.assertRedirects(res, reverse('validate_list'))
