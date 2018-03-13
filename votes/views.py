@@ -11,7 +11,7 @@ from django.contrib import messages
 from bureaux import actions
 from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber
-from phones.sms import send_new_code
+from phones.sms import send_new_code, SMSCodeBypassed
 from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
@@ -99,13 +99,13 @@ class AskForPhoneView(FormView):
     def form_valid(self, form):
         clean_session(self.request)
 
-        # bypass code validation for phone numbers we already know about
-        if form.phone_number.bypass_code:
+        try:
+            code = form.send_code()
+        except SMSCodeBypassed:
+            # bypass code validation for phone numbers we already know about
             self.request.session[PHONE_NUMBER_KEY] = str(form.cleaned_data['phone_number'])
             self.request.session[PHONE_NUMBER_VALID_KEY] = True
             return HttpResponseRedirect(reverse('validate_list'))
-
-        code = form.send_code()
 
         if code is None:
             return super().form_invalid(form)

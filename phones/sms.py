@@ -29,6 +29,9 @@ code_counter = Counter('finuke_sms_code_checked_total', 'Number of code verifica
 class SMSSendException(Exception):
     pass
 
+class SMSCodeBypassed(Exception):
+    pass
+
 
 def send(message, phone_number):
     try:
@@ -60,6 +63,10 @@ def send_new_code(phone_number, ip):
     if not (SMSShortTokenBucket.has_tokens(phone_number) and SMSLongTokenBucket.has_tokens(phone_number)):
         sms_counter.labels('number_limited').inc()
         raise RateLimitedException('Trop de messages envoyés, réessayer dans quelques minutes.')
+
+    if phone_number.bypass_code:
+        sms_counter.labels('bypassed').inc()
+        raise SMSCodeBypassed()
 
     sms = SMS(phone_number=phone_number)
     formatted_code = sms.code[:3] + ' ' + sms.code[3:]
