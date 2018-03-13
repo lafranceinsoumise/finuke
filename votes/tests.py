@@ -162,7 +162,7 @@ class PhoneNumberViewsTestCase(TestCase):
 
         self.assertRedirects(res, f'/?next={reverse("validate_code")}', fetch_redirect_response=False)
 
-    def test_can_validate_code(self):
+    def test_can_validate_code_and_avoid_revalidating_it(self):
         res = self.client.post(
             reverse('validate_phone_number'),
             {'phone_number': self.phone_number.phone_number.as_international}
@@ -172,5 +172,12 @@ class PhoneNumberViewsTestCase(TestCase):
         res = self.client.post(
             reverse('validate_code'),
             {'code': self.sms.code}
+        )
+        self.assertRedirects(res, reverse('validate_list'))
+
+        # if posting same number again, should redirect directly to validate_list
+        res = self.client.post(
+            reverse('validate_phone_number'),
+            {'phone_number': self.phone_number.phone_number.as_international}
         )
         self.assertRedirects(res, reverse('validate_list'))

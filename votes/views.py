@@ -46,7 +46,8 @@ def commune_json_search(request, departement):
 
 
 def person_json_search(request, departement, search):
-    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code') or request.session.get(actions.OPERATOR_LOGIN_SESSION_KEY)):
+    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code') or request.session.get(
+            actions.OPERATOR_LOGIN_SESSION_KEY)):
         raise PermissionDenied("not allowed")
 
     if not ListSearchTokenBucket.has_tokens(request.session.session_key):
@@ -97,6 +98,10 @@ class AskForPhoneView(FormView):
         return kwargs
 
     def form_valid(self, form):
+        if self.request.session.get(PHONE_NUMBER_VALID_KEY) and \
+                self.request.session.get(PHONE_NUMBER_KEY) == form.cleaned_data['phone_number']:
+            return HttpResponseRedirect(reverse('validate_list'))
+
         clean_session(self.request)
 
         try:
@@ -122,7 +127,10 @@ class ResendSms(RedirectView):
         if PHONE_NUMBER_KEY not in request.session:
             return HttpResponseRedirect(reverse('validate_phone_number'))
         try:
-            code = send_new_code(PhoneNumber.objects.get(phone_number=request.session[PHONE_NUMBER_KEY]), request.META['REMOTE_ADDR'])
+            code = send_new_code(
+                PhoneNumber.objects.get(phone_number=request.session[PHONE_NUMBER_KEY]),
+                request.META['REMOTE_ADDR']
+            )
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
             messages.add_message(request, messages.DEBUG, f'Le code envoyé est {code}')
         except RateLimitedException:
@@ -211,7 +219,11 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
         except VoteLimitException:
-            messages.add_message(self.request, messages.ERROR, "Trop de votes sur cette connexion, merci de réessayer plus tard.")
+            messages.add_message(
+                self.request,
+                messages.ERROR,
+                "Trop de votes sur cette connexion, merci de réessayer plus tard."
+            )
             return super().form_invalid(form)
 
         return super().form_valid(form)
