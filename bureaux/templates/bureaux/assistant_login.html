@@ -2,5 +2,10 @@
 {% load crispy_forms_tags %}
 
 {% block content_central %}
+    <div class="alert alert-warning">
+        Si vous avez créé votre événement et êtes donc président⋅e de bureau, ce n'est pas ici que vous devez vous
+        connecter&nbsp;! Vous avez reçu un email contenant toutes les informations et un bouton de connexion sur lequel
+        il vous faut simplement cliquer.
+    </div>
     {% crispy form %}
 {% endblock %}
