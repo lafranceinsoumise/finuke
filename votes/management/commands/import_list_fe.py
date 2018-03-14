@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
             for chunk in group_by(enumerate(file_reader), 10000):
                 for i, row in chunk:
-                    if i < last_created:
+                    if i <= last_created:
                         continue
 
                     if i == 0:
