@@ -133,6 +133,7 @@ class ListSearch extends React.Component {
             name="person"
             onBlurResetsInput={false}
             onCloseResetsInput={false}
+            inputProps={{autoComplete: 'off'}}
             onBlur={() => this.setState({displayNoChoiceHint: true})}
             autoBlur={true}
             required={true}

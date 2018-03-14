@@ -15,7 +15,7 @@ class App extends React.Component {
 
   render() {
     return (
-    <form action="" method="post">
+    <form action="" method="post" autocomplete="off">
       <input type="hidden" name="csrfmiddlewaretoken" value={Cookies.get('csrftoken')} />
       <ListSearch onChange={(person) => this.personChange(person)} />
       <div className="input-group">
