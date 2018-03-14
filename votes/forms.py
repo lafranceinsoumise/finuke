@@ -1,14 +1,17 @@
+import logging
 import re
+from datetime import timedelta
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
 from django.forms import Form, CharField, ChoiceField, ModelChoiceField, RadioSelect
+from django.utils import timezone
 from django.utils.html import mark_safe
 from phonenumber_field.formfields import PhoneNumberField
 
 from finuke.exceptions import RateLimitedException
-from phones.models import PhoneNumber
+from phones.models import PhoneNumber, SMS
 from phones.sms import send_new_code, is_valid_code, SMSSendException
 from votes.models import Vote, VoterListItem
 
@@ -28,6 +31,8 @@ DROMS_PREFIX = {
 TOM_COUNTRY_CODES = set([687, 689, 590, 590, 508, 681])
 
 DROMS_COUNTRY_CODES = set(DROMS_PREFIX.values())
+
+logger = logging.getLogger('finuke.sms')
 
 class BaseForm(Form):
     def __init__(self, *args, **kwargs):
@@ -115,6 +120,10 @@ class ValidateCodeForm(BaseForm):
             raise ValidationError('Trop de tentative échouées. Veuillez patienter une minute par mesure de sécurité.')
 
         if not valid:
+            codes = list(SMS.objects.values('code').filter(phone_number=self.phone_number,
+                                                           created__gt=timezone.now() - timedelta(minutes=30)))
+            logger.warning(
+                f"SMS code failure : tried {self.cleaned_data['code']} and valid codes were {', '.join([code['code'] for code in codes])}")
             raise ValidationError('Votre code est invalide ou expiré.')
 
         return code
