@@ -1,12 +1,23 @@
 import csv
 import datetime
 from collections import OrderedDict
+from itertools import chain, islice
 
 import progressbar
 from django.core.management import BaseCommand
-from django.db import transaction
 
 from votes.models import VoterListItem
+
+
+def group_by(it, n):
+    it = iter(it)
+    while True:
+        try:
+            e = next(it)
+        except StopIteration:
+            return
+
+        yield chain((e, ), islice(it, n-1))
 
 
 class Command(BaseCommand):
@@ -69,39 +80,36 @@ class Command(BaseCommand):
             file_reader = csv.DictReader(file, delimiter=';', fieldnames=fieldnames)
             items = []
 
+            for chunk in group_by(enumerate(file_reader), 10000):
+                for i, row in chunk:
+                    if i == 0:
+                        if row != filestructure:
+                            print('Le fichier n\'est pas structuré correctement')
+                            print(row)
+                            print(filestructure)
+                            exit()
+                        continue
 
-            for i, row in enumerate(file_reader):
-                if i == 0:
-                    if row != filestructure:
-                        print('Le fichier n\'est pas structuré correctement')
-                        print(row)
-                        print(filestructure)
-                        exit()
-                    continue
+                    if i <= last_created:
+                        continue
 
-                if i <= last_created:
-                    continue
+                    row['list_type'] = row['list_type'].replace('\ufeff', '')
+                    row['civilite'] = dict(map(reversed, VoterListItem.CIVILITE_CHOICES)).get(row['civilite'], '')
+                    row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
 
-                row['list_type'] = row['list_type'].replace('\ufeff', '')
-                row['civilite'] = dict(map(reversed, VoterListItem.CIVILITE_CHOICES)).get(row['civilite'], '')
-                row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
+                    items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
 
-                items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
+                try:
+                    VoterListItem.objects.bulk_create(items)
+                    bar.update(i - last_created)
+                    items = []
+                except Exception as e:
+                    pass
 
-                if i % 10000 == 0:
-                    try:
-                        with transaction.atomic():
-                            VoterListItem.objects.bulk_create(items)
-                        bar.update(i - last_created)
-                        items = []
-                    except Exception as e:
-                        pass
-
-                    try:
-                        for j, item in enumerate(items):
-                            item.save()
-                    except Exception as e:
-                        print('Error on line '  + str(i - len(items) + j))
-                        print(item.__dict__)
-                        raise e
-
+                try:
+                    for j, item in enumerate(items):
+                        item.save()
+                except Exception as e:
+                    print('Error on line '  + str(i - len(items) + j))
+                    print(item.__dict__)
+                    raise e
