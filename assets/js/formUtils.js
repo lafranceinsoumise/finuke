@@ -12,9 +12,8 @@ function phoneField(selector) {
 
 function codeField(selector) {
   new Cleave(selector, {
-    blocks: [3, 3, 2],
+    blocks: [3, 3],
     numericOnly: true,
-    delimiterLazyShow: true
   })
 }
 
