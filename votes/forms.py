@@ -25,6 +25,8 @@ DROMS_PREFIX = {
     '693': 262,  # Réunion
 }
 
+TOM_COUNTRY_CODES = set([687, 689, 590, 590, 508, 681])
+
 DROMS_COUNTRY_CODES = set(DROMS_PREFIX.values())
 
 class BaseForm(Form):
@@ -72,6 +74,9 @@ class ValidatePhoneForm(BaseForm):
             # if country code is one of the DROM country codes, we check that is is a valid mobile phone number
             if DROMS_PREFIX.get(str(phone_number.national_number)[:3], None) != phone_number.country_code:
                 raise ValidationError(self.error_messages['mobile_only'])
+
+        elif phone_number.country_code in TOM_COUNTRY_CODES:
+            pass
 
         else:
             raise ValidationError(self.error_messages['french_only'])
