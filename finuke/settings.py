@@ -132,6 +132,25 @@ STATIC_ROOT = os.environ.get('STATIC_ROOT')
 
 # Loggers
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        'finuke': {
+            'handlers': ['console'],
+        },
+    },
+}
+
 if not DEBUG:
     LOGGING = {
         'version': 1,
@@ -143,6 +162,11 @@ if not DEBUG:
             }
         },
         'loggers': {
+            'finuke': {
+                'handlers': ['journald'],
+                'level': 'INFO',
+                'propagate': False,
+            },
             'django.template': {
                 'handlers': ['journald'],
                 'level': 'INFO',

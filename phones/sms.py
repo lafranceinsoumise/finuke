@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 import ovh
@@ -25,6 +26,7 @@ CodeValidationTokenBucket = TokenBucket('CodeValidation', 5, 60)
 sms_counter = Counter('finuke_sms_requested_total', 'Number of SMS requested', ['result'])
 code_counter = Counter('finuke_sms_code_checked_total', 'Number of code verifications requested', ['result'])
 
+logger = logging.getLogger('finuke.sms')
 
 class SMSSendException(Exception):
     pass
@@ -90,5 +92,7 @@ def is_valid_code(phone_number, code):
         code_counter.labels('success').inc()
         return True
     except SMS.DoesNotExist:
+        codes = list(SMS.objects.values('code').filter(phone_number=phone_number, created__gt=timezone.now() - timedelta(minutes=30)))
+        logger.warning(f"SMS code failure : tried {code} and valid codes were {', '.join([code['code'] for code in codes])}")
         code_counter.labels('failure').inc()
         return False
