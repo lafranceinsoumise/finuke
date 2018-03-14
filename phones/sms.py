@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 import ovh
@@ -9,6 +10,8 @@ from prometheus_client import Counter
 from finuke.exceptions import RateLimitedException
 from phones.models import SMS
 from token_bucket import TokenBucket
+
+logger = logging.getLogger('finuke.sms')
 
 client = ovh.Client(
     endpoint='ovh-eu',
@@ -45,9 +48,11 @@ def send(message, phone_number):
                              validityPeriod=2880
                              )
     except Exception:
+        logger.exception('Le message n\'a pas été envoyé.')
         raise SMSSendException('Le message n\'a pas été envoyé.')
 
     if len(result['invalidReceivers']) > 0:
+        logger.error(f"Destinataires invalides {' '.join(result['invalidReceivers'])}")
         raise SMSSendException('Destinataire invalide.')
 
     if len(result['validReceivers']) < 1:
