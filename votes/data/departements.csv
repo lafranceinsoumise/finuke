@@ -60,11 +60,11 @@
 "58";"NIEVRE";"Nièvre";3;"27";"58194";1;"O";"F";"C"
 "59";"NORD";"Nord";2;"32";"59350";1;"O";"G";"C"
 "60";"OISE";"Oise";5;"32";"60057";1;;;
-"61";"ORNE";"Orne";5;"28";"61001";1;;;
+"61";"ORNE";"Orne";5;"28";"61001";1;;;"C"
 "62";"PAS-DE-CALAIS";"Pas-de-Calais";2;"32";"62041";1;"O";"G";"C"
 "63";"PUY-DE-DOME";"Puy-de-Dôme";2;"84";"63113";1;"O";"D";"C"
 "64";"PYRENEES-ATLANTIQUES";"Pyrénées-Atlantiques";4;"75";"64445";1;"O";"D";"C"
-"65";"HAUTES-PYRENEES";"Hautes-Pyrénées";4;"76";"65440";1;;;
+"65";"HAUTES-PYRENEES";"Hautes-Pyrénées";4;"76";"65440";1;;;"C"
 "66";"PYRENEES-ORIENTALES";"Pyrénées-Orientales";4;"76";"66136";1;"O";"C";"C"
 "67";"BAS-RHIN";"Bas-Rhin";2;"44";"67482";1;"O";"G";"C"
 "68";"HAUT-RHIN";"Haut-Rhin";2;"44";"68066";1;"O";"E";"C"
