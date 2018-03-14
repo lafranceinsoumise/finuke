@@ -58,6 +58,9 @@ class Command(BaseCommand):
 
                     items.append(FEVoterListItem(**row))
 
+                if len(items) == 0:
+                    continue
+
                 try:
                     FEVoterListItem.objects.bulk_create(items)
                     bar.update(i)

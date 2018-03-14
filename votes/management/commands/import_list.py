@@ -99,6 +99,9 @@ class Command(BaseCommand):
 
                     items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
 
+                if len(items) == 0:
+                    continue
+
                 try:
                     VoterListItem.objects.bulk_create(items)
                     bar.update(i - last_created)
