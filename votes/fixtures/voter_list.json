@@ -598,5 +598,25 @@
       "local_city_name": "CAUSSADE",
       "country": "FRANCE"
     }
+  },
+  {
+    "model": "votes.fevoterlistitem",
+    "pk": 1,
+    "fields": {
+      "email": "frank@test.com",
+      "first_names": "Frank Dyson",
+      "last_name": "Herbert",
+      "has_voted": false
+    }
+  },
+  {
+    "model": "votes.fevoterlistitem",
+    "pk": 2,
+    "fields": {
+      "email": "marc@test.com",
+      "first_names": "Marc",
+      "last_name": "Pariot",
+      "has_voted": false
+    }
   }
 ]

@@ -3,6 +3,7 @@ from django.contrib.postgres.search import TrigramSimilarity
 from django.core.exceptions import PermissionDenied
 from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.template.response import TemplateResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView, DetailView, RedirectView
 from django.views.decorators.cache import cache_control
@@ -10,33 +11,23 @@ from django.contrib import messages
 
 from bureaux import actions
 from finuke.exceptions import RateLimitedException
-from phones.models import PhoneNumber
 from phones.sms import send_new_code, SMSCodeBypassed
 from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
-from .models import Vote, VoterListItem
-from .actions import make_online_vote, AlreadyVotedException, VoteLimitException
+from .models import Vote, VoterListItem, FEVoterListItem
+from .actions import make_online_vote, AlreadyVotedException, VoteLimitException, VoterState
+from .tokens import mail_token_generator
 
-PHONE_NUMBER_KEY = 'phone_number'
-PHONE_NUMBER_VALID_KEY = 'phone_valid'
-VOTER_ID_KEY = 'list_voter'
-SESSIONS_KEY = [PHONE_NUMBER_KEY, PHONE_NUMBER_VALID_KEY, VOTER_ID_KEY]
 
 ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
-
-
-def clean_session(request):
-    for key in SESSIONS_KEY:
-        if key in request.session:
-            del request.session[key]
 
 
 class CleanSessionView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        clean_session(self.request)
+        VoterState(self.request).clean_session()
         return '/'
 
 
@@ -46,7 +37,8 @@ def commune_json_search(request, departement):
 
 
 def person_json_search(request, departement, search):
-    if not (request.session.get(PHONE_NUMBER_VALID_KEY) or request.session.get('assistant_code') or request.session.get(
+    voter_state = VoterState(request)
+    if not (voter_state.is_phone_valid or request.session.get(actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
             actions.OPERATOR_LOGIN_SESSION_KEY)):
         raise PermissionDenied("not allowed")
 
@@ -98,25 +90,25 @@ class AskForPhoneView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        if self.request.session.get(PHONE_NUMBER_VALID_KEY) and \
-                self.request.session.get(PHONE_NUMBER_KEY) == form.cleaned_data['phone_number']:
+        voter_state = VoterState(self.request)
+        if voter_state.is_phone_valid and voter_state.phone_number and voter_state.phone_number.phone_number == form.cleaned_data['phone_number']:
             return HttpResponseRedirect(reverse('validate_list'))
 
-        clean_session(self.request)
+        voter_state.clean_session()
 
         try:
             code = form.send_code()
         except SMSCodeBypassed:
             # bypass code validation for phone numbers we already know about
-            self.request.session[PHONE_NUMBER_KEY] = str(form.cleaned_data['phone_number'])
-            self.request.session[PHONE_NUMBER_VALID_KEY] = True
+            voter_state.phone_number = form.phone_number
+            voter_state.is_phone_valid = True
             return HttpResponseRedirect(reverse('validate_list'))
 
         if code is None:
             return super().form_invalid(form)
 
         messages.add_message(self.request, messages.DEBUG, f'Le code envoyé est {code}')
-        self.request.session[PHONE_NUMBER_KEY] = str(form.cleaned_data['phone_number'])
+        voter_state.phone_number = form.phone_number
         return super().form_valid(form)
 
 
@@ -124,11 +116,13 @@ class ResendSms(RedirectView):
     url = reverse_lazy('validate_code')
 
     def get(self, request, *args, **kwargs):
-        if PHONE_NUMBER_KEY not in request.session:
+        voter_state = VoterState(request)
+
+        if voter_state.phone_number is None:
             return HttpResponseRedirect(reverse('validate_phone_number'))
         try:
             code = send_new_code(
-                PhoneNumber.objects.get(phone_number=request.session[PHONE_NUMBER_KEY]),
+                voter_state.phone_number,
                 request.META['REMOTE_ADDR']
             )
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
@@ -142,12 +136,14 @@ class ResendSms(RedirectView):
 class HasNotVotedMixin(UserPassesTestMixin):
     login_url = reverse_lazy('validate_phone_number')
 
+    def dispatch(self, request, *args, **kwargs):
+        self.voter_state = VoterState(request)
+        return super().dispatch(request, *args, **kwargs)
+
     def test_func(self):
-        session_phone = self.request.session.get(PHONE_NUMBER_KEY)
-        if session_phone is None:
+        if self.voter_state.phone_number is None:
             return False
-        phone_number = PhoneNumber.objects.get(phone_number=session_phone)
-        if phone_number.validated:
+        if self.voter_state.phone_number.validated:
             return False
 
         return True
@@ -161,12 +157,12 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['phone_number'] = self.request.session[PHONE_NUMBER_KEY]
+        kwargs['phone_number'] = self.voter_state.phone_number
 
         return kwargs
 
     def form_valid(self, form):
-        self.request.session[PHONE_NUMBER_VALID_KEY] = True
+        self.voter_state.is_phone_valid = True
         return super().form_valid(form)
 
 
@@ -174,6 +170,9 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
     template_name = 'votes/find_person.html'
     form_class = FindPersonInListForm
     success_url = reverse_lazy('vote')
+
+    def test_func(self):
+        return self.voter_state.is_phone_valid and super().test_func()
 
     def form_invalid(self, form):
         messages.add_message(
@@ -183,7 +182,7 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
         return super().form_invalid(form)
 
     def form_valid(self, form):
-        self.request.session[VOTER_ID_KEY] = form.cleaned_data['person'].id
+        self.voter_state.voter = form.cleaned_data['person']
         return super().form_valid(form)
 
 
@@ -196,15 +195,12 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         return '/merci?id=' + self.vote_id
 
     def test_func(self):
-        return self.request.session.get(PHONE_NUMBER_VALID_KEY) is not None and super().test_func()
+        voter_state = self.voter_state
+
+        return voter_state.is_foreign_french or (voter_state.is_phone_valid and super().test_func())
 
     def get_context_data(self, **kwargs):
-        list_voter_id = self.request.session.get(VOTER_ID_KEY, None)
-        if list_voter_id:
-            try:
-                kwargs['person'] = VoterListItem.objects.get(pk=list_voter_id)
-            except VoterListItem.DoesNotExist:
-                del self.request.session[VOTER_ID_KEY]
+        kwargs['person'] = self.voter_state.voter
 
         return super().get_context_data(**kwargs)
 
@@ -212,11 +208,13 @@ class MakeVoteView(HasNotVotedMixin, FormView):
         try:
             self.vote_id = make_online_vote(
                 ip=self.request.META['REMOTE_ADDR'],
-                phone_number=self.request.session['phone_number'],
-                voter_list_id=self.request.session.get(VOTER_ID_KEY, None),
+                phone_number=self.voter_state.phone_number,
+                voter=self.voter_state.voter,
+                is_foreign_french=self.voter_state.is_foreign_french,
                 vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:
+            raise
             return JsonResponse({'error': 'already voted'})
         except VoteLimitException:
             messages.add_message(
@@ -233,3 +231,24 @@ class CheckVoteView(DetailView):
     model = Vote
     context_object_name = 'vote'
     template_name = 'votes/check_vote.html'
+
+
+class FELogin(RedirectView):
+    url = reverse_lazy('vote')
+
+    def get(self, request, *args, token, **kwargs):
+        email = mail_token_generator.check_token(token)
+
+        if email is None:
+            return TemplateResponse(request, 'votes/fe_login_error.html')
+
+        try:
+            voter = FEVoterListItem.objects.get(email=email, has_voted=False)
+        except FEVoterListItem.DoesNotExist:
+            return TemplateResponse(request, 'votes/fe_login_error.html')
+
+        voter_state = VoterState(request)
+        voter_state.voter = voter
+        voter_state.is_foreign = True
+
+        return super().get(request, *args, **kwargs)

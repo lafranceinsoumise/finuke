@@ -2,8 +2,8 @@ import csv
 import datetime
 from collections import OrderedDict
 from itertools import chain, islice
+from tqdm import tqdm
 
-import progressbar
 from django.core.management import BaseCommand
 
 from votes.models import VoterListItem
@@ -72,12 +72,8 @@ class Command(BaseCommand):
             last_created = VoterListItem.objects.filter(origin_file=options['file_id']).order_by('-file_line').first()
             last_created = last_created.file_line if last_created else 0
 
-            print('Counting lines in file...')
-            lines = sum(1 for line in file)
-            bar = progressbar.ProgressBar(max_value=lines - last_created)
-
             file.seek(0)
-            file_reader = csv.DictReader(file, delimiter=';', fieldnames=fieldnames)
+            file_reader = tqdm(csv.DictReader(file, delimiter=';', fieldnames=fieldnames), desc="Import")
             items = []
 
             for chunk in group_by(enumerate(file_reader), 10000):
@@ -104,7 +100,6 @@ class Command(BaseCommand):
 
                 try:
                     VoterListItem.objects.bulk_create(items)
-                    bar.update(i - last_created)
                     items = []
                 except Exception as e:
                     pass

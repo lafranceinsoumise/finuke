@@ -33,7 +33,7 @@ class FEVoterListItem(models.Model):
     email = fields.EmailField('Adresse email donnée au consulat', unique=True)
     first_names = fields.CharField('Prénoms', max_length=255)
     last_name = fields.CharField('Nom', max_length=255)
-    has_voted = fields.BooleanField('Statut du vote', default=False)
+    has_voted = fields.BooleanField('Déjà voté', default=False, editable=False)
 
 
 class VoterListItem(models.Model):

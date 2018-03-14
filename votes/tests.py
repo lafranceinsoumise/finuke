@@ -1,4 +1,5 @@
-from django.test import RequestFactory
+from unittest.mock import patch
+from django.test import RequestFactory, override_settings
 from django.shortcuts import reverse
 
 from bs4 import BeautifulSoup
@@ -9,11 +10,11 @@ from bureaux.models import Bureau, BureauOperator
 from phones.models import PhoneNumber, SMS
 from bureaux.actions import mark_as_voted
 
-from .models import VoterListItem, Vote
-from .actions import make_online_vote, AlreadyVotedException
+from .models import VoterListItem, Vote, FEVoterListItem
+from .actions import make_online_vote, AlreadyVotedException, VoterState
 
 
-class VoteActionsTestCase(TestCase):
+class VoteConstraintsTestCase(TestCase):
     fixtures = ['voter_list']
 
     def setUp(self):
@@ -26,16 +27,16 @@ class VoteActionsTestCase(TestCase):
         self.bureau = Bureau.objects.create(place="In the database", operator=self.operator)
 
     def test_can_only_vote_once_with_phone_number(self):
-        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', str(self.phone1.phone_number), self.identity2.id, Vote.NO)
+            make_online_vote('randomip', self.phone1, self.identity2, False, Vote.NO)
 
     def test_can_only_vote_once_online_with_identity(self):
-        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', str(self.phone2.phone_number), self.identity1.id, Vote.NO)
+            make_online_vote('randomip', self.phone2, self.identity1, False, Vote.NO)
 
     def test_cannot_vote_physically_twice(self):
         request_factory = RequestFactory()
@@ -52,7 +53,7 @@ class VoteActionsTestCase(TestCase):
         request = request_factory.get('/')
         request.session = {}
 
-        make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
             mark_as_voted(request, self.identity1.id, self.bureau)
@@ -65,7 +66,7 @@ class VoteActionsTestCase(TestCase):
         mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', str(self.phone1.phone_number), self.identity1.id, Vote.YES)
+            make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
 
 
 class PhoneNumberViewsTestCase(TestCase):
@@ -129,6 +130,24 @@ class PhoneNumberViewsTestCase(TestCase):
             self.assertEqual(res.status_code, 200)
             self.assertFormFieldHasError(res, 'phone_number', f'Should be an error with number {number}.')
 
+    @override_settings(OVH_SMS_DISABLE=False)
+    @patch('phones.sms.send')
+    def test_drom_tom_numbers(self, send_mock):
+        numbers = [
+            '06 90 48 78 45',  # phone number for guadeloupe in national format
+            '+590 6 90 54 12 54',  # phone number for guadeloupe in international format
+        ]
+
+        for n in numbers:
+            send_mock.reset_mock()
+
+            res = self.client.post(reverse('validate_phone_number'), {'phone_number': n})
+            self.assertRedirects(res, reverse('validate_code'))
+
+            send_mock.assert_called_once()
+            self.assertEqual(len(send_mock.call_args[0]), 2)
+            self.assertEqual(send_mock.call_args[0][1].country_code, 590)
+
     def test_cannot_use_already_used_number(self):
         res = self.client.post(
             reverse('validate_phone_number'),
@@ -181,3 +200,104 @@ class PhoneNumberViewsTestCase(TestCase):
             {'phone_number': self.phone_number.phone_number.as_international}
         )
         self.assertRedirects(res, reverse('validate_list'))
+
+
+class SearchPersonAndVoteTestCase(TestCase):
+    fixtures = ['voter_list']
+
+    def setUp(self):
+        super().setUp()
+
+        fake_request = lambda: None
+        fake_request.session = self.client.session
+        self.voter_state = VoterState(fake_request)
+        self.save_session = lambda: fake_request.session.save()
+
+        self.voter1 = VoterListItem.objects.all()[0]
+        self.voter2 = VoterListItem.objects.all()[1]
+
+        self.foreign_french_voter = FEVoterListItem.objects.all()[0]
+
+        self.phone_number = PhoneNumber.objects.create(
+            phone_number='+33687217323',
+        )
+
+    def test_cannot_see_search_form_if_not_connected(self):
+        res = self.client.get(reverse('validate_list'))
+        self.assertRedirects(res, f"{reverse('validate_phone_number')}?next={reverse('validate_list')}")
+
+    def test_can_see_search_form_when_phone_validated(self):
+        self.voter_state.phone_number = self.phone_number
+        self.voter_state.is_phone_valid = True
+        self.save_session()
+
+        res = self.client.get(reverse('validate_list'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('person_json_search', kwargs={
+            'departement': self.voter1.departement,
+            'search': self.voter1.first_names + ' ' + self.voter1.last_name
+        }), data={'commune': self.voter1.commune})
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('validate_list'), data={'person': self.voter1.id})
+        self.assertRedirects(res, reverse('vote'))
+
+    def test_can_vote_with_voter_id(self):
+        self.voter_state.phone_number = self.phone_number
+        self.voter_state.is_phone_valid = True
+        self.voter_state.voter = self.voter1
+        self.save_session()
+
+        res = self.client.get(reverse('vote'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('vote'), data={'choice': Vote.YES})
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res['Location'].startswith('/merci?'))
+
+        self.voter1.refresh_from_db()
+        self.phone_number.refresh_from_db()
+        vote = Vote.objects.get()
+
+        self.assertTrue(self.phone_number.validated)
+        self.assertEqual(self.voter1.vote_status, VoterListItem.VOTE_STATUS_ONLINE)
+        self.assertEqual(vote.vote, Vote.YES)
+        self.assertTrue(vote.with_list)
+
+    def test_can_vote_without_voter_id(self):
+        self.voter_state.phone_number = self.phone_number
+        self.voter_state.is_phone_valid = True
+        self.save_session()
+
+        res = self.client.get(reverse('vote'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res['Location'].startswith('/merci?'))
+
+        self.phone_number.refresh_from_db()
+        vote = Vote.objects.get()
+
+        self.assertTrue(self.phone_number.validated)
+        self.assertEqual(vote.vote, Vote.NO)
+        self.assertFalse(vote.with_list)
+
+    def test_can_vote_as_foreign_french(self):
+        self.voter_state.voter = self.foreign_french_voter
+        self.save_session()
+
+        res = self.client.get(reverse('vote'))
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res['Location'].startswith('/merci?'))
+
+        self.foreign_french_voter.refresh_from_db()
+        vote = Vote.objects.get()
+
+        self.assertTrue(self.foreign_french_voter.has_voted,)
+        self.assertEqual(vote.vote, Vote.NO)
+        self.assertTrue(vote.with_list)

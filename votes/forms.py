@@ -108,7 +108,7 @@ class ValidateCodeForm(BaseForm):
 
     def __init__(self, *args, phone_number, **kwargs):
         super().__init__(*args, **kwargs)
-        self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
+        self.phone_number = phone_number
 
     def clean_code(self):
         # remove spaces added by Cleave.js
