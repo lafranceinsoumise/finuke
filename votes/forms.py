@@ -25,6 +25,7 @@ DROMS_PREFIX = {
     '696': 596,  # Martinique
     '697': 596,  # Martinique
     '692': 262,  # Réunion
+    '693': 262,  # Réunion
 }
 
 TOM_COUNTRY_CODES = set([687, 689, 590, 590, 508, 681])
