@@ -19,7 +19,7 @@ class BureauOperatorAdmin(admin.ModelAdmin):
     list_display = ('email', 'bureau_count')
     search_fields = ('email',)
 
-    readonly_fields = ('email', 'bureau_count', 'login_link')
+    readonly_fields = ('bureau_count', 'login_link')
 
     def bureau_count(self, obj):
         return obj.bureaux.all().count()
