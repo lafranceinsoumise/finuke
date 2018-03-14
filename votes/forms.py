@@ -18,14 +18,13 @@ from votes.models import Vote, VoterListItem
 MOBILE_PHONE_RE = re.compile(r'^0[67]')
 
 DROMS_PREFIX = {
-    '639': 269,  # Mayotte
+    '639': 262,  # Mayotte
     '690': 590,  # Gadeloupe
     '691': 590,  # Gadeloupe
     '694': 594,  # Guyane
     '696': 596,  # Martinique
     '697': 596,  # Martinique
     '692': 262,  # Réunion
-    '693': 262,  # Réunion
 }
 
 TOM_COUNTRY_CODES = set([687, 689, 590, 590, 508, 681])
