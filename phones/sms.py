@@ -70,7 +70,7 @@ def send_new_code(phone_number, ip):
 
     sms = SMS(phone_number=phone_number)
     formatted_code = sms.code[:3] + ' ' + sms.code[3:]
-    message = 'Votre code de validation pour nucleaire.vote est {0}'.format(sms.code)
+    message = 'Votre code de validation pour nucleaire.vote est {0}'.format(formatted_code)
 
     if not settings.OVH_SMS_DISABLE:
         send(message, phone_number.phone_number)
