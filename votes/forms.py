@@ -124,7 +124,11 @@ class ValidateCodeForm(BaseForm):
                                                            created__gt=timezone.now() - timedelta(minutes=30)))
             logger.warning(
                 f"SMS code failure : tried {self.cleaned_data['code']} and valid codes were {', '.join([code['code'] for code in codes])}")
-            raise ValidationError('Votre code est invalide ou expiré.')
+            if len(code) == 5:
+                raise ValidationError('Votre code est incorrect. Attention : le code demandé figure '
+                                      'dans le SMS et comporte 6 chiffres. Ne le confondez pas avec le numéro court '
+                                      'de l\'expéditeur (5 chiffres).')
+            raise ValidationError('Votre code est incorrect ou expiré.')
 
         return code
 
