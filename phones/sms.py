@@ -40,7 +40,7 @@ def send(message, phone_number):
         result = client.post('/sms/' + settings.OVH_SMS_SERVICE + '/jobs',
                              charset='UTF-8',
                              coding='7bit',
-                             receivers=[str(phone_number)],
+                             receivers=[str('00') + str(phone_number.country_code) + str(phone_number.national_number)],
                              message=message,
                              noStopClause=True,
                              priority='high',
