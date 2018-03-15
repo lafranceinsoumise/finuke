@@ -1,9 +1,9 @@
 import re
-import os
 import csv
 import quopri
 from collections import defaultdict
 from django.core.management import BaseCommand
+from django.conf import settings
 from phonenumber_field.phonenumber import PhoneNumber as PhoneNumberObj
 from argparse import FileType
 import imapclient
@@ -41,10 +41,8 @@ class Command(BaseCommand):
         return res
 
     def handle(self, *args, output, **kwargs):
-        password = os.environ['EMAIL_PASSWORD']
-
-        c = imapclient.IMAPClient('mail.gandi.net')
-        c.login('contact@nucleaire.vote', password)
+        c = imapclient.IMAPClient(settings.CONTACT_EMAIL_SERVER)
+        c.login(settings.CONTACT_EMAIL, settings.CONTACT_EMAIL_PASSWORD)
 
         c.select_folder('DEBLOCAGE TEL')
 

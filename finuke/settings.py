@@ -243,3 +243,8 @@ MESSAGE_LEVEL = messages.DEBUG if DEBUG else messages.INFO
 
 PROMETHEUS_USER = os.environ.get('PROMETHEUS_USER', 'prometheus')
 PROMETHEUS_PASSWORD = os.environ.get('PROMETHEUS_PASSWORD', 'password')
+
+
+CONTACT_EMAIL = 'contact@nucleaire.vote'
+CONTACT_EMAIL_SERVER = 'mail.gandi.net'
+CONTACT_EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
