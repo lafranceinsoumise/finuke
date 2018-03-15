@@ -10,6 +10,7 @@ from phones.models import PhoneNumber
 VoteIPTokenBucket = TokenBucket('VoteIP', 10, 60)
 
 online_vote_counter = Counter('finuke_online_votes_total', 'Number of online votes')
+fe_vote_counter = Counter('finuke_fe_votes_total', 'Number of FE votes')
 
 
 class VoteLimitException(Exception):
@@ -142,6 +143,7 @@ def make_online_vote(ip, phone_number, voter, is_foreign_french, vote):
             if voter is not None:
                 if is_foreign_french:
                     check_fe_voter_list_item(voter.pk)
+                    fe_vote_counter.inc()
                 else:
                     check_voter_list_item(voter.pk, VoterListItem.VOTE_STATUS_ONLINE)
 
