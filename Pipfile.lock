@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "600b6fe183af6338d11c00a7948ac0e070f80f8811179c275a2be86067bcd991"
+            "sha256": "564178c90fafc9fbfc462d2e5ef01c75db0df067bb493f9721ce96122aa48737"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -82,6 +82,13 @@
                 "sha256:ca958e13128e49674aa4a96f02746f5de5973f39b57297b84d59fd44d314d5b5"
             ],
             "version": "==0.2.0"
+        },
+        "imapclient": {
+            "hashes": [
+                "sha256:c35b57a4bb4a93ebfec84676000364ff2b0f049abffd934a0472fa14dc20c6e2",
+                "sha256:de02cedbb5de2f061907fcbfb1a85a1f6ebfb8b5fa523bc003670fb02222e579"
+            ],
+            "version": "==2.0.0"
         },
         "ipython": {
             "hashes": [
