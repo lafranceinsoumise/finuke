@@ -11,9 +11,9 @@ import imapclient
 from phones.models import PhoneNumber
 
 
-requester_re = re.compile('De\xa0'+r'(?P<nom>\w+(?: \w+)*) <(?P<email>[^>]+)>')
+requester_re = re.compile(r'De\s:\s(?P<nom>[^<]+) <(?P<email>[^>]+)>')
 number_re = re.compile(r'numéro_([0-9_+]+)\?')
-votant_re = re.compile(r'personne ayant déjà voté avec : (\w(?: \w+)*)\r')
+votant_re = re.compile(r'personne ayant déjà voté avec\s:\s([^\r]+)\r')
 
 body_key = 'BODY[1]'
 subject_key  = 'BODY[HEADER.FIELDS ("SUBJECT")]'
@@ -32,15 +32,16 @@ class Command(BaseCommand):
         res = {}
 
         if requester_match:
-            res['requester_name'] = requester_match.group('nom')
+            res['requester'] = requester_match.group('nom')
             res['email'] = requester_match.group('email')
 
         if voter_match:
-            res['voter_name'] = votant_re.search(body).group(1)
+            res['voter_declared'] = votant_re.search(body).group(1)
 
         return res
 
     def handle(self, *args, output, **kwargs):
+
         c = imapclient.IMAPClient(settings.CONTACT_EMAIL_SERVER)
         c.login(settings.CONTACT_EMAIL, settings.CONTACT_EMAIL_PASSWORD)
 
