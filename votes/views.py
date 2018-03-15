@@ -78,7 +78,13 @@ def person_json_search(request, departement, search):
     return JsonResponse(response, safe=False)
 
 
-class AskForPhoneView(FormView):
+class VoterStateMixin():
+    def dispatch(self, request, *args, **kwargs):
+        self.voter_state = VoterState(request)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AskForPhoneView(VoterStateMixin, FormView):
     template_name = 'votes/ask_for_phone.html'
     form_class = ValidatePhoneForm
     success_url = reverse_lazy('validate_code')
@@ -90,39 +96,36 @@ class AskForPhoneView(FormView):
         return kwargs
 
     def form_valid(self, form):
-        voter_state = VoterState(self.request)
-        if voter_state.is_phone_valid and voter_state.phone_number and voter_state.phone_number.phone_number == form.cleaned_data['phone_number']:
+        if self.voter_state.is_phone_valid and self.voter_state.phone_number and self.voter_state.phone_number.phone_number == form.cleaned_data['phone_number']:
             return HttpResponseRedirect(reverse('validate_list'))
 
-        voter_state.clean_session()
+        self.voter_state.clean_session()
 
         try:
             code = form.send_code()
         except SMSCodeBypassed:
             # bypass code validation for phone numbers we already know about
-            voter_state.phone_number = form.phone_number
-            voter_state.is_phone_valid = True
+            self.voter_state.phone_number = form.phone_number
+            self.voter_state.is_phone_valid = True
             return HttpResponseRedirect(reverse('validate_list'))
 
         if code is None:
             return super().form_invalid(form)
 
         messages.add_message(self.request, messages.DEBUG, f'Le code envoyé est {code}')
-        voter_state.phone_number = form.phone_number
+        self.voter_state.phone_number = form.phone_number
         return super().form_valid(form)
 
 
-class ResendSms(RedirectView):
+class ResendSms(VoterStateMixin, RedirectView):
     url = reverse_lazy('validate_code')
 
     def get(self, request, *args, **kwargs):
-        voter_state = VoterState(request)
-
-        if voter_state.phone_number is None:
+        if self.voter_state.phone_number is None:
             return HttpResponseRedirect(reverse('validate_phone_number'))
         try:
             code = send_new_code(
-                voter_state.phone_number,
+                self.voter_state.phone_number,
                 request.META['REMOTE_ADDR']
             )
             messages.add_message(request, messages.INFO, 'Le SMS a bien été renvoyé')
@@ -133,12 +136,8 @@ class ResendSms(RedirectView):
         return super().get(request, *args, **kwargs)
 
 
-class HasNotVotedMixin(UserPassesTestMixin):
+class HasUnusedPhoneMixin(VoterStateMixin, UserPassesTestMixin):
     login_url = reverse_lazy('validate_phone_number')
-
-    def dispatch(self, request, *args, **kwargs):
-        self.voter_state = VoterState(request)
-        return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
         if self.voter_state.phone_number is None:
@@ -149,7 +148,7 @@ class HasNotVotedMixin(UserPassesTestMixin):
         return True
 
 
-class ValidateCodeView(HasNotVotedMixin, FormView):
+class ValidateCodeView(HasUnusedPhoneMixin, FormView):
     login_url = '/'
     template_name = 'votes/validate_code.html'
     form_class = ValidateCodeForm
@@ -166,7 +165,7 @@ class ValidateCodeView(HasNotVotedMixin, FormView):
         return super().form_valid(form)
 
 
-class FindPersonInListView(HasNotVotedMixin, FormView):
+class FindPersonInListView(HasUnusedPhoneMixin, FormView):
     template_name = 'votes/find_person.html'
     form_class = FindPersonInListForm
     success_url = reverse_lazy('vote')
@@ -186,7 +185,7 @@ class FindPersonInListView(HasNotVotedMixin, FormView):
         return super().form_valid(form)
 
 
-class MakeVoteView(HasNotVotedMixin, FormView):
+class MakeVoteView(HasUnusedPhoneMixin, FormView):
     login_url = '/'
     template_name = 'votes/vote.html'
     form_class = VoteForm
@@ -214,7 +213,6 @@ class MakeVoteView(HasNotVotedMixin, FormView):
                 vote=form.cleaned_data['choice']
             )
         except AlreadyVotedException:
-            raise
             return JsonResponse({'error': 'already voted'})
         except VoteLimitException:
             messages.add_message(
