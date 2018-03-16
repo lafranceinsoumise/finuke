@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 
 from finuke.admin import admin_site
-from votes.models import VoterListItem, Vote, FEVoterListItem
+from votes.models import VoterListItem, Vote, FEVoterListItem, UnlockingRequest
 from .tokens import mail_token_generator
 
 
@@ -41,3 +41,28 @@ class VoterListItemAdmin(admin.ModelAdmin):
 @admin.register(Vote, site=admin_site)
 class VoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'vote', 'with_list')
+
+
+@admin.register(UnlockingRequest, site=admin_site)
+class UnlockingRequestAdmin(admin.ModelAdmin):
+    list_display = ('requester', 'display_number', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
+    list_filter = ('status', 'answer_sent')
+
+    fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
+    readonly_fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'answer_sent')
+
+    def display_number(self, obj):
+        if obj.phone_number:
+            return obj.phone_number.phone_number.as_international
+        return obj.raw_number
+    display_number.short_description = 'Numéro'
+
+    def actual_voter(self, obj):
+        if obj.voter:
+            if obj.voter.use_last_name:
+                return obj.voter.get_full_name() + ' ' + obj.voter.use_last_name
+            else:
+                return obj.voter.get_full_name()
+        else:
+            return '-'
+    actual_voter.short_description = 'Nom du votant'

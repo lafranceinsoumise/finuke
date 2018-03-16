@@ -92,3 +92,34 @@ class VoterListItem(models.Model):
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.departement})"
+
+
+class UnlockingRequest(models.Model):
+    email = models.EmailField('adresse email')
+    raw_number = models.CharField('Numéro (brut)', max_length=40)
+    requester = models.CharField('Demandeur', max_length=255)
+    declared_voter = models.CharField('Votant déclaré', max_length=255)
+
+    phone_number = models.ForeignKey('phones.PhoneNumber', on_delete=models.CASCADE, null=True)
+    voter = models.ForeignKey('VoterListItem', on_delete=models.CASCADE, null=True)
+
+    STATUS_REVIEW = 're'
+    STATUS_OK = 'ok'
+    STATUS_KO = 'ko'
+    STATUS_DUPLICATE = 'du'
+    STATUS_INVALID_NUMBER = 'in'
+    STATUS_UNUSED = 'un'
+    STATUS_UNLISTED = 'ul'
+    STATUS_CHOICES = (
+        (STATUS_REVIEW, 'À vérifier'),
+        (STATUS_OK, 'Acceptée'),
+        (STATUS_KO, 'Refusée'),
+        (STATUS_DUPLICATE, 'Numéro déjà débloqué une fois'),
+        (STATUS_INVALID_NUMBER, 'Le numéro transmis n\'est pas un numéro valide'),
+        (STATUS_UNUSED, "Le numéro n'a pas encore été utilisé"),
+        (STATUS_UNLISTED, "Le numéro a été utilisé par quelqu'un de non-inscrit")
+    )
+
+    status = models.CharField('Statut de la demande', max_length=2, choices=STATUS_CHOICES)
+
+    answer_sent = models.BooleanField('Message parti ?', editable=False, default=False)
