@@ -12,7 +12,7 @@ from phones.models import PhoneNumber
 
 
 requester_re = re.compile(r'De\s:\s(?P<nom>[^<]+) <(?P<email>[^>]+)>')
-number_re = re.compile(r'numéro_([0-9_+]+)\?')
+number_re = re.compile(r'numéro_([0-9_+-]+)\?')
 votant_re = re.compile(r'personne ayant déjà voté avec\s:\s([^\r]+)\r')
 
 body_key = 'BODY[1]'
