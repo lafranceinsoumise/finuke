@@ -23,7 +23,7 @@ class SkipException(Exception):
 
 
 class Command(BaseCommand):
-    help = 'Importer un CSV de FE de Mailtrain'
+    help = 'Importer les demandes de déblocage'
 
     def add_arguments(self, parser):
         parser.add_argument('-o', '--output', type=FileType(mode='w'), default=self.stdout)

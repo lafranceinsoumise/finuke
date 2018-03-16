@@ -8,6 +8,7 @@ from finuke.model_mixins import TimestampedModel
 from bureaux.models import Bureau
 from votes.data.geodata import communes_names
 
+
 def generate_vote_id():
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for i in range(32))
@@ -120,6 +121,7 @@ class UnlockingRequest(models.Model):
         (STATUS_UNLISTED, "Le numéro a été utilisé par quelqu'un de non-inscrit")
     )
 
-    status = models.CharField('Statut de la demande', max_length=2, choices=STATUS_CHOICES)
+    status = models.CharField('Statut de la demande', max_length=2, choices=STATUS_CHOICES, blank=None,
+                              default=STATUS_REVIEW)
 
     answer_sent = models.BooleanField('Message parti ?', editable=False, default=False)

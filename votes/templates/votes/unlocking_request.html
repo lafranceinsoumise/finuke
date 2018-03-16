@@ -1,0 +1,14 @@
+{% extends 'votes/layout.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content_central %}
+    <p>
+        Si vous partagez un numéro de téléphone avec une autre personne ayant déjà voté, vous pouvez demander le
+        déblocage du numéro pour pouvoir voter une deuxième fois en utilisant le formulaire ci-dessous. Merci de
+        bien vouloir nous donner toutes les informations pertinentes.
+    </p>
+
+    {% crispy form %}
+
+{% endblock %}

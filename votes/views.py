@@ -5,7 +5,7 @@ from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy, reverse
-from django.views.generic import FormView, DetailView, RedirectView
+from django.views.generic import FormView, DetailView, RedirectView, CreateView
 from django.views.decorators.cache import cache_control
 from django.contrib import messages
 
@@ -14,11 +14,10 @@ from finuke.exceptions import RateLimitedException
 from phones.sms import send_new_code, SMSCodeBypassed
 from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
-from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm
-from .models import Vote, VoterListItem, FEVoterListItem
+from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm, PhoneUnlockingRequestForm
+from .models import Vote, VoterListItem, FEVoterListItem, UnlockingRequest
 from .actions import make_online_vote, AlreadyVotedException, VoteLimitException, VoterState
 from .tokens import mail_token_generator
-
 
 ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
 
@@ -33,13 +32,15 @@ class CleanSessionView(RedirectView):
 
 @cache_control(max_age=3600, public=True)
 def commune_json_search(request, departement):
-    return JsonResponse([commune for commune in communes if commune['dep'].zfill(2) == departement.zfill(2)], safe=False)
+    return JsonResponse([commune for commune in communes if commune['dep'].zfill(2) == departement.zfill(2)],
+                        safe=False)
 
 
 def person_json_search(request, departement, search):
     voter_state = VoterState(request)
-    if not (voter_state.is_phone_valid or request.session.get(actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
-            actions.OPERATOR_LOGIN_SESSION_KEY)):
+    if not (voter_state.is_phone_valid or request.session.get(
+            actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
+        actions.OPERATOR_LOGIN_SESSION_KEY)):
         raise PermissionDenied("not allowed")
 
     if not ListSearchTokenBucket.has_tokens(request.session.session_key):
@@ -96,7 +97,8 @@ class AskForPhoneView(VoterStateMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        if self.voter_state.is_phone_valid and self.voter_state.phone_number and self.voter_state.phone_number.phone_number == form.cleaned_data['phone_number']:
+        if self.voter_state.is_phone_valid and self.voter_state.phone_number and self.voter_state.phone_number.phone_number == \
+                form.cleaned_data['phone_number']:
             return HttpResponseRedirect(reverse('validate_list'))
 
         self.voter_state.clean_session()
@@ -250,3 +252,23 @@ class FELogin(RedirectView):
         voter_state.is_foreign = True
 
         return super().get(request, *args, **kwargs)
+
+
+class UnlockingRequestView(CreateView):
+    model = UnlockingRequest
+    form_class = PhoneUnlockingRequestForm
+
+    success_url = reverse_lazy('validate_phone_number')
+
+    template_name = 'votes/unlocking_request.html'
+
+    def form_valid(self, form):
+        res = super().form_valid(form)
+
+        messages.add_message(
+            self.request,
+            messages.SUCCESS,
+            "Votre demande a été prise en compte. Elle sera vérifiée et vous recevez un email de confirmation."
+        )
+
+        return res

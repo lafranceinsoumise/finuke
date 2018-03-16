@@ -2,7 +2,7 @@ from django.urls import path
 
 from votes.views import (
     AskForPhoneView, ValidateCodeView, MakeVoteView, CheckVoteView, commune_json_search, person_json_search,
-    FindPersonInListView, CleanSessionView, ResendSms, FELogin
+    FindPersonInListView, CleanSessionView, ResendSms, FELogin, UnlockingRequestView
 )
 
 urlpatterns = [
@@ -16,4 +16,5 @@ urlpatterns = [
     path('vote', MakeVoteView.as_view(), name='vote'),
     path('vote/<pk>', CheckVoteView.as_view(), name='check_vote'),
     path('fe/<token>', FELogin.as_view(), name='fe_login'),
+    path('demande-deblocage', UnlockingRequestView.as_view(), name='unlocking_request'),
 ]

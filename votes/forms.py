@@ -1,19 +1,21 @@
 import logging
 import re
 from datetime import timedelta
+from collections import Counter
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+from crispy_forms import layout
 from django.core.exceptions import ValidationError
-from django.forms import Form, CharField, ChoiceField, ModelChoiceField, RadioSelect
+from django.forms import Form, ModelForm, CharField, ChoiceField, ModelChoiceField, RadioSelect
 from django.utils import timezone
 from django.utils.html import mark_safe
+from django.urls import reverse
 from phonenumber_field.formfields import PhoneNumberField
 
 from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber, SMS
 from phones.sms import send_new_code, is_valid_code, SMSSendException
-from votes.models import Vote, VoterListItem
+from votes.models import Vote, VoterListItem, UnlockingRequest
 
 MOBILE_PHONE_RE = re.compile(r'^0[67]')
 
@@ -34,11 +36,36 @@ DROMS_COUNTRY_CODES = set(DROMS_PREFIX.values())
 
 logger = logging.getLogger('finuke.sms')
 
+
+def normalize_mobile_phone(phone_number, messages):
+    if phone_number.country_code == 33:
+        # if french number, we verifies if it is not actually a DROM mobile number and replace country code in this case
+        drom = DROMS_PREFIX.get(str(phone_number.national_number)[:3], None)
+        if drom is not None:
+            phone_number.country_code = drom
+        # if it is not the case, we verify it is a mobile number
+        elif not MOBILE_PHONE_RE.match(phone_number.as_national):
+            raise ValidationError(messages['mobile_only'])
+
+    elif phone_number.country_code in DROMS_COUNTRY_CODES:
+        # if country code is one of the DROM country codes, we check that is is a valid mobile phone number
+        if DROMS_PREFIX.get(str(phone_number.national_number)[:3], None) != phone_number.country_code:
+            raise ValidationError(messages['mobile_only'])
+
+    elif phone_number.country_code in TOM_COUNTRY_CODES:
+        pass
+
+    else:
+        raise ValidationError(messages['french_only'])
+
+    return phone_number
+
+
 class BaseForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.add_input(Submit('submit', 'Valider'))
+        self.helper.add_input(layout.Submit('submit', 'Valider'))
 
 
 class FindPersonInListForm(Form):
@@ -54,9 +81,9 @@ class ValidatePhoneForm(BaseForm):
         'mobile_only': "Vous devez donner un numéro de téléphone mobile.",
         'rate_limited': "Trop de SMS envoyés. Merci de réessayer dans quelques minutes.",
         'sending_error': "Le SMS n'a pu être envoyé suite à un problème technique. Merci de réessayer plus tard.",
-        'already_used': mark_safe("Ce numéro a déjà été utilisé pour voter. Si vous le partagez avec une autre"
-                                  " personne, <a href=\"/demander-le-deblocage-dun-numero/\">vous pouvez"
-                                  " exceptionnellement en demander le déblocage</a>."),
+        'already_used': "Ce numéro a déjà été utilisé pour voter. Si vous le partagez avec une autre"
+                        " personne, <a href=\"{}\">vous pouvez"
+                        " exceptionnellement en demander le déblocage</a>.",
     }
 
     def __init__(self, ip, *args, **kwargs):
@@ -64,32 +91,12 @@ class ValidatePhoneForm(BaseForm):
         self.ip = ip
 
     def clean_phone_number(self):
-        phone_number = self.cleaned_data['phone_number']
-
-        if phone_number.country_code == 33:
-            # if french number, we verifies if it is not actually a DROM mobile number and replace country code in this case
-            drom = DROMS_PREFIX.get(str(phone_number.national_number)[:3], None)
-            if drom is not None:
-                phone_number.country_code = drom
-            # if it is not the case, we verify it is a mobile number
-            elif not MOBILE_PHONE_RE.match(phone_number.as_national):
-                raise ValidationError(self.error_messages['mobile_only'])
-
-        elif phone_number.country_code in DROMS_COUNTRY_CODES:
-            # if country code is one of the DROM country codes, we check that is is a valid mobile phone number
-            if DROMS_PREFIX.get(str(phone_number.national_number)[:3], None) != phone_number.country_code:
-                raise ValidationError(self.error_messages['mobile_only'])
-
-        elif phone_number.country_code in TOM_COUNTRY_CODES:
-            pass
-
-        else:
-            raise ValidationError(self.error_messages['french_only'])
+        phone_number = normalize_mobile_phone(self.cleaned_data['phone_number'], self.error_messages)
 
         (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=phone_number)
 
         if self.phone_number.validated:
-            raise ValidationError(self.error_messages['already_used'])
+            raise ValidationError(mark_safe(self.error_messages['already_used'].format(reverse('unlocking_request'))))
 
         return phone_number
 
@@ -135,3 +142,69 @@ class ValidateCodeForm(BaseForm):
 
 class VoteForm(BaseForm):
     choice = ChoiceField(label='Vote', choices=Vote.VOTE_CHOICES, widget=RadioSelect, required=True)
+
+
+class PhoneUnlockingRequestForm(ModelForm):
+    error_messages = {
+        'french_only': "Il n'est possible de voter qu'avec des numéros de téléphone français. Ce formulaire ne sert"
+                       " qu'à débloquer un numéro qui a DÉJÀ servi à voter.",
+        'mobile_only': "Il n'est possible de voter qu'avec un numéro de téléphone mobile. Ce formulaire ne sert"
+                       " qu'à débloquer un numéro qui a DÉJÀ servi à voter.",
+        'unused': 'Ce numéro de téléphone n\'a pas été utilisé, vous pouvez déjà bien voter.',
+        'unlisted': "La personne qui a voté avec ce numéro l'a fait en tant que non-inscrit. Il nous est"
+                    " donc malheureusement impossible de vérifier cette requête.",
+        'no_duplicate': 'Une requête de déblocage a déjà été validée pour ce numéro. Nous n\'acceptons pas'
+                        ' de requête multiple pour le même numéro.',
+        'in_review': 'Une requête de déblocage a déjà été reçu pour ce numéro et est en cours de'
+                     ' traitement. Merci de bien vouloir patienter !',
+    }
+
+    phone_number = PhoneNumberField(label='Le numéro de téléphone à débloquer', required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].label = 'Une adresse email de contact'
+        self.fields['requester'].label = 'Vos nom et prénoms (personne qui souhaite pouvoir voter)'
+        self.fields['declared_voter'].label = 'Les nom de naissance et prénoms de la personne qui a déjà voté'
+
+        self.helper = FormHelper()
+        self.helper.add_input(layout.Submit('submit', 'Valider'))
+
+        self.helper.layout = layout.Layout(
+            'email',
+            'phone_number',
+            'requester',
+            'declared_voter'
+        )
+
+    def clean_phone_number(self):
+        phone_number = normalize_mobile_phone(self.cleaned_data['phone_number'], self.error_messages)
+
+        try:
+            self.phone_number = PhoneNumber.objects.get(phone_number=phone_number)
+        except PhoneNumber.DoesNotExist:
+            raise ValidationError(self.error_messages['unused'])
+
+        if not self.phone_number.validated:
+            raise ValidationError(self.error_messages['unused'])
+
+        if self.phone_number.voter is None:
+            raise ValidationError(self.error_messages['unlisted'])
+
+        requests = Counter(u.status for u in UnlockingRequest.objects.filter(phone_number=self.phone_number))
+
+        if requests[UnlockingRequest.STATUS_OK]:
+            raise ValidationError(self.error_messages['no_duplicate'])
+        elif requests[UnlockingRequest.STATUS_REVIEW]:
+            raise ValidationError(self.error_messages['in_review'])
+
+        return phone_number
+
+    def save(self, commit=True):
+        self.instance.phone_number = self.phone_number
+        self.instance.voter = self.phone_number.voter
+        return super().save(commit)
+
+    class Meta:
+        model = UnlockingRequest
+        fields = ('email', 'requester', 'declared_voter')
