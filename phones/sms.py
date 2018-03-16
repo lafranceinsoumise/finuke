@@ -44,6 +44,7 @@ def send(message, phone_number):
                              message=message,
                              noStopClause=True,
                              priority='high',
+                             senderForResponse=True,
                              validityPeriod=2880
                              )
     except Exception:
