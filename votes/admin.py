@@ -43,6 +43,16 @@ class VoteAdmin(admin.ModelAdmin):
     list_display = ('id', 'vote', 'with_list')
 
 
+def accept_request(model_admin, request, queryset):
+    queryset.update(status=UnlockingRequest.STATUS_OK)
+accept_request.short_description = "Accepter les requêtes"
+
+
+def refuse_request(model_admin, request, queryset):
+    queryset.update(status=UnlockingRequest.STATUS_KO)
+refuse_request.short_description = "Refuser les requêtes"
+
+
 @admin.register(UnlockingRequest, site=admin_site)
 class UnlockingRequestAdmin(admin.ModelAdmin):
     list_display = ('requester', 'display_number', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
@@ -66,3 +76,5 @@ class UnlockingRequestAdmin(admin.ModelAdmin):
         else:
             return '-'
     actual_voter.short_description = 'Nom du votant'
+
+    actions = [accept_request, refuse_request]
