@@ -20,5 +20,5 @@ function codeField(selector) {
 if (document.querySelector('input[name="phone_number"]'))
   phoneField('input[name="phone_number"]');
 
-if(document.querySelector('input[name="code"]'))
-  codeField('input[name="code"]');
+// if(document.querySelector('input[name="code"]'))
+//   codeField('input[name="code"]');
