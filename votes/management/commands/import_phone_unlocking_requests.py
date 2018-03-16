@@ -25,9 +25,6 @@ class SkipException(Exception):
 class Command(BaseCommand):
     help = 'Importer les demandes de déblocage'
 
-    def add_arguments(self, parser):
-        parser.add_argument('-o', '--output', type=FileType(mode='w'), default=self.stdout)
-
     def get_fields(self, body):
         requester_match = requester_re.search(body)
         voter_match = votant_re.search(body)
@@ -37,7 +34,7 @@ class Command(BaseCommand):
 
         return requester_match.group('email'), requester_match.group('nom'), voter_match.group(1)
 
-    def handle(self, *args, output, **kwargs):
+    def handle(self, *args, **kwargs):
 
         c = imapclient.IMAPClient(settings.CONTACT_EMAIL_SERVER)
         c.login(settings.CONTACT_EMAIL, settings.CONTACT_EMAIL_PASSWORD)

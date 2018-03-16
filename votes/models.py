@@ -111,6 +111,7 @@ class UnlockingRequest(models.Model):
     STATUS_INVALID_NUMBER = 'in'
     STATUS_UNUSED = 'un'
     STATUS_UNLISTED = 'ul'
+    STATUS_IGNORE = 'ig'
     STATUS_CHOICES = (
         (STATUS_REVIEW, 'À vérifier'),
         (STATUS_OK, 'Acceptée'),
@@ -118,7 +119,8 @@ class UnlockingRequest(models.Model):
         (STATUS_DUPLICATE, 'Numéro déjà débloqué une fois'),
         (STATUS_INVALID_NUMBER, 'Le numéro transmis n\'est pas un numéro valide'),
         (STATUS_UNUSED, "Le numéro n'a pas encore été utilisé"),
-        (STATUS_UNLISTED, "Le numéro a été utilisé par quelqu'un de non-inscrit")
+        (STATUS_UNLISTED, "Le numéro a été utilisé par quelqu'un de non-inscrit"),
+        (STATUS_IGNORE, "Demande à ignore (pas de réponse)")
     )
 
     status = models.CharField('Statut de la demande', max_length=2, choices=STATUS_CHOICES, blank=None,
