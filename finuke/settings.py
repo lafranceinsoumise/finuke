@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+
+import dj_email_url
 from django.contrib import messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -130,6 +132,20 @@ USE_TZ = True
 STATIC_URL = '/' + (BASE_URL or '') + 'static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT')
 
+# Email
+
+# by default configured for mailhog sending
+email_config = dj_email_url.parse(os.environ.get('SMTP_URL', 'smtp://localhost:1025/'))
+
+EMAIL_FILE_PATH = email_config['EMAIL_FILE_PATH']
+EMAIL_HOST_USER = email_config['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = email_config['EMAIL_HOST_PASSWORD']
+EMAIL_HOST = email_config['EMAIL_HOST']
+EMAIL_PORT = email_config['EMAIL_PORT']
+EMAIL_BACKEND = email_config['EMAIL_BACKEND']
+EMAIL_USE_TLS = email_config['EMAIL_USE_TLS']
+EMAIL_USE_SSL = email_config['EMAIL_USE_SSL']
+
 # Loggers
 
 LOGGING = {
@@ -248,3 +264,6 @@ PROMETHEUS_PASSWORD = os.environ.get('PROMETHEUS_PASSWORD', 'password')
 CONTACT_EMAIL = 'contact@nucleaire.vote'
 CONTACT_EMAIL_SERVER = 'mail.gandi.net'
 CONTACT_EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+
+EMAIL_NOT_CLOSED = 'https://mosaico.jlm2017.fr/emails/6cbbc59c-19bf-423f-880f-a7ee88db7fa4.html'
+EMAIL_NO_RESULTS = 'https://mosaico.jlm2017.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'

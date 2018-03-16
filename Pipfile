@@ -29,6 +29,9 @@ systemd = "*"
 prometheus-client = "*"
 tqdm = "*"
 imapclient = "*"
+dj-email-url = "*"
+requests = "*"
+"html2text" = "*"
 
 
 [dev-packages]
