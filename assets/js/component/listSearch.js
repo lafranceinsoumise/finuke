@@ -106,7 +106,7 @@ class ListSearch extends React.Component {
     return (
       <div>
         <div className="form-group">
-          <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" value={this.state.departement} onChange={this.departementChange} />
+          <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" name="departement" value={this.state.departement} onChange={this.departementChange} autocomplete="off" />
         </div>
         <p className="text-center">
           { this.state.departementInfo ? this.state.departementInfo.name : this.labels.departementHelp }
@@ -133,7 +133,7 @@ class ListSearch extends React.Component {
             name="person"
             onBlurResetsInput={false}
             onCloseResetsInput={false}
-            inputProps={{autoComplete: 'off'}}
+            inputProps={{autoComplete: 'full name'}}
             onBlur={() => this.setState({displayNoChoiceHint: true})}
             autoBlur={true}
             required={true}
