@@ -40,11 +40,11 @@ def send(message, phone_number):
         result = client.post('/sms/' + settings.OVH_SMS_SERVICE + '/jobs',
                              charset='UTF-8',
                              coding='7bit',
-                             receivers=[str('00') + str(phone_number.country_code) + str(phone_number.national_number)],
+                             receivers=[phone_number.as_e164],
                              message=message,
                              noStopClause=True,
                              priority='high',
-                             senderForResponse=True,
+                             sender='nucleaire.v',
                              validityPeriod=2880
                              )
     except Exception:
