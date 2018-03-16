@@ -15,10 +15,15 @@ _h.ignore_images = True
 class Command(BaseCommand):
     help = 'Envoyer les rappels par mail'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--current', action='store_true')
+
     def handle(self, *args, **options):
-        midnight = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        start_time = timezone.now()
+        if not options['current']:
+            start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
         not_closed_bureau = BureauOperator.objects\
-            .filter(bureaux__start_time__lt=midnight, bureaux__end_time__isnull=True)
+            .filter(bureaux__start_time__lt=start_time, bureaux__end_time__isnull=True)
         no_results_bureau = BureauOperator.objects\
             .filter(bureaux__end_time__isnull=False, bureaux__result1_yes__isnull=True)\
             .difference(not_closed_bureau)
