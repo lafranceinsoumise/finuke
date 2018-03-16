@@ -100,7 +100,10 @@ class Command(BaseCommand):
 
                 if phone_number_model.voter:
                     row['status'] = 'Personne trouvée'
-                    row['voter_actual'] = phone_number_model.voter.get_full_name()
+                    voter = phone_number_model.voter
+                    row['voter_actual'] = voter.get_full_name()
+                    if voter.use_last_name:
+                        row['voter_actual'] += f' ({voter.use_last_name})'
                 else:
                     row['status'] = 'Personne non indiquée'
 
