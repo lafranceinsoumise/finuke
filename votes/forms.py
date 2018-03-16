@@ -50,6 +50,7 @@ class ValidatePhoneForm(BaseForm):
     phone_number = PhoneNumberField(label='Numéro de téléphone portable')
 
     error_messages = {
+        'drom_problems': "Nous avons actuellement avec notre prestataire un problème d'envoi de SMS vers l'outre-mer. Nous essayons de le régler au plus vite.",
         'french_only': "Le numéro doit être un numéro de téléphone français.",
         'mobile_only': "Vous devez donner un numéro de téléphone mobile.",
         'rate_limited': "Trop de SMS envoyés. Merci de réessayer dans quelques minutes.",
@@ -86,10 +87,13 @@ class ValidatePhoneForm(BaseForm):
         else:
             raise ValidationError(self.error_messages['french_only'])
 
-        (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=self.cleaned_data['phone_number'])
+        (self.phone_number, created) = PhoneNumber.objects.get_or_create(phone_number=phone_number)
 
         if self.phone_number.validated:
             raise ValidationError(self.error_messages['already_used'])
+
+        if phone_number.country_code in DROMS_COUNTRY_CODES or phone_number.country_code in TOM_COUNTRY_CODES:
+            raise ValidationError(self.error_messages['drom_problems'])
 
         return phone_number
 
