@@ -50,9 +50,18 @@ class ListSearch extends React.Component {
   }
 
   async departementChange(event) {
+    if (event.target.value.length > 4) {
+      this.setState({
+        displayZipHint: true
+      });
+
+      return;
+    }
+
     let departementInfo = findDepartement(event.target.value);
 
     this.setState({
+      displayZipHint: false,
       departement: event.target.value,
       departementInfo : departementInfo,
       commune: null,
@@ -108,6 +117,12 @@ class ListSearch extends React.Component {
         <div className="form-group">
           <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" name="departement" value={this.state.departement} onChange={this.departementChange} autocomplete="off" />
         </div>
+        {this.state.displayZipHint ?
+        <div className="alert alert-warning">
+          <p>
+            Vous devez taper votre numéro de département (2 ou 3 chiffres) et non votre code postal&nbsp;!
+          </p>
+        </div> : ''}
         <p className="text-center">
           { this.state.departementInfo ? this.state.departementInfo.name : this.labels.departementHelp }
         </p>
@@ -122,6 +137,7 @@ class ListSearch extends React.Component {
               onBlurResetsInput={false}
               onCloseResetsInput={false}
               onChange={this.communeChange}
+              noResultsText={"Pas de résultats. N'oubliez pas le tirets !"}
               options={this.communesChoice}
               disabled={!this.state.communesLoaded}
               placeholder={this.labels.communePlaceholder}
