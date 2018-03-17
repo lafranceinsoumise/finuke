@@ -151,8 +151,11 @@ class PhoneUnlockingRequestForm(ModelForm):
         'mobile_only': "Il n'est possible de voter qu'avec un numéro de téléphone mobile. Ce formulaire ne sert"
                        " qu'à débloquer un numéro qui a DÉJÀ servi à voter.",
         'unused': 'Ce numéro de téléphone n\'a pas été utilisé, vous pouvez déjà bien voter.',
-        'unlisted': "La personne qui a voté avec ce numéro l'a fait en tant que non-inscrit. Il nous est"
-                    " donc malheureusement impossible de vérifier cette requête.",
+        'unlisted': "La personne qui a voté avec ce numéro l'a fait en tant que non-inscrit sur les listes électorales,"
+                    " ou a voté avant le lundi 12, 19h (nous ne sauvegardions alors pas les associations votant/numéro"
+                    " de téléphone)."
+                    " Il nous est donc malheureusement impossible de vérifier que la personne ayant effectivement voté"
+                    " correspond à celle que vous nous déclarez. Nous nous excusons platement pour la gêne occasionnée.",
         'no_duplicate': 'Une requête de déblocage a déjà été validée pour ce numéro. Nous n\'acceptons pas'
                         ' de requête multiple pour le même numéro.',
         'in_review': 'Une requête de déblocage a déjà été reçu pour ce numéro et est en cours de'
