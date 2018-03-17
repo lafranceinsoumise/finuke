@@ -191,9 +191,14 @@ class MakeVoteView(HasUnusedPhoneMixin, FormView):
     login_url = '/'
     template_name = 'votes/vote.html'
     form_class = VoteForm
+    success_url = '/merci'
 
-    def get_success_url(self):
-        return '/merci?id=' + self.vote_id
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if isinstance(response, HttpResponseRedirect):
+            response.set_cookie('vote_id', self.vote_id, max_age=600)
+
+        return response
 
     def test_func(self):
         voter_state = self.voter_state
