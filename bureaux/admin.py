@@ -32,6 +32,7 @@ class BureauOperatorAdmin(admin.ModelAdmin):
 
 @admin.register(Bureau, site=admin_site)
 class BureauAdmin(admin.ModelAdmin):
+    search_fields = ('place', 'operator__email')
     list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results')
     readonly_fields = ('has_results',)
 
