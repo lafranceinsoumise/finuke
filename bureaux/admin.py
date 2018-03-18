@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
+from django.db.models import Count, F
 from django.shortcuts import reverse
 
 from bureaux.models import LoginLink, BureauOperator, Operation, Bureau
@@ -33,12 +34,29 @@ class BureauOperatorAdmin(admin.ModelAdmin):
 @admin.register(Bureau, site=admin_site)
 class BureauAdmin(admin.ModelAdmin):
     search_fields = ('place', 'operator__email')
-    list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results')
-    readonly_fields = ('has_results',)
+    list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results', 'emargements', 'difference')
+    readonly_fields = ('has_results', 'emargements', 'difference')
+
+    def get_queryset(self, request):
+        return Bureau.objects.annotate(emargements=Count('voterlistitem'))\
+            .annotate(difference=Count('voterlistitem') - F('result1_yes') - F('result1_no') - F('result1_blank') - F('result1_null'))
 
     def has_results(self, obj):
         return 'Oui' if obj.result1_yes is not None else 'Non'
     has_results.short_description = "Résultats remontés"
+
+    def difference(self, obj):
+        return obj.difference
+
+    difference.short_description = 'Écart bulletins / émargements'
+    difference.admin_order_field = 'difference'
+
+    def emargements(self, obj):
+        return obj.emargements
+
+    emargements.short_description = 'Émargements'
+    emargements.admin_order_field = 'emargements'
+
 
 
 @admin.register(Operation, site=admin_site)
