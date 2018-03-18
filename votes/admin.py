@@ -57,6 +57,7 @@ refuse_request.short_description = "Refuser les requêtes"
 class UnlockingRequestAdmin(admin.ModelAdmin):
     list_display = ('requester', 'display_number', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
     list_filter = ('status', 'answer_sent')
+    search_fields = ('email', 'requester', 'declared_voter', 'raw_number', 'phone_number__phone_number')
 
     fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
     readonly_fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'answer_sent')
