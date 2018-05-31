@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import reverse
 
@@ -37,45 +38,45 @@ class VoterListItemAdmin(admin.ModelAdmin):
         return str(obj.origin_file) + ' #' + str(obj.file_line)
     import_id.short_description = "ID importation"
 
-
-@admin.register(Vote, site=admin_site)
-class VoteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'vote', 'with_list')
-
-
-def accept_request(model_admin, request, queryset):
-    queryset.update(status=UnlockingRequest.STATUS_OK)
-accept_request.short_description = "Accepter les requêtes"
+if settings.ENABLE_ELECTRONIC_VOTE:
+    @admin.register(Vote, site=admin_site)
+    class VoteAdmin(admin.ModelAdmin):
+        list_display = ('id', 'vote', 'with_list')
 
 
-def refuse_request(model_admin, request, queryset):
-    queryset.update(status=UnlockingRequest.STATUS_KO)
-refuse_request.short_description = "Refuser les requêtes"
+    def accept_request(model_admin, request, queryset):
+        queryset.update(status=UnlockingRequest.STATUS_OK)
+    accept_request.short_description = "Accepter les requêtes"
 
 
-@admin.register(UnlockingRequest, site=admin_site)
-class UnlockingRequestAdmin(admin.ModelAdmin):
-    list_display = ('requester', 'display_number', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
-    list_filter = ('status', 'answer_sent')
-    search_fields = ('email', 'requester', 'declared_voter', 'raw_number', 'phone_number__phone_number')
+    def refuse_request(model_admin, request, queryset):
+        queryset.update(status=UnlockingRequest.STATUS_KO)
+    refuse_request.short_description = "Refuser les requêtes"
 
-    fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
-    readonly_fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'answer_sent')
 
-    def display_number(self, obj):
-        if obj.phone_number:
-            return obj.phone_number.phone_number.as_international
-        return obj.raw_number
-    display_number.short_description = 'Numéro'
+    @admin.register(UnlockingRequest, site=admin_site)
+    class UnlockingRequestAdmin(admin.ModelAdmin):
+        list_display = ('requester', 'display_number', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
+        list_filter = ('status', 'answer_sent')
+        search_fields = ('email', 'requester', 'declared_voter', 'raw_number', 'phone_number__phone_number')
 
-    def actual_voter(self, obj):
-        if obj.voter:
-            if obj.voter.use_last_name:
-                return obj.voter.get_full_name() + ' ' + obj.voter.use_last_name
+        fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'status', 'answer_sent')
+        readonly_fields = ('email', 'requester', 'declared_voter', 'actual_voter', 'answer_sent')
+
+        def display_number(self, obj):
+            if obj.phone_number:
+                return obj.phone_number.phone_number.as_international
+            return obj.raw_number
+        display_number.short_description = 'Numéro'
+
+        def actual_voter(self, obj):
+            if obj.voter:
+                if obj.voter.use_last_name:
+                    return obj.voter.get_full_name() + ' ' + obj.voter.use_last_name
+                else:
+                    return obj.voter.get_full_name()
             else:
-                return obj.voter.get_full_name()
-        else:
-            return '-'
-    actual_voter.short_description = 'Nom du votant'
+                return '-'
+        actual_voter.short_description = 'Nom du votant'
 
-    actions = [accept_request, refuse_request]
+        actions = [accept_request, refuse_request]
