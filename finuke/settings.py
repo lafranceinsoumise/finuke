@@ -30,7 +30,7 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
 BASE_URL = os.environ.get('BASE_URL', None)
-DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'nucleaire.vote')
+DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'localhost')
 
 # Application definition
 
@@ -261,9 +261,12 @@ PROMETHEUS_USER = os.environ.get('PROMETHEUS_USER', 'prometheus')
 PROMETHEUS_PASSWORD = os.environ.get('PROMETHEUS_PASSWORD', 'password')
 
 
-CONTACT_EMAIL = 'contact@nucleaire.vote'
+CONTACT_EMAIL = os.environ.get('EMAIL_ADDRESS')
 CONTACT_EMAIL_SERVER = 'mail.gandi.net'
 CONTACT_EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 
 EMAIL_NOT_CLOSED = 'https://mosaico.jlm2017.fr/emails/6cbbc59c-19bf-423f-880f-a7ee88db7fa4.html'
 EMAIL_NO_RESULTS = 'https://mosaico.jlm2017.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'
+
+ENABLE_ELECTRONIC_VOTE = os.environ.get('ELECTRONIC_VOTE', 'false').lower() == 'true'
+ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'false').lower() == 'true'

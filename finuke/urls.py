@@ -22,10 +22,14 @@ from finuke.metrics import get_metrics
 
 urlpatterns = [
     path('admin/', admin_site.urls),
-    path('', include('votes.urls')),
-    path('bureaux/', include('bureaux.urls')),
     path('', include('custom_messages.urls')),
+    path('', include('votes.urls'))
 ]
+
+if settings.ENABLE_PHYSICAL_VOTE or settings.DEBUG:
+    urlpatterns.append(
+        path('bureaux/', include('bureaux.urls'))
+    )
 
 if settings.BASE_URL:
     urlpatterns = [
