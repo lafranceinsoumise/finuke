@@ -12,7 +12,7 @@ urlpatterns = [
     path('json/listes/<departement>/<search>', person_json_search, name='person_json_search'),
 ]
 
-if settings.ENABLE_PHYSICAL_VOTE:
+if settings.ENABLE_ELECTRONIC_VOTE:
     urlpatterns.append([
         path('validation/listes', FindPersonInListView.as_view(), name='validate_list'),
         path('validation', AskForPhoneView.as_view(), name='validate_phone_number'),
