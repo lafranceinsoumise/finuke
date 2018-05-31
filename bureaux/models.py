@@ -17,12 +17,20 @@ class LoginLink(TimestampedModel):
     def get_absolute_url(self):
         return reverse('login', args=[str(self.uuid)])
 
+    class Meta:
+        verbose_name = 'lien de connexion'
+        verbose_name_plural = 'liens de connexions'
+
 
 class BureauOperator(TimestampedModel):
     email = fields.EmailField("Adresse email", unique=True)
 
     def __str__(self):
         return self.email
+
+    class Meta:
+        verbose_name = 'opérateur de bureaux de vote'
+        verbose_name_plural = 'opérateurs de bureaux de votes'
 
 
 def new_assistant_code():
@@ -41,7 +49,8 @@ class BureauQueryset(models.QuerySet):
 class Bureau(models.Model):
     objects = BureauQueryset.as_manager()
 
-    operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux')
+    operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux',
+                                 verbose_name='opérateur du bureau')
     place = fields.CharField("Lieu", max_length=255)
     start_time = fields.DateTimeField("Heure de d'ouverture du bureau", auto_now_add=True, editable=False)
     end_time = fields.DateTimeField("Heure de fermeture du bureau", blank=True, null=True, editable=False)
@@ -64,8 +73,8 @@ class Bureau(models.Model):
         return f'Bureau {self.pk} "{self.place}" <{self.operator.email}>'
 
     class Meta:
-        verbose_name = 'Bureau de vote'
-        verbose_name_plural = 'Bureaux de vote'
+        verbose_name = 'bureau de vote'
+        verbose_name_plural = 'bureaux de vote'
 
 
 class Operation(TimestampedModel):
@@ -87,3 +96,7 @@ class Operation(TimestampedModel):
 
     details = JSONField("Détails", editable=False)
     type = fields.CharField("Type d'opération", choices=OPERATION_CHOICES, max_length=255, editable=False)
+
+    class Meta:
+        verbose_name = 'opération sur un bureau'
+        verbose_name_plural = 'opérations sur les bureaux'

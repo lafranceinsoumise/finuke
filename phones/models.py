@@ -21,7 +21,15 @@ class PhoneNumber(TimestampedModel):
     def __str__(self):
         return str(self.phone_number)
 
+    class Meta:
+        verbose_name = 'numéro de téléphone'
+        verbose_name_plural = 'numéros de téléphone'
+
 
 class SMS(TimestampedModel):
     phone_number = models.ForeignKey('phones.PhoneNumber', on_delete=models.CASCADE, editable=False)
     code = models.CharField(max_length=8, editable=False, default=generate_code)
+
+    class Meta:
+        verbose_name = 'SMS'
+        verbose_name_plural = 'SMS'

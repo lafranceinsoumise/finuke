@@ -7,3 +7,6 @@ class PersistantMessage(models.Model):
     text = models.TextField(blank=False)
     enabled = models.BooleanField(default=True)
     url_name = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'annonce'

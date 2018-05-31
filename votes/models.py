@@ -29,12 +29,20 @@ class Vote(TimestampedModel):
     vote = fields.CharField(max_length=1, choices=VOTE_CHOICES, editable=False)
     with_list = fields.BooleanField(editable=False)
 
+    class Meta:
+        verbose_name = 'Vote exprimé'
+        verbose_name_plural = 'Votes exprimés'
+
 
 class FEVoterListItem(models.Model):
     email = fields.EmailField('Adresse email donnée au consulat', unique=True)
     first_names = fields.CharField('Prénoms', max_length=255)
     last_name = fields.CharField('Nom', max_length=255)
     has_voted = fields.BooleanField('Déjà voté', default=False, editable=False)
+
+    class Meta:
+        verbose_name = "électeur Français de l'étranger"
+        verbose_name_plural = "électeurs Français de l'étranger"
 
 
 class VoterListItem(models.Model):
@@ -94,6 +102,10 @@ class VoterListItem(models.Model):
     def __str__(self):
         return f"{self.get_full_name()} ({self.departement})"
 
+    class Meta:
+        verbose_name = 'électeur inscrit'
+        verbose_name_plural = 'électeurs inscrits'
+
 
 class UnlockingRequest(models.Model):
     email = models.EmailField('adresse email')
@@ -127,3 +139,7 @@ class UnlockingRequest(models.Model):
                               default=STATUS_REVIEW)
 
     answer_sent = models.BooleanField('Message parti ?', editable=False, default=False)
+
+    class Meta:
+        verbose_name = "demande de déblocage d'un numéro de téléphone"
+        verbose_name_plural = 'demandes de déblocages de numéros de téléphone'
