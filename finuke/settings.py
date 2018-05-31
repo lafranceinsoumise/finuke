@@ -268,5 +268,5 @@ CONTACT_EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 EMAIL_NOT_CLOSED = 'https://mosaico.jlm2017.fr/emails/6cbbc59c-19bf-423f-880f-a7ee88db7fa4.html'
 EMAIL_NO_RESULTS = 'https://mosaico.jlm2017.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'
 
-ENABLE_ELECTRONIC_VOTE = os.environ.get('ELECTRONIC_VOTE', 'false').lower() == 'true'
-ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'false').lower() == 'true'
+ENABLE_ELECTRONIC_VOTE = DEBUG or os.environ.get('ELECTRONIC_VOTE', 'false').lower() == 'true'
+ENABLE_PHYSICAL_VOTE = DEBUG or os.environ.get('PHYSICAL_VOTE', 'false').lower() == 'true'

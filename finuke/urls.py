@@ -26,7 +26,7 @@ urlpatterns = [
     path('', include('votes.urls'))
 ]
 
-if settings.ENABLE_PHYSICAL_VOTE or settings.DEBUG:
+if settings.ENABLE_PHYSICAL_VOTE:
     urlpatterns.append(
         path('bureaux/', include('bureaux.urls'))
     )

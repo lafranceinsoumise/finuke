@@ -13,7 +13,7 @@ urlpatterns = [
 ]
 
 if settings.ENABLE_ELECTRONIC_VOTE:
-    urlpatterns.append([
+    urlpatterns.extend([
         path('validation/listes', FindPersonInListView.as_view(), name='validate_list'),
         path('validation', AskForPhoneView.as_view(), name='validate_phone_number'),
         path('validation/renvoyer', ResendSms.as_view(), name='resend_sms'),
