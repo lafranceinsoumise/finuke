@@ -15,13 +15,15 @@ Including another URLconf
 """
 from django.conf import settings
 from django.conf.urls import url
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
+from django.views.generic import RedirectView
 
 from finuke.admin import admin_site
 from finuke.metrics import get_metrics
 
 urlpatterns = [
     path('admin/', admin_site.urls),
+    path('', RedirectView.as_view(url=reverse_lazy('assistant_login'))),
     path('', include('custom_messages.urls')),
     path('', include('votes.urls'))
 ]
