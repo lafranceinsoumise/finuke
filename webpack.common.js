@@ -20,7 +20,8 @@ module.exports = {
     new BundleTracker({path: DISTPATH}),
     new webpack.DefinePlugin({
         'BASE_URL': JSON.stringify(process.env.BASE_URL || ''),
-        'DEPARTEMENT': JSON.stringify(process.env.DEPARTEMENT || false),
+        'DEPARTEMENT': process.env.DEPARTEMENT || false,
+        'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
         '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],
