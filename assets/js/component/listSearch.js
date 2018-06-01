@@ -33,6 +33,7 @@ class ListSearch extends React.Component {
     this.searchPeople = this.searchPeople.bind(this);
     this.personChange = this.personChange.bind(this);
     this.opMode = this.props.mode === 'operator';
+    this.departement = JSON.parse(DEPARTEMENT);
 
     this.labels = {
       departementHelp: this.opMode ? 'Département d\'inscription de la personne': 'Recherchez votre département ci-dessus.',
@@ -47,6 +48,25 @@ class ListSearch extends React.Component {
         'faire voter la personne avec un bulletin orange'
         : (<a href={BASE_URL + '/vote'}>voter directement ici</a>),
     }
+  }
+
+  async componentDidMount() {
+    if (!this.departement) return;
+
+    let departementInfo = findDepartement(String(this.departement));
+
+    this.setState({
+      departement: this.departement,
+      departementInfo : departementInfo,
+      commune: null,
+      communesLoaded: false,
+    });
+
+    this.communesChoice = (await axios(`/json/communes/${this.departement}?${__VERSION__}`)).data.map(c => ({value: c.code, label: c.name}))
+
+    this.setState({
+      communesLoaded: true
+    });
   }
 
   async departementChange(event) {
@@ -115,7 +135,7 @@ class ListSearch extends React.Component {
     return (
       <div>
         <div className="form-group">
-          <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" name="departement" value={this.state.departement} onChange={this.departementChange} autocomplete="off" />
+          <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" name="departement" value={this.state.departement} onChange={this.departementChange} autocomplete="off" disabled={this.departement}/>
         </div>
         {this.state.displayZipHint ?
         <div className="alert alert-warning">
