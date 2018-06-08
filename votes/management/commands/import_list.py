@@ -73,16 +73,17 @@ class Command(BaseCommand):
             last_created = last_created.file_line if last_created else 0
 
             file.seek(0)
-            file_reader = tqdm(csv.DictReader(file, delimiter=';', fieldnames=fieldnames), desc="Import")
+            file_reader = tqdm(csv.DictReader(file, delimiter=';', fieldnames=fieldnames, restkey="more_fields"), desc="Import")
             items = []
 
             for chunk in group_by(enumerate(file_reader), 10000):
                 for i, row in chunk:
+                    row.pop("more_fields")
                     if i == 0:
-                        if row != filestructure:
+                        if not row.items() == filestructure.items():
                             print('Le fichier n\'est pas structuré correctement')
-                            print(row)
-                            print(filestructure)
+                            print('Fichier : ' + str(row))
+                            print('Attendu : ' + str(filestructure))
                             exit()
                         continue
 
@@ -91,7 +92,10 @@ class Command(BaseCommand):
 
                     row['list_type'] = row['list_type'].replace('\ufeff', '')
                     row['civilite'] = dict(map(reversed, VoterListItem.CIVILITE_CHOICES)).get(row['civilite'], '')
-                    row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
+                    try:
+                        row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
+                    except ValueError:
+                        row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y") if row['birth_date'] else None
 
                     items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
 
