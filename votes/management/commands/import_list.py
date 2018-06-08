@@ -75,6 +75,7 @@ class Command(BaseCommand):
             file.seek(0)
             file_reader = tqdm(csv.DictReader(file, delimiter=';', fieldnames=fieldnames, restkey="more_fields"), desc="Import")
             items = []
+            date_errors = 0
 
             for chunk in group_by(enumerate(file_reader), 10000):
                 for i, row in chunk:
@@ -95,7 +96,11 @@ class Command(BaseCommand):
                     try:
                         row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y %H:%M:%S") if row['birth_date'] else None
                     except ValueError:
-                        row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y") if row['birth_date'] else None
+                        try:
+                            row['birth_date'] = datetime.datetime.strptime(row['birth_date'], "%d/%m/%Y") if row['birth_date'] else None
+                        except ValueError:
+                            date_errors = date_errors + 1
+                            continue
 
                     items.append(VoterListItem(origin_file=options['file_id'], file_line=i, **row))
 
@@ -115,3 +120,5 @@ class Command(BaseCommand):
                     print('Error on line '  + str(i - len(items) + j))
                     print(item.__dict__)
                     raise e
+
+            print(f'{date_errors} erreurs de date')
