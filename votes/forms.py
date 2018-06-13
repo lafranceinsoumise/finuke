@@ -5,8 +5,9 @@ from collections import Counter
 
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.forms import Form, ModelForm, CharField, ChoiceField, ModelChoiceField, RadioSelect
+from django.forms import Form, ModelForm, CharField, ChoiceField, ModelChoiceField, RadioSelect, DateField
 from django.utils import timezone
 from django.utils.html import mark_safe
 from django.urls import reverse
@@ -70,7 +71,24 @@ class BaseForm(Form):
 
 class FindPersonInListForm(Form):
     person = ModelChoiceField(queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
-                              widget=None)
+                              widget=None, error_messages={'required': "Vous n'avez pas sélectionné de nom dans la liste."})
+    birth_date = DateField(required=settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE)
+
+    def __init__(self, *args, **kwargs):
+        self.birthdate_check = kwargs.pop('birthdate_check')
+        super().__init__(*args, **kwargs)
+
+
+    def clean(self):
+        if not self.birthdate_check:
+            return super().clean()
+
+        cleaned_data = super().clean()
+        if not cleaned_data['person'].birth_date == cleaned_data.get('birth_date'):
+            raise ValidationError('La date de naissance n\'est pas celle inscrite sur les listes électorales.')
+
+        return cleaned_data
+
 
 
 class ValidatePhoneForm(BaseForm):

@@ -21,6 +21,7 @@ module.exports = {
     new webpack.DefinePlugin({
         'BASE_URL': JSON.stringify(process.env.BASE_URL || ''),
         'DEPARTEMENT': process.env.DEPARTEMENT || false,
+        'ELECTRONIC_VOTE_REQUIRE_BIRTHDATE': process.env.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE || false,
         'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
         '__VERSION__': JSON.stringify(__VERSION__)
     })

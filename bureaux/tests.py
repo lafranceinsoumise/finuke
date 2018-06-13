@@ -1,5 +1,5 @@
 import uuid
-from django.test import TestCase as DjangoTestCase
+from django.test import TestCase as DjangoTestCase, override_settings
 from django.shortcuts import reverse
 
 from finuke.test_utils import RedisLiteMixin
@@ -13,6 +13,7 @@ class TestCase(RedisLiteMixin, DjangoTestCase):
     pass
 
 
+@override_settings(ENABLE_ELECTRONIC_VOTE=True, ENABLE_PHYSICAL_VOTE=True, ELECTRONIC_VOTE_REQUIRE_SMS=True, ELECTRONIC_VOTE_REQUIRE_BIRTHDATE=False)
 class BasicFunctionalityTestCase(TestCase):
     fixtures = ['voter_list.json']
 

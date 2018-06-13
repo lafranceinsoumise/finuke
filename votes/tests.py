@@ -179,7 +179,7 @@ class PhoneNumberViewsTestCase(TestCase):
             reverse('validate_code'),
         )
 
-        self.assertRedirects(res, f'/?next={reverse("validate_code")}', fetch_redirect_response=False)
+        self.assertRedirects(res, f'/validation?next={reverse("validate_code")}', fetch_redirect_response=False)
 
     def test_can_validate_code_and_avoid_revalidating_it(self):
         res = self.client.post(
@@ -226,6 +226,11 @@ class SearchPersonAndVoteTestCase(TestCase):
         res = self.client.get(reverse('validate_list'))
         self.assertRedirects(res, f"{reverse('validate_phone_number')}?next={reverse('validate_list')}")
 
+    @override_settings(ELECTRONIC_VOTE_REQUIRE_SMS=False)
+    def test_can_see_search_form_if_no_sms(self):
+        res = self.client.get(reverse('validate_list'))
+        self.assertEqual(res.status_code, 200)
+
     def test_can_see_search_form_when_phone_validated(self):
         self.voter_state.phone_number = self.phone_number
         self.voter_state.is_phone_valid = True
@@ -254,7 +259,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.YES})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci?'))
+        self.assertTrue(res['Location'].startswith('/merci'))
 
         self.voter1.refresh_from_db()
         self.phone_number.refresh_from_db()
@@ -275,7 +280,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci?'))
+        self.assertTrue(res['Location'].startswith('/merci'))
 
         self.phone_number.refresh_from_db()
         vote = Vote.objects.get()
@@ -293,7 +298,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci?'))
+        self.assertTrue(res['Location'].startswith('/merci'))
 
         self.foreign_french_voter.refresh_from_db()
         vote = Vote.objects.get()

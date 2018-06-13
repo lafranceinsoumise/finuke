@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction, DatabaseError
 from functools import wraps
 
@@ -61,11 +62,30 @@ class VoterState:
 
     @property
     def is_phone_valid(self):
+        if self.phone_number is None:
+            return False
+        if self.phone_number.validated:
+            return False
+
         return self.phone_number is not None and bool(self._request.session.get(self.PHONE_NUMBER_VALID_KEY))
 
     @is_phone_valid.setter
     def is_phone_valid(self, value):
         self._request.session[self.PHONE_NUMBER_VALID_KEY] = value
+
+    @property
+    def can_see_list(self):
+        if not settings.ELECTRONIC_VOTE_REQUIRE_SMS:
+            return True
+
+        return self.is_phone_valid
+
+    @property
+    def can_vote(self):
+        return self.is_foreign_french or \
+               (self.can_see_list and
+                (not settings.ELECTRONIC_VOTE_REQUIRE_LIST or
+                 (self.voter and self.voter.vote_status == VoterListItem.VOTE_STATUS_NONE)))
 
     @property
     def is_foreign_french(self):

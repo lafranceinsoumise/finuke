@@ -15,11 +15,15 @@ urlpatterns = [
 if settings.ENABLE_ELECTRONIC_VOTE:
     urlpatterns.extend([
         path('validation/listes', FindPersonInListView.as_view(), name='validate_list'),
-        path('validation', AskForPhoneView.as_view(), name='validate_phone_number'),
-        path('validation/renvoyer', ResendSms.as_view(), name='resend_sms'),
-        path('validation/code', ValidateCodeView.as_view(), name='validate_code'),
         path('vote', MakeVoteView.as_view(), name='vote'),
         path('vote/<pk>', CheckVoteView.as_view(), name='check_vote'),
         path('fe/<token>', FELogin.as_view(), name='fe_login'),
         path('demande-deblocage', UnlockingRequestView.as_view(), name='unlocking_request'),
     ])
+
+    if settings.ELECTRONIC_VOTE_REQUIRE_SMS:
+        urlpatterns.extend([
+            path('validation', AskForPhoneView.as_view(), name='validate_phone_number'),
+            path('validation/renvoyer', ResendSms.as_view(), name='resend_sms'),
+            path('validation/code', ValidateCodeView.as_view(), name='validate_code'),
+        ])

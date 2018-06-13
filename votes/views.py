@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.exceptions import PermissionDenied
@@ -38,7 +39,7 @@ def commune_json_search(request, departement):
 
 def person_json_search(request, departement, search):
     voter_state = VoterState(request)
-    if not (voter_state.is_phone_valid or request.session.get(
+    if not (voter_state.can_see_list or request.session.get(
             actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
         actions.OPERATOR_LOGIN_SESSION_KEY)):
         raise PermissionDenied("not allowed")
@@ -138,8 +139,11 @@ class ResendSms(VoterStateMixin, RedirectView):
         return super().get(request, *args, **kwargs)
 
 
-class HasUnusedPhoneMixin(VoterStateMixin, UserPassesTestMixin):
+class ValidateCodeView(VoterStateMixin, UserPassesTestMixin, FormView):
     login_url = reverse_lazy('validate_phone_number')
+    template_name = 'votes/validate_code.html'
+    form_class = ValidateCodeForm
+    success_url = reverse_lazy('validate_list')
 
     def test_func(self):
         if self.voter_state.phone_number is None:
@@ -148,13 +152,6 @@ class HasUnusedPhoneMixin(VoterStateMixin, UserPassesTestMixin):
             return False
 
         return True
-
-
-class ValidateCodeView(HasUnusedPhoneMixin, FormView):
-    login_url = '/'
-    template_name = 'votes/validate_code.html'
-    form_class = ValidateCodeForm
-    success_url = reverse_lazy('validate_list')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -167,19 +164,27 @@ class ValidateCodeView(HasUnusedPhoneMixin, FormView):
         return super().form_valid(form)
 
 
-class FindPersonInListView(HasUnusedPhoneMixin, FormView):
+class FindPersonInListView(VoterStateMixin, UserPassesTestMixin, FormView):
+    login_url = reverse_lazy('validate_phone_number')
     template_name = 'votes/find_person.html'
     form_class = FindPersonInListForm
     success_url = reverse_lazy('vote')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['birthdate_check'] = settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE
+
+        return kwargs
+
     def test_func(self):
-        return self.voter_state.is_phone_valid and super().test_func()
+        return self.voter_state.can_see_list
 
     def form_invalid(self, form):
-        messages.add_message(
-            self.request, messages.ERROR,
-            "Vous n'avez pas sélectionné de nom dans la liste."
-        )
+        for error in form.errors.values():
+            messages.add_message(
+                self.request, messages.ERROR,
+                error
+            )
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -187,8 +192,8 @@ class FindPersonInListView(HasUnusedPhoneMixin, FormView):
         return super().form_valid(form)
 
 
-class MakeVoteView(HasUnusedPhoneMixin, FormView):
-    login_url = '/'
+class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
+    login_url = reverse_lazy('validate_list')
     template_name = 'votes/vote.html'
     form_class = VoteForm
     success_url = '/merci'
@@ -203,7 +208,7 @@ class MakeVoteView(HasUnusedPhoneMixin, FormView):
     def test_func(self):
         voter_state = self.voter_state
 
-        return voter_state.is_foreign_french or (voter_state.is_phone_valid and super().test_func())
+        return voter_state.can_vote
 
     def get_context_data(self, **kwargs):
         kwargs['person'] = self.voter_state.voter

@@ -136,6 +136,12 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
     template_name = 'bureaux/vote.html'
     form_class = FindPersonInListForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['birthdate_check'] = False
+
+        return kwargs
+
     def get_success_url(self):
         return reverse('vote_bureau', args=[self.object.id])
 
