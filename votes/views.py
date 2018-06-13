@@ -196,7 +196,7 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     login_url = reverse_lazy('validate_list')
     template_name = 'votes/vote.html'
     form_class = VoteForm
-    success_url = '/merci'
+    success_url = settings.THANK_YOU_URL
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
