@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
@@ -141,6 +142,12 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
         kwargs['birthdate_check'] = False
 
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        kwargs = super().get_context_data(**kwargs)
+        kwargs['display_no_list_info'] = not settings.ELECTRONIC_VOTE_REQUIRE_LIST
+
+        return  kwargs
 
     def get_success_url(self):
         return reverse('vote_bureau', args=[self.object.id])
