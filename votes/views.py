@@ -28,7 +28,7 @@ class CleanSessionView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         VoterState(self.request).clean_session()
-        return '/'
+        return reverse('validate_list')
 
 
 @cache_control(max_age=3600, public=True)
