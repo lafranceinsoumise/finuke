@@ -194,6 +194,8 @@ class ListSearch extends React.Component {
             loadingPlaceholder="Chargement..." />
         </div>
 
+        <p>Si vous avez déjà voté en ligne ou dans un bureau de vote, votre nom n'apparaîtra plus dans la liste déroulante.</p>
+
         {
           this.state.person &&
             this.state.person.value.map(id => <input key={id} type="hidden" name="persons" value={id} />)
