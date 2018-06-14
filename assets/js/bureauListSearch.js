@@ -24,7 +24,9 @@ class App extends React.Component {
         Voulez-vous vraiment faire voter {this.state.person.label}&nbsp;?
         <form action="" method="post">
           <input type="hidden" name="csrfmiddlewaretoken" value={Cookies.get('csrftoken')} />
-          <input type="hidden" name="person" value={this.state.person.value} />
+          {
+              this.state.person.value.map(id => <input key={id} type="hidden" name="persons" value={id} />)
+          }
           <input type="submit" className="btn btn-primary" value="Faire voter cette personne" />
         </form>
       </div>

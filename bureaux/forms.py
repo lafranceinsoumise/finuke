@@ -1,13 +1,14 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.core.exceptions import ValidationError
-from django.forms import ModelForm, Form, fields
-
+from django import forms
 from bureaux.models import Bureau
 
+from votes.models import VoterListItem
 
-class OpenBureauForm(Form):
-    place = fields.CharField(label='Lieu', max_length=255)
+
+class OpenBureauForm(forms.Form):
+    place = forms.CharField(label='Lieu', max_length=255)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -15,7 +16,7 @@ class OpenBureauForm(Form):
         self.helper.add_input(Submit('submit', 'Valider'))
 
 
-class BureauResultsForm(ModelForm):
+class BureauResultsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -42,8 +43,8 @@ class BureauResultsForm(ModelForm):
         )
 
 
-class AssistantCodeForm(Form):
-    code = fields.CharField(help_text="Code de connexion")
+class AssistantCodeForm(forms.Form):
+    code = forms.CharField(help_text="Code de connexion")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,3 +55,33 @@ class AssistantCodeForm(Form):
         code = self.cleaned_data['code'].upper().strip().replace(' ', '')
 
         return code
+
+
+class SelectPersonByBirthdateField(forms.ModelChoiceField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('widget', forms.RadioSelect())
+        super().__init__(*args, **kwargs)
+        self.use_full_date = True
+
+    def label_from_instance(self, obj):
+        return obj.birth_date if self.use_full_date else obj.birth_date.year
+
+
+class SelectHomonymForm(forms.Form):
+    person = SelectPersonByBirthdateField(
+        empty_label=None,
+        queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
+        label='Date de naissance de la personne',
+    )
+
+    def __init__(self, ids, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        qs = self.fields['person'].queryset = self.fields['person'].queryset.filter(pk__in=ids)
+
+        if len({p.birth_date.year for p in qs}) == len(qs):
+            self.fields['person'].use_full_date = False
+            self.fields['person'].label = 'Année de naissance de la personne'
+
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Marquer comme votant'))

@@ -1,3 +1,5 @@
+from itertools import groupby
+
 from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.postgres.search import TrigramSimilarity
@@ -37,6 +39,17 @@ def commune_json_search(request, departement):
                         safe=False)
 
 
+def groupby_homonyms(qs):
+    sorted_people = sorted(qs, key=VoterListItem.homonymy_key)
+    for k, people in groupby(sorted_people, key=VoterListItem.homonymy_key):
+        yield {
+            'id': [item.id for item in people],
+            'first_names': k.first_names,
+            'last_name': k.last_name,
+            'commune_name': communes_names.get(k.commune, 'Commune inconnue')
+        }
+
+
 def person_json_search(request, departement, search):
     voter_state = VoterState(request)
     if not (voter_state.can_see_list or request.session.get(
@@ -70,12 +83,8 @@ def person_json_search(request, departement, search):
         similarity=TrigramSimilarity(coumpound_field, str(search)),
         full_name=coumpound_field
     ).filter(full_name__trigram_similar=str(search)).order_by('-similarity')[:20]
-    response = list(map(lambda item: {
-        'id': item.id,
-        'first_names': item.first_names,
-        'last_name': item.last_name,
-        'commune_name': communes_names.get(item.commune, 'Commune inconnue')
-    }, qs))
+
+    response = list(groupby_homonyms(qs))
 
     return JsonResponse(response, safe=False)
 

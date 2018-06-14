@@ -7,7 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms import layout
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.forms import Form, ModelForm, CharField, ChoiceField, ModelChoiceField, RadioSelect, DateField
+from django.forms import Form, ModelForm, CharField, ChoiceField, ModelMultipleChoiceField, RadioSelect, DateField
 from django.utils import timezone
 from django.utils.html import mark_safe
 from django.urls import reverse
@@ -70,25 +70,46 @@ class BaseForm(Form):
 
 
 class FindPersonInListForm(Form):
-    person = ModelChoiceField(queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
-                              widget=None, error_messages={'required': "Vous n'avez pas sélectionné de nom dans la liste."})
+    persons = ModelMultipleChoiceField(
+        queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
+        widget=None,
+        required=True,
+        error_messages={'required': "Vous n'avez pas sélectionné de nom dans la liste."})
     birth_date = DateField(required=settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE)
 
-    def __init__(self, *args, **kwargs):
-        self.birthdate_check = kwargs.pop('birthdate_check')
+    def __init__(self, *args, birthdate_check, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.birthdate_check = birthdate_check
+        if not settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE or not birthdate_check:
+            del self.fields['birth_date']
+
+
+    def clean_persons(self):
+        persons = self.cleaned_data['persons']
+        if len({p.homonymy_key() for p in persons}) > 1:
+            raise ValidationError('Veuillez réessayer')
+
+        return persons
 
     def clean(self):
-        if not self.birthdate_check:
-            return super().clean()
+        if not settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE:
+            if self.cleaned_data.get('persons'):
+                self.cleaned_data['person'] = self.cleaned_data['persons'][0]
+            return self.cleaned_data
 
-        cleaned_data = super().clean()
-        if not cleaned_data['person'].birth_date == cleaned_data.get('birth_date'):
-            raise ValidationError('La date de naissance n\'est pas celle inscrite sur les listes électorales.')
+        if not self.birthdate_check:
+            return self.cleaned_data
+
+        cleaned_data = self.cleaned_data
+
+        if 'persons' in cleaned_data:
+            try:
+                cleaned_data['person'] = next(p for p in cleaned_data['persons'] if p.birth_date == cleaned_data.get('birth_date'))
+            except StopIteration:
+                raise ValidationError('La date de naissance n\'est pas celle inscrite sur les listes électorales.')
 
         return cleaned_data
-
 
 
 class ValidatePhoneForm(BaseForm):

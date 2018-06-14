@@ -133,7 +133,7 @@ class BasicFunctionalityTestCase(TestCase):
         res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'person': voter.pk})
+        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'persons': [voter.pk]})
         self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
 
         voter.refresh_from_db()
@@ -159,7 +159,7 @@ class BasicFunctionalityTestCase(TestCase):
         res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'person': voter.pk})
+        res = self.client.post(reverse('vote_bureau', args=[self.bureau.pk]), data={'persons': [voter.pk]})
         self.assertRedirects(res, reverse('vote_bureau', args=[self.bureau.pk]))
 
         voter.refresh_from_db()

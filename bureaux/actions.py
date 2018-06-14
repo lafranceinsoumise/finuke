@@ -13,6 +13,7 @@ from . import models
 
 OPERATOR_LOGIN_SESSION_KEY = 'login_uuid'
 ASSISTANT_LOGIN_SESSION_KEY = 'assistant_code'
+HOMONYMS_CHOICES_KEY = '_homonyms_choice_key'
 
 OpenBureauTokenBucket = TokenBucket('OpenBureau', 20, 3600)
 LoginAssistantTokenBucket = TokenBucket('LoginAssistant', 50, 60)

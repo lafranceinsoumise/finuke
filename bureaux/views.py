@@ -7,7 +7,7 @@ from django.views.generic import RedirectView, ListView, DetailView, FormView, U
 from django.views.generic.detail import SingleObjectMixin
 
 from finuke.exceptions import RateLimitedException
-from bureaux.forms import OpenBureauForm, BureauResultsForm, AssistantCodeForm
+from bureaux.forms import OpenBureauForm, BureauResultsForm, AssistantCodeForm, SelectHomonymForm
 from bureaux.models import LoginLink, Bureau
 from . import actions
 
@@ -131,9 +131,28 @@ class AssistantLoginView(FormView):
         return super().form_valid(form)
 
 
-class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
+class MakePersonVoteMixin(SingleObjectMixin, OperatorViewMixin):
     queryset = Bureau.objects.open_only()
     login_url = reverse_lazy('assistant_login')
+
+    def test_func(self):
+        self.object = self.get_object()
+
+        is_operator = super().test_func()
+        if is_operator and self.object in self.request.operator.bureaux.all():
+            return True
+        if self.request.session.get(actions.ASSISTANT_LOGIN_SESSION_KEY) == self.object.assistant_code:
+            return True
+        return False
+
+    def show_voting_message(self, person):
+        messages.add_message(
+            self.request, messages.SUCCESS,
+            f'{person.get_full_name()} a bien été marqué⋅e comme votant⋅e. Vous pouvez lui donner enveloppe et bulletin'
+            f' vert.')
+
+
+class FindVoterInListView(MakePersonVoteMixin, FormView):
     template_name = 'bureaux/vote.html'
     form_class = FindPersonInListForm
 
@@ -147,22 +166,13 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
         kwargs = super().get_context_data(**kwargs)
         kwargs['display_no_list_info'] = not settings.ELECTRONIC_VOTE_REQUIRE_LIST
 
-        return  kwargs
+        return kwargs
 
     def get_success_url(self):
         return reverse('vote_bureau', args=[self.object.id])
 
-    def test_func(self):
-        self.object = self.get_object()
-
-        is_operator = super().test_func()
-        if is_operator and self.object in self.request.operator.bureaux.all():
-            return True
-        if self.request.session.get(actions.ASSISTANT_LOGIN_SESSION_KEY) == self.object.assistant_code:
-            return True
-        return False
-
     def form_invalid(self, form):
+        print(form.errors)
         messages.add_message(
             self.request, messages.ERROR,
             "Vous n'avez pas sélectionné de personne dans la liste."
@@ -170,15 +180,43 @@ class FindVoterInListView(SingleObjectMixin, OperatorViewMixin, FormView):
         return super().form_invalid(form)
 
     def form_valid(self, form):
+        persons = form.cleaned_data['persons']
+
+        if settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE and len(persons) > 1:
+            self.request.session[actions.HOMONYMS_CHOICES_KEY] = [p.pk for p in persons]
+            return HttpResponseRedirect(reverse('select_homonym', args=[self.object.pk]))
+
+        try:
+            actions.mark_as_voted(self.request, persons[0].id, self.object)
+        except AlreadyVotedException:
+            return JsonResponse({'error': 'already voted'})
+
+        self.show_voting_message(persons[0])
+
+        return super().form_valid(form)
+
+
+class SelectHomonymView(MakePersonVoteMixin, FormView):
+    template_name = 'bureaux/select_homonym.html'
+    form_class = SelectHomonymForm
+
+    def get_success_url(self):
+        return reverse('vote_bureau', args=[self.object.pk])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['ids'] = self.request.session.get(actions.HOMONYMS_CHOICES_KEY, [])
+
+        return kwargs
+
+    def form_valid(self, form):
         person = form.cleaned_data['person']
+
         try:
             actions.mark_as_voted(self.request, person.id, self.object)
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
 
-        messages.add_message(
-            self.request, messages.SUCCESS,
-            f'{person.get_full_name()} a bien été marqué⋅e comme votant⋅e. Vous pouvez lui donner enveloppe et bulletin'
-            f' vert.')
+        self.show_voting_message(person)
 
         return super().form_valid(form)

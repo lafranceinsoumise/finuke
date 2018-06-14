@@ -2,7 +2,7 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from bureaux.views import LoginView, ListBureauxView, DetailBureauView, CloseBureauView, BureauResultsView, \
-    OpenBureauView, AssistantLoginView, FindVoterInListView
+    OpenBureauView, AssistantLoginView, FindVoterInListView, SelectHomonymView
 
 urlpatterns = [
     path('login/error', TemplateView.as_view(template_name='bureaux/login_error.html'), name='login_error'),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('<pk>/fermer', CloseBureauView.as_view(), name='close_bureau'),
     path('<pk>/results', BureauResultsView.as_view(), name='results_bureau'),
     path('<pk>/vote', FindVoterInListView.as_view(), name='vote_bureau'),
+    path('<pk>/vote/homonymes', SelectHomonymView.as_view(), name='select_homonym'),
 ]

@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from django.test import RequestFactory, override_settings
 from django.shortcuts import reverse
+from django.conf import settings
 
 from bs4 import BeautifulSoup
 
@@ -245,7 +246,7 @@ class SearchPersonAndVoteTestCase(TestCase):
         }), data={'commune': self.voter1.commune})
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.post(reverse('validate_list'), data={'person': self.voter1.id})
+        res = self.client.post(reverse('validate_list'), data={'persons': [self.voter1.id]})
         self.assertRedirects(res, reverse('vote'))
 
     def test_can_vote_with_voter_id(self):
@@ -259,7 +260,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.YES})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci'))
+        self.assertRedirects(res, settings.THANK_YOU_URL, fetch_redirect_response=False)
 
         self.voter1.refresh_from_db()
         self.phone_number.refresh_from_db()
@@ -280,7 +281,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci'))
+        self.assertRedirects(res, settings.THANK_YOU_URL, fetch_redirect_response=False)
 
         self.phone_number.refresh_from_db()
         vote = Vote.objects.get()
@@ -298,7 +299,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.post(reverse('vote'), data={'choice': Vote.NO})
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res['Location'].startswith('/merci'))
+        self.assertRedirects(res, settings.THANK_YOU_URL, fetch_redirect_response=False)
 
         self.foreign_french_voter.refresh_from_db()
         vote = Vote.objects.get()

@@ -164,7 +164,7 @@ class ListSearch extends React.Component {
               onBlurResetsInput={false}
               onCloseResetsInput={false}
               onChange={this.communeChange}
-              noResultsText={"Pas de résultats. N'oubliez pas le tirets !"}
+              noResultsText={"Pas de résultats. N'oubliez pas le tiret !"}
               options={this.communesChoice}
               disabled={!this.state.communesLoaded}
               placeholder={this.labels.communePlaceholder}
@@ -173,7 +173,6 @@ class ListSearch extends React.Component {
         }
         <div className="form-group">
           <Async
-            name="person"
             onBlurResetsInput={false}
             onCloseResetsInput={false}
             inputProps={{autoComplete: 'full name'}}
@@ -194,6 +193,12 @@ class ListSearch extends React.Component {
             searchPromptText={this.labels.personPromptText}
             loadingPlaceholder="Chargement..." />
         </div>
+
+        {
+          this.state.person &&
+            this.state.person.value.map(id => <input key={id} type="hidden" name="persons" value={id} />)
+        }
+
         { this.state.displayNoChoiceHint ?
           <div className="alert alert-danger">
             <p>

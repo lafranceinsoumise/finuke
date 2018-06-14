@@ -1,0 +1,10 @@
+{% extends 'votes/layout.html' %}
+{% load crispy_forms_tags %}
+
+{% block content_central %}
+    <p>
+        Plusieurs personnes partagent ces noms et prénoms. Pouvez-vous interroger la personne sur sa date de naissance
+        pour déterminer son identité exacte ?
+    </p>
+    {% crispy form %}
+{% endblock %}

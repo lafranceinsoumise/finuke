@@ -274,4 +274,4 @@ ELECTRONIC_VOTE_REQUIRE_SMS = os.environ.get('ELECTRONIC_VOTE_REQUIRE_SMS', 'tru
 ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = os.environ.get('ELECTRONIC_VOTE_REQUIRE_BIRTHDATE', 'false').lower() == 'true'
 ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'true').lower() == 'true'
 
-THANK_YOU_URL = os.environ.get('THANK_YOU_URL', 'about:blank')
+THANK_YOU_URL = os.environ.get('THANK_YOU_URL', '/')
