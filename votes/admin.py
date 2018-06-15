@@ -39,7 +39,7 @@ class FEVoterListItemAdmin(admin.ModelAdmin):
 @admin.register(VoterListItem, site=admin_site)
 class VoterListItemAdmin(admin.ModelAdmin):
     list_display = ('import_id', 'first_names', 'last_name', 'departement', 'commune', 'birth_date')
-    list_filter = ('departement',)
+    list_filter = ('departement', 'vote_status')
 
     fieldsets = (
         (None, {'fields': ('import_id', 'last_name', 'first_names', 'departement', 'commune')}),
