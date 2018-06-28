@@ -34,12 +34,22 @@ if settings.ENABLE_PHYSICAL_VOTE:
     @admin.register(Bureau, site=admin_site)
     class BureauAdmin(admin.ModelAdmin):
         search_fields = ('place', 'operator__email')
-        list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results', 'emargements', 'difference')
-        readonly_fields = ('has_results', 'emargements', 'difference')
+        list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results', 'result1', 'emargements', 'difference', 'result2')
+        readonly_fields = ('has_results', 'result1', 'result2', 'emargements', 'difference')
 
         def get_queryset(self, request):
             return Bureau.objects.annotate(emargements=Count('voterlistitem'))\
-                .annotate(difference=Count('voterlistitem') - F('result1_yes') - F('result1_no') - F('result1_blank') - F('result1_null'))
+                .annotate(difference=Count('voterlistitem') - F('result1_yes') - F('result1_no') - F('result1_blank') - F('result1_null'))\
+                .annotate(result1=F('result1_yes') + F('result1_no') + F('result1_blank') + F('result1_null'))\
+                .annotate(result2=F('result2_yes') + F('result2_no') + F('result2_blank') + F('result2_null'))
+
+        def result1(self, obj):
+            return obj.result1
+        result1.short_description = "Bulletins inscrit⋅e⋅s"
+
+        def result2(self, obj):
+            return obj.result2
+        result2.short_description = "Bulletins non-inscrit⋅e⋅s"
 
         def has_results(self, obj):
             return 'Oui' if obj.result1_yes is not None else 'Non'
