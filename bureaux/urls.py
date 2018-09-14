@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path
 from django.views.generic import TemplateView
 
@@ -5,6 +6,10 @@ from bureaux.views import LoginView, ListBureauxView, DetailBureauView, CloseBur
     OpenBureauView, AssistantLoginView, FindVoterInListView, SelectHomonymView
 
 urlpatterns = [
+    path('mode-emploi', TemplateView.as_view(template_name='bureaux/manual.html', extra_context={
+        'app_domain': settings.DOMAIN_NAME,
+        'votation_name': settings.VOTATION_NAME
+    }), name='manual'),
     path('login/error', TemplateView.as_view(template_name='bureaux/login_error.html'), name='login_error'),
     path('login/<uuid>', LoginView.as_view(), name='login'),
     path('', ListBureauxView.as_view(), name='list_bureaux'),

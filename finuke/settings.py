@@ -265,13 +265,16 @@ CONTACT_EMAIL = os.environ.get('EMAIL_ADDRESS')
 CONTACT_EMAIL_SERVER = 'mail.gandi.net'
 CONTACT_EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 
-EMAIL_NOT_CLOSED = 'https://mosaico.jlm2017.fr/emails/6cbbc59c-19bf-423f-880f-a7ee88db7fa4.html'
-EMAIL_NO_RESULTS = 'https://mosaico.jlm2017.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'
+FROM_EMAIL = os.environ.get('FROM_EMAIL', 'votation@lafranceinsoumise.fr')
+EMAIL_NOT_CLOSED = 'https://mosaico.lafranceinsoumise.fr/emails/6cbbc59c-19bf-423f-880f-a7ee88db7fa4.html'
+EMAIL_NO_RESULTS = 'https://mosaico.lafranceinsoumise.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'
+EMAIL_OPERATOR = 'https://mosaico.jlm2017.fr/emails/efeecd4d-1cbb-4bb6-9552-7d09a6251bcd.html'
 
 ENABLE_ELECTRONIC_VOTE = os.environ.get('ELECTRONIC_VOTE', 'true').lower() == 'true'
 ELECTRONIC_VOTE_REQUIRE_LIST = os.environ.get('ELECTRONIC_VOTE_REQUIRE_LIST', 'false').lower() == 'true'
 ELECTRONIC_VOTE_REQUIRE_SMS = os.environ.get('ELECTRONIC_VOTE_REQUIRE_SMS', 'true').lower() == 'true'
 ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = os.environ.get('ELECTRONIC_VOTE_REQUIRE_BIRTHDATE', 'false').lower() == 'true'
 ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'true').lower() == 'true'
+VOTATION_NAME = os.environ.get('VOTATION_NAME', 'citoyenne')
 
 THANK_YOU_URL = os.environ.get('THANK_YOU_URL', '/')
