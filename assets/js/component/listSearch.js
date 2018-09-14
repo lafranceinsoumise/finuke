@@ -204,7 +204,7 @@ class ListSearch extends React.Component {
         { this.state.displayNoChoiceHint ?
           <div className="alert alert-danger">
             <p>
-              Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2017
+              Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2018
               transmises par la préfecture du département {this.state.departement}.
             </p>
             <p>
