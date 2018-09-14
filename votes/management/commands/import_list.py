@@ -79,7 +79,7 @@ class Command(BaseCommand):
 
             for chunk in group_by(enumerate(file_reader), 10000):
                 for i, row in chunk:
-                    row.pop("more_fields")
+                    if "more_fields" in row: del row["more_fields"]
                     if i == 0:
                         if not row.items() == filestructure.items():
                             print('Le fichier n\'est pas structuré correctement')
