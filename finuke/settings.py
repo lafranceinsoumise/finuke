@@ -276,5 +276,6 @@ ELECTRONIC_VOTE_REQUIRE_SMS = os.environ.get('ELECTRONIC_VOTE_REQUIRE_SMS', 'tru
 ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = os.environ.get('ELECTRONIC_VOTE_REQUIRE_BIRTHDATE', 'false').lower() == 'true'
 ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'true').lower() == 'true'
 VOTATION_NAME = os.environ.get('VOTATION_NAME', 'citoyenne')
+VOTE_QUESTION = os.environ.get('VOTE_QUESTION', "Êtes-vous favorable à la Régie publique de l’eau pour Toulouse Métropole ?")
 
 THANK_YOU_URL = os.environ.get('THANK_YOU_URL', '/')
