@@ -7,22 +7,20 @@ import 'babel-polyfill';
 
 import departementsData from 'CSVData/departements.csv';
 
-const departements = departementsData.map(({
-  CodeDept: code,
-  NomDept,
-  NomDeptEnr: name,
-  TypNom,
-  CodeRegion,
-  ChefLieuDept,
-  PopVotNuc,
-  Intégration,
-  PhyFile,
-  NivDetail: details
-}) => ({code: String(code), name, details}));
-
-function findDepartement(number) {
-  return departements.find(line => line.code.padStart(2, '0') == number.padStart(2, '0'));
-}
+const departements = departementsData
+  .map(({
+    CodeDept: code,
+    NomDept,
+    NomDeptEnr: name,
+    TypNom,
+    CodeRegion,
+    ChefLieuDept,
+    PopVotNuc,
+    Intégration,
+    PhyFile,
+    NivDetail: details
+  }) => ({value: String(code), label: name, code: String(code), name, details}))
+  .filter(d => (!DEPARTEMENTS || DEPARTEMENTS.includes(d.value)));
 
 class ListSearch extends React.Component {
   constructor(props) {
@@ -33,11 +31,13 @@ class ListSearch extends React.Component {
     this.searchPeople = this.searchPeople.bind(this);
     this.personChange = this.personChange.bind(this);
     this.opMode = this.props.mode === 'operator';
-    this.departement = DEPARTEMENT;
+    this.departement = DEPARTEMENT_PRESELECT;
+    this.departements = DEPARTEMENTS;
     this.communes = COMMUNES;
 
     this.labels = {
       departementHelp: this.opMode ? 'Département d\'inscription de la personne': 'Recherchez votre département ci-dessus.',
+      departementPlaceholder: 'Numéro ou nom du département d\'inscription',
       communePlaceholder: 'Commune d\'inscription',
       communePromptText: 'Tapez le nom de la commune d\'inscription',
       personPlaceholder : 'Prénom NOM',
@@ -73,30 +73,20 @@ class ListSearch extends React.Component {
     });
   }
 
-  async departementChange(event) {
-    if (event.target.value.length > 4) {
-      this.setState({
-        displayZipHint: true
-      });
-
-      return;
-    }
-
-    let departementInfo = findDepartement(event.target.value);
-
+  async departementChange(departementInfo) {
     this.setState({
       displayZipHint: false,
-      departement: event.target.value,
+      departement: departementInfo.code,
       departementInfo : departementInfo,
       commune: null,
       communesLoaded: false,
     });
 
-    if (!departementInfo || departementInfo.details !== 'C') {
+    if (departementInfo.details !== 'C') {
       return;
     }
 
-    this.communesChoice = (await axios(`/json/communes/${event.target.value}?${__VERSION__}`)).data.map(c => ({value: c.code, label: c.name}));
+    this.communesChoice = (await axios(`/json/communes/${departementInfo.code}?${__VERSION__}`)).data.map(c => ({value: c.code, label: c.name}));
     if (this.communes) {
       this.communesChoice = this.communesChoice.filter(c => this.communes.includes(c.value));
     }
@@ -142,7 +132,15 @@ class ListSearch extends React.Component {
     return (
       <div>
         <div className="form-group">
-          <input placeholder="Numéro de département d'inscription sur les listes électorales" type="text" className="text-center form-control input-lg" name="departement" value={this.state.departement} onChange={this.departementChange} autoComplete="off" disabled={this.departement}/>
+          <Select
+            value={this.state.departement}
+            onBlurResetsInput={false}
+            onCloseResetsInput={false}
+            onChange={this.departementChange}
+            disabled={this.departement}
+            placeholder={this.labels.departementPlaceholder}
+            options={departements}
+            />
         </div>
         {this.state.displayZipHint ?
         <div className="alert alert-warning">

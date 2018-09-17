@@ -20,9 +20,10 @@ module.exports = {
     new BundleTracker({path: DISTPATH}),
     new webpack.DefinePlugin({
         'BASE_URL': JSON.stringify(process.env.BASE_URL || ''),
-        'DEPARTEMENT': process.env.DEPARTEMENT || false,
-        'ELECTRONIC_VOTE_REQUIRE_BIRTHDATE': process.env.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE.toLowerCase() === 'true' || false,
+        'DEPARTEMENT_PRESELECT': process.env.DEPARTEMENT_PRESELECT || false,
+        'ELECTRONIC_VOTE_REQUIRE_BIRTHDATE': (process.env.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE || "false").toLowerCase() === 'true',
         'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
+        'DEPARTEMENTS': JSON.stringify(!!process.env.DEPARTEMENTS && process.env.DEPARTEMENTS.split(',')),
         '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],
