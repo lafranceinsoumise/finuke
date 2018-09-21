@@ -3,11 +3,11 @@ import string
 from collections import namedtuple
 
 from django.db import models
-from django.db.models import fields, ForeignKey
 
 from finuke.model_mixins import TimestampedModel
 from bureaux.models import Bureau
 from votes.data.geodata import communes_names
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 def generate_vote_id():
@@ -26,20 +26,29 @@ class Vote(TimestampedModel):
         (BLANK, 'Blanc'),
     )
 
-    id = fields.CharField(max_length=32, primary_key=True, editable=False, default=generate_vote_id)
-    vote = fields.CharField(max_length=1, choices=VOTE_CHOICES, editable=False)
-    with_list = fields.BooleanField(editable=False)
+    id = models.CharField(max_length=32, primary_key=True, editable=False, default=generate_vote_id)
+    operation = models.ForeignKey('operations.Operation', on_delete=models.PROTECT, null=False,)
+    vote = models.CharField(max_length=1, choices=VOTE_CHOICES, editable=False)
+    with_list = models.BooleanField(editable=False)
 
     class Meta:
         verbose_name = 'Vote exprimé'
         verbose_name_plural = 'Votes exprimés'
 
 
+class Participation(TimestampedModel):
+    operation = models.ForeignKey('operations.Operation', on_delete=models.PROTECT, null=False)
+    voter = models.ForeignKey('VoterListItem', on_delete=models.CASCADE, null=False, related_name='participations')
+    contact_phone = PhoneNumberField('Numéro de téléphone', null=False, blank=True)
+    contact_email = models.EmailField('Adresse email', null=False, blank=True)
+    bureau = models.ForeignKey(Bureau, on_delete=models.CASCADE, null=True)
+
+
 class FEVoterListItem(models.Model):
-    email = fields.EmailField('Adresse email donnée au consulat', unique=True)
-    first_names = fields.CharField('Prénoms', max_length=255)
-    last_name = fields.CharField('Nom', max_length=255)
-    has_voted = fields.BooleanField('Déjà voté', default=False, editable=False)
+    email = models.EmailField('Adresse email donnée au consulat', unique=True)
+    first_names = models.CharField('Prénoms', max_length=255)
+    last_name = models.CharField('Nom', max_length=255)
+    has_voted = models.BooleanField('Déjà voté', default=False, editable=False)
 
     class Meta:
         verbose_name = "électeur Français de l'étranger"
@@ -70,32 +79,29 @@ class VoterListItem(models.Model):
     def get_commune_display(self):
         return communes_names.get(self.commune, 'Commune inconnue')
 
-    vote_status = fields.CharField('Statut du vote', max_length=1, choices=VOTED_CHOICES, default=VOTE_STATUS_NONE)
-    vote_bureau = ForeignKey(Bureau, on_delete=models.CASCADE, null=True)
-
-    origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
-    file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')
-    list_type = fields.CharField('Type de liste', max_length=1, choices=LIST_TYPE_CHOICES)
-    departement = fields.CharField('Code INSEE département', max_length=5, db_index=True)
-    commune = fields.CharField('Code INSEE commune', max_length=5, db_index=True)
-    civilite = fields.CharField('Civilité', max_length=1, choices=CIVILITE_CHOICES, blank=True)
-    last_name = fields.CharField('Nom de naissance', max_length=255)
-    use_last_name = fields.CharField('Nom d\'usage', max_length=255, blank=True)
-    first_names = fields.CharField('Prénoms', max_length=255)
-    birth_date = fields.DateField('Date de naissance', blank=True, null=True)
-    birth_city_name = fields.CharField('Ville de naissance', max_length=255, blank=True)
-    birth_departement_name = fields.CharField('Département de naissance', max_length=255, blank=True)
-    birth_country_name = fields.CharField('Pays de naissance', max_length=255, blank=True)
-    nationality = fields.CharField('Nationalité', max_length=255, blank=True)
-    address1 = fields.CharField('Complément d\'adresse 1', max_length=255, blank=True)
-    address2 = fields.CharField('Complément d\'adresse 2', max_length=255, blank=True)
-    street_number = fields.CharField('Numéro de voie', max_length=255, blank=True)
-    street_type = fields.CharField('Type de voie', max_length=255, blank=True)
-    street_label = fields.CharField('Nom de la voie', max_length=255, blank=True)
-    place_name = fields.CharField('Lieu-dit', max_length=255, blank=True)
-    zipcode = fields.CharField('Code postal', max_length=255, blank=True)
-    local_city_name = fields.CharField('Ville ou localité', max_length=255, blank=True)
-    country = fields.CharField('Pays', max_length=255, blank=True)
+    origin_file = models.IntegerField('Identifiant du fichier d\'origine')
+    file_line = models.IntegerField('Numéro de la ligne dans le fichier d\'origine')
+    list_type = models.CharField('Type de liste', max_length=1, choices=LIST_TYPE_CHOICES)
+    departement = models.CharField('Code INSEE département', max_length=5, db_index=True)
+    commune = models.CharField('Code INSEE commune', max_length=5, db_index=True)
+    civilite = models.CharField('Civilité', max_length=1, choices=CIVILITE_CHOICES, blank=True)
+    last_name = models.CharField('Nom de naissance', max_length=255)
+    use_last_name = models.CharField('Nom d\'usage', max_length=255, blank=True)
+    first_names = models.CharField('Prénoms', max_length=255)
+    birth_date = models.DateField('Date de naissance', blank=True, null=True)
+    birth_city_name = models.CharField('Ville de naissance', max_length=255, blank=True)
+    birth_departement_name = models.CharField('Département de naissance', max_length=255, blank=True)
+    birth_country_name = models.CharField('Pays de naissance', max_length=255, blank=True)
+    nationality = models.CharField('Nationalité', max_length=255, blank=True)
+    address1 = models.CharField('Complément d\'adresse 1', max_length=255, blank=True)
+    address2 = models.CharField('Complément d\'adresse 2', max_length=255, blank=True)
+    street_number = models.CharField('Numéro de voie', max_length=255, blank=True)
+    street_type = models.CharField('Type de voie', max_length=255, blank=True)
+    street_label = models.CharField('Nom de la voie', max_length=255, blank=True)
+    place_name = models.CharField('Lieu-dit', max_length=255, blank=True)
+    zipcode = models.CharField('Code postal', max_length=255, blank=True)
+    local_city_name = models.CharField('Ville ou localité', max_length=255, blank=True)
+    country = models.CharField('Pays', max_length=255, blank=True)
 
     def get_full_name(self):
         return '{}, {}'.format(self.last_name, self.first_names)
