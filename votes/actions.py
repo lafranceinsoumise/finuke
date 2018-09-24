@@ -4,6 +4,7 @@ from django.db import DatabaseError, transaction
 from phonenumber_field.phonenumber import PhoneNumber
 from prometheus_client import Counter
 
+from finuke.redis import RedisCounter
 from token_bucket import TokenBucket
 from .models import VoterListItem, FEVoterListItem, Vote, VoterInformation
 from phones.models import PhoneNumber
@@ -20,6 +21,9 @@ class VoteLimitException(Exception):
 
 class AlreadyVotedException(Exception):
     pass
+
+
+participation_counter = RedisCounter('participation')
 
 
 class VoterState:
@@ -199,6 +203,7 @@ def make_online_validation(*, ip, phone_number=None, voter=None, is_foreign_fren
     except DatabaseError:
         raise AlreadyVotedException()
 
+    participation_counter.incr()
     online_vote_counter.inc()
 
     return vote_id, contact_information_id

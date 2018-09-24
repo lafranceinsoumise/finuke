@@ -6,7 +6,7 @@ from prometheus_client import Counter
 
 from finuke.exceptions import RateLimitedException
 from token_bucket import TokenBucket
-from votes.actions import check_voter_list_item, AlreadyVotedException
+from votes.actions import check_voter_list_item, AlreadyVotedException, participation_counter
 from votes.models import VoterListItem
 
 from . import models
@@ -124,6 +124,8 @@ def mark_as_voted(request, voter_list_id, bureau):
                 details={**request_to_json(request), 'voter_list_item': voter_list_id, 'bureau': bureau.id}
             )
             check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL, bureau)
+
+        participation_counter.incr()
         marked_as_voted_counter.inc()
     except DatabaseError:
         AlreadyVotedException()

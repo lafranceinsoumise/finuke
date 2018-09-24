@@ -19,7 +19,7 @@ from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm, PhoneUnlockingRequestForm
 from .models import Vote, VoterListItem, FEVoterListItem, UnlockingRequest
-from .actions import make_online_validation, AlreadyVotedException, VoteLimitException, VoterState
+from .actions import make_online_validation, AlreadyVotedException, VoteLimitException, VoterState, participation_counter
 from .tokens import mail_token_generator
 
 ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
@@ -293,3 +293,7 @@ class UnlockingRequestView(CreateView):
         )
 
         return res
+
+
+def participation_view(request):
+    return JsonResponse({"participation": participation_counter.get()})

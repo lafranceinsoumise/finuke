@@ -37,7 +37,7 @@ class Vote(TimestampedModel):
 
 
 class VoterInformation(models.Model):
-    voter = models.ForeignKey('VoterListItem', models.CASCADE, unique=True)
+    voter = models.OneToOneField('VoterListItem', models.CASCADE)
     phone = PhoneNumberField('Numéro de téléphone', blank=True)
     email = models.EmailField('Adresse email', blank=True)
 
