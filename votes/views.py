@@ -92,6 +92,10 @@ def person_json_search(request, departement, search):
 class VoterStateMixin():
     def dispatch(self, request, *args, **kwargs):
         self.voter_state = VoterState(request)
+
+        if "multiple" in request.GET:
+            request.session['multiple'] = request.GET['multiple'] == True
+
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -206,6 +210,16 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     template_name = 'votes/vote.html'
     form_class = VoteForm
     success_url = settings.THANK_YOU_URL
+
+    def get_success_url(self):
+        if self.request.session.get('multiple', False):
+            messages.add_message(
+                self.request,
+                messages.SUCCESS,
+                'La participation de cette personne a bien été prise en compte.'
+            )
+            return reverse('validate_list')
+        return super().get_success_url()
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)

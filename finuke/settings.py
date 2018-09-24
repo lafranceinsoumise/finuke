@@ -282,6 +282,7 @@ VOTE_QUESTION = os.environ.get('VOTE_QUESTION', "Pensez-vous qu'être méchant c
 ENABLE_VOTING = os.environ.get('ENABLE_VOTING', 'true').lower() == 'true'
 ENABLE_CONTACT_INFORMATION = os.environ.get('ENABLE_CONTACT_INFORMATION', 'false').lower() == 'true'
 ENABLE_PARTICIPATION = os.environ.get('ENABLE_PARTICIPATION', 'false').lower() == 'true'
+MAIN_PAGE = os.environ.get('MAIN_PAGE', 'assistant_login')
 
 
 THANK_YOU_URL = os.environ.get('THANK_YOU_URL', '/')
