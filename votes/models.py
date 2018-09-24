@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from django.db import models
 from django.db.models import fields, ForeignKey
+from phonenumber_field.modelfields import PhoneNumberField
 
 from finuke.model_mixins import TimestampedModel
 from bureaux.models import Bureau
@@ -33,6 +34,12 @@ class Vote(TimestampedModel):
     class Meta:
         verbose_name = 'Vote exprimé'
         verbose_name_plural = 'Votes exprimés'
+
+
+class VoterInformation(models.Model):
+    voter = models.ForeignKey('VoterListItem', models.CASCADE, unique=True)
+    phone = PhoneNumberField('Numéro de téléphone', blank=True)
+    email = models.EmailField('Adresse email', blank=True)
 
 
 class FEVoterListItem(models.Model):

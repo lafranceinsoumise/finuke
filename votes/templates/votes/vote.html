@@ -5,7 +5,7 @@
     {% if person %}
         <div class="alert alert-info">
             <p>
-                {{  person.first_names }} {{ person.last_name }}, c'est à vous de voter&nbsp;!
+                {{  person.first_names }} {{ person.last_name }}, c'est à vous&nbsp;!
                 Si vous n'êtes pas {{ person.first_names }} {{ person.last_name }}, merci de
                 <a href="{%  url 'clean_session' %}">cliquez ici</a>.
             </p>

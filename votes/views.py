@@ -19,7 +19,7 @@ from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm, PhoneUnlockingRequestForm
 from .models import Vote, VoterListItem, FEVoterListItem, UnlockingRequest
-from .actions import make_online_vote, AlreadyVotedException, VoteLimitException, VoterState
+from .actions import make_online_validation, AlreadyVotedException, VoteLimitException, VoterState
 from .tokens import mail_token_generator
 
 ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
@@ -209,7 +209,7 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        if isinstance(response, HttpResponseRedirect):
+        if isinstance(response, HttpResponseRedirect) and hasattr(self, 'vote_id'):
             response.set_cookie('vote_id', self.vote_id, max_age=600)
 
         return response
@@ -227,12 +227,13 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
 
     def form_valid(self, form):
         try:
-            self.vote_id = make_online_vote(
+            self.vote_id, self.contact_information_id = make_online_validation(
                 ip=self.request.META['REMOTE_ADDR'],
                 phone_number=self.voter_state.phone_number,
                 voter=self.voter_state.voter,
                 is_foreign_french=self.voter_state.is_foreign_french,
-                vote=form.cleaned_data['choice']
+                vote=form.cleaned_data.get('choice'),
+                contact_information=form.cleaned_data.get('contact_information')
             )
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})

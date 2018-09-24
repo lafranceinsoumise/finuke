@@ -24,6 +24,7 @@ module.exports = {
         'ELECTRONIC_VOTE_REQUIRE_BIRTHDATE': (process.env.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE || "false").toLowerCase() === 'true',
         'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
         'DEPARTEMENTS': JSON.stringify(!!process.env.DEPARTEMENTS && process.env.DEPARTEMENTS.split(',')),
+        'ENABLE_VOTING': (process.env.ENABLE_VOTING || 'true').toLowerCase() === 'true',
         '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],

@@ -151,7 +151,7 @@ class ListSearch extends React.Component {
         <p className="text-center">
           { this.state.departementInfo ? this.state.departementInfo.name : this.labels.departementHelp }
         </p>
-        {this.state.departementInfo && this.state.departementInfo.details == 'D' ?
+        {this.state.departementInfo && this.state.departementInfo.details === 'D' ?
           <div className="alert alert-warning">
             Nous ne disposons malheureusement pas du détail par communes des listes électorales de ce département.
             Effectuez une recherche sur tout le département.
@@ -192,7 +192,7 @@ class ListSearch extends React.Component {
             loadingPlaceholder="Chargement..." />
         </div>
 
-        <p>Si vous avez déjà voté en ligne ou dans un bureau de vote, votre nom n'apparaîtra plus dans la liste déroulante.</p>
+        <p>Si vous avez déjà {ENABLE_VOTING ? "voté" : "signé"} en ligne ou dans un bureau{ ENABLE_VOTING && " de vote"}, votre nom n'apparaîtra plus dans la liste déroulante.</p>
 
         {
           this.state.person &&

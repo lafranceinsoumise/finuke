@@ -12,7 +12,7 @@ from phones.models import PhoneNumber, SMS
 from bureaux.actions import mark_as_voted
 
 from .models import VoterListItem, Vote, FEVoterListItem
-from .actions import make_online_vote, AlreadyVotedException, VoterState
+from .actions import make_online_validation, AlreadyVotedException, VoterState
 
 
 class VoteConstraintsTestCase(TestCase):
@@ -28,16 +28,16 @@ class VoteConstraintsTestCase(TestCase):
         self.bureau = Bureau.objects.create(place="In the database", operator=self.operator)
 
     def test_can_only_vote_once_with_phone_number(self):
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone1, self.identity2, False, Vote.NO)
+            make_online_validation('randomip', self.phone1, self.identity2, False, Vote.NO)
 
     def test_can_only_vote_once_online_with_identity(self):
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone2, self.identity1, False, Vote.NO)
+            make_online_validation('randomip', self.phone2, self.identity1, False, Vote.NO)
 
     def test_cannot_vote_physically_twice(self):
         request_factory = RequestFactory()
@@ -54,7 +54,7 @@ class VoteConstraintsTestCase(TestCase):
         request = request_factory.get('/')
         request.session = {}
 
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation('randomip', self.phone1, self.identity1, False, Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
             mark_as_voted(request, self.identity1.id, self.bureau)
@@ -67,7 +67,7 @@ class VoteConstraintsTestCase(TestCase):
         mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+            make_online_validation('randomip', self.phone1, self.identity1, False, Vote.YES)
 
 
 class PhoneNumberViewsTestCase(TestCase):
