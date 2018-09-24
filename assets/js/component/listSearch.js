@@ -54,7 +54,9 @@ class ListSearch extends React.Component {
   async componentDidMount() {
     if (!this.departement) return;
 
-    let departementInfo = findDepartement(String(this.departement));
+    let departementInfo = departements.find(
+      d => d.code === String(this.departement).padStart(2, '0')
+    );
 
     this.setState({
       departement: this.departement,
@@ -137,7 +139,7 @@ class ListSearch extends React.Component {
             onBlurResetsInput={false}
             onCloseResetsInput={false}
             onChange={this.departementChange}
-            disabled={this.departement}
+            disabled={!!this.departement}
             placeholder={this.labels.departementPlaceholder}
             options={departements}
             />
