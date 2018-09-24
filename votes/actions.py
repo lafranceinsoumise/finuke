@@ -154,7 +154,7 @@ def check_phone_number_status(phone_number, voter=None):
     return phone_number
 
 
-def make_online_validation(*, ip, phone_number, voter, is_foreign_french, vote, contact_information):
+def make_online_validation(*, ip, phone_number=None, voter=None, is_foreign_french=False, vote, contact_information=None):
     """Make an online vote
 
     This procedure must be executed inside an atomic transaction
