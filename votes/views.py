@@ -8,6 +8,7 @@ from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy, reverse
+from django.utils.safestring import mark_safe
 from django.views.generic import FormView, DetailView, RedirectView, CreateView
 from django.views.decorators.cache import cache_control
 from django.contrib import messages
@@ -236,6 +237,7 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     def get_context_data(self, **kwargs):
         kwargs['person'] = self.voter_state.voter
         kwargs['question'] = settings.VOTE_QUESTION
+        kwargs['text'] = mark_safe(settings.VOTE_TEXT)
 
         return super().get_context_data(**kwargs)
 

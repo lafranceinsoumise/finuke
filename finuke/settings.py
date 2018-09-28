@@ -278,6 +278,7 @@ ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = os.environ.get('ELECTRONIC_VOTE_REQUIRE_BIRT
 ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'true').lower() == 'true'
 VOTATION_NAME = os.environ.get('VOTATION_NAME', 'citoyenne')
 VOTE_QUESTION = os.environ.get('VOTE_QUESTION', "Pensez-vous qu'être méchant c'est pas gentil ?")
+VOTE_TEXT = os.environ.get('VOTE_TEXT', None)
 
 ENABLE_VOTING = os.environ.get('ENABLE_VOTING', 'true').lower() == 'true'
 ENABLE_CONTACT_INFORMATION = os.environ.get('ENABLE_CONTACT_INFORMATION', 'false').lower() == 'true'
