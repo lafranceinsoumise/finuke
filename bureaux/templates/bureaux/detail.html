@@ -8,12 +8,14 @@
     <hr />
 
     <h3>{{ bureau.place }} <small>Bureau de vote</small></h3>
+    {% if not bureau.end_time %}
     <p>
         <a href="{% url 'vote_bureau' bureau.id %}">Accéder aux listes électorales.</a>
     </p>
     <p>
         Code de connexion pour les assesseur⋅e⋅s&nbsp;: <strong>{{ bureau.assistant_code }}</strong>.
     </p>
+    {% endif %}
     <h4>Ouverture</h4>
     <p>
         {{ bureau.start_time }}
