@@ -1,17 +1,12 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [requires]
-
 python_version = "3.6"
 
-
 [packages]
-
 django = "*"
 ovh = "*"
 ipython = "*"
@@ -32,9 +27,8 @@ imapclient = "*"
 dj-email-url = "*"
 requests = "*"
 "html2text" = "*"
-
+elasticsearch = "*"
 
 [dev-packages]
-
 redislite = "*"
 "beautifulsoup4" = "*"

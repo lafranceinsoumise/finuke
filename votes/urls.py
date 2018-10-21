@@ -9,7 +9,7 @@ from votes.views import (
 urlpatterns = [
     path('clean_session', CleanSessionView.as_view(), name='clean_session'),
     path('json/communes/<departement>', commune_json_search, name='commune_json_search'),
-    path('json/listes/<departement>/<search>', person_json_search, name='person_json_search'),
+    path('json/listes/<departement>', person_json_search, name='person_json_search'),
 ]
 
 if settings.ENABLE_ELECTRONIC_VOTE:

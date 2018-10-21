@@ -1,0 +1,65 @@
+{
+  "source": {
+    "query": {
+      "bool": {
+        "should": [
+            {
+            "multi_match": {
+              "query": "{{ name }}",
+              "type": "cross_fields",
+              "fields": [
+                "first_names",
+                "last_name",
+                "use_name"
+              ],
+              "boost": 2
+            }
+          },
+          {
+            "multi_match": {
+              "query": "{{ name }}",
+              "type": "cross_fields",
+              "fields": [
+                "first_names.unaccented",
+                "last_name.unaccented",
+                "use_name.unaccented"
+              ],
+              "boost": 1.5
+            }
+          },
+          {
+            "multi_match": {
+              "query": "{{ name }}",
+              "type": "cross_fields",
+              "fields": [
+                "first_names.ngrams",
+                "last_name.ngrams",
+                "use_name.ngrams"
+              ]
+            }
+          },
+          {
+            "multi_match": {
+              "query": "{{ name }}",
+              "type": "cross_fields",
+              "fields": [
+                "first_names.phonetic",
+                "last_name.phonetic",
+                "use_name.phonetic"
+              ]
+            }
+          }
+        ],
+        "filter": {
+          "term": {
+            "insee": "{{ insee }}"
+          }
+        }
+      }
+    }
+  },
+  "params": {
+    "name": "the name value to search",
+    "insee": "the insee code"
+  }
+}

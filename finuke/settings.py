@@ -15,6 +15,20 @@ import os
 import dj_email_url
 from django.contrib import messages
 
+_YES_VALUES = ['true', 'yes']
+_NO_VALUES = ['false', 'no']
+
+def _boolean_env_var(name, default=False):
+    value = os.environ.get(name, '').lower().strip()
+
+    if any(s.startswith(value) for s in _YES_VALUES):
+        return True
+    if any(s.startswith(value) for s in _NO_VALUES):
+        return False
+
+    return default
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -233,7 +247,7 @@ if DEBUG:
     ]
 
 # OVH Settings
-OVH_SMS_DISABLE = os.environ.get('OVH_SMS_DISABLE', 'true').lower() == 'true'
+OVH_SMS_DISABLE = _boolean_env_var('OVH_SMS_DISABLE', True)
 OVH_SMS_SERVICE = os.environ.get('OVH_SMS_SERVICE')
 OVH_APPLICATION_KEY = os.environ.get('OVH_APPLICATION_KEY')
 OVH_APPLICATION_SECRET = os.environ.get('OVH_APPLICATION_SECRET')
@@ -271,19 +285,24 @@ EMAIL_NOT_CLOSED = 'https://mosaico.lafranceinsoumise.fr/emails/6cbbc59c-19bf-42
 EMAIL_NO_RESULTS = 'https://mosaico.lafranceinsoumise.fr/emails/65f1fe4c-b83a-4808-82fa-049159d22bb7.html'
 EMAIL_OPERATOR = 'https://mosaico.jlm2017.fr/emails/efeecd4d-1cbb-4bb6-9552-7d09a6251bcd.html'
 
-ENABLE_ELECTRONIC_VOTE = os.environ.get('ELECTRONIC_VOTE', 'true').lower() == 'true'
-ELECTRONIC_VOTE_REQUIRE_LIST = os.environ.get('ELECTRONIC_VOTE_REQUIRE_LIST', 'false').lower() == 'true'
-ELECTRONIC_VOTE_REQUIRE_SMS = os.environ.get('ELECTRONIC_VOTE_REQUIRE_SMS', 'true').lower() == 'true'
-ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = os.environ.get('ELECTRONIC_VOTE_REQUIRE_BIRTHDATE', 'false').lower() == 'true'
-ENABLE_PHYSICAL_VOTE = os.environ.get('PHYSICAL_VOTE', 'true').lower() == 'true'
+ENABLE_ELECTRONIC_VOTE = _boolean_env_var('ELECTRONIC_VOTE', True)
+ELECTRONIC_VOTE_REQUIRE_LIST = _boolean_env_var('ELECTRONIC_VOTE_REQUIRE_LIST', False)
+ELECTRONIC_VOTE_REQUIRE_SMS = _boolean_env_var('ELECTRONIC_VOTE_REQUIRE_SMS', True)
+ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = _boolean_env_var('ELECTRONIC_VOTE_REQUIRE_BIRTHDATE', False)
+ENABLE_PHYSICAL_VOTE = _boolean_env_var('PHYSICAL_VOTE', True)
 VOTATION_NAME = os.environ.get('VOTATION_NAME', 'citoyenne')
 VOTE_QUESTION = os.environ.get('VOTE_QUESTION', "Pensez-vous qu'être méchant c'est pas gentil ?")
 VOTE_TEXT = os.environ.get('VOTE_TEXT', None)
 
-ENABLE_VOTING = os.environ.get('ENABLE_VOTING', 'true').lower() == 'true'
-ENABLE_CONTACT_INFORMATION = os.environ.get('ENABLE_CONTACT_INFORMATION', 'false').lower() == 'true'
-ENABLE_PARTICIPATION = os.environ.get('ENABLE_PARTICIPATION', 'false').lower() == 'true'
+ENABLE_VOTING = _boolean_env_var('ENABLE_VOTING', True)
+ENABLE_CONTACT_INFORMATION = _boolean_env_var('ENABLE_CONTACT_INFORMATION', False)
+ENABLE_PARTICIPATION = _boolean_env_var('ENABLE_PARTICIPATION', False)
+ENABLE_HIDING_VOTERS = _boolean_env_var('ENABLE_HIDING_VOTERS', True)
 MAIN_PAGE = os.environ.get('MAIN_PAGE', 'assistant_login')
 
 
 THANK_YOU_URL = os.environ.get('THANK_YOU_URL', '/')
+
+
+ELASTICSEARCH_HOST = 'localhost'
+ELASTICSEARCH_ENABLED = _boolean_env_var("ELASTICSEARCH_ENABLED")

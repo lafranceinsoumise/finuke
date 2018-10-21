@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import DatabaseError, transaction
+from elasticsearch import Elasticsearch, NotFoundError
 
 from phonenumber_field.phonenumber import PhoneNumber
 from prometheus_client import Counter
@@ -203,10 +204,21 @@ def make_online_validation(*, ip, phone_number=None, voter=None, is_foreign_fren
     except DatabaseError:
         raise AlreadyVotedException()
 
+    if settings.ELASTICSEARCH_ENABLED and settings.ENABLE_HIDING_VOTERS:
+        deindex_voter(voter.id)
+
     participation_counter.incr()
     online_vote_counter.inc()
 
     return vote_id, contact_information_id
+
+
+def deindex_voter(voter_id):
+    es = Elasticsearch(hosts=[settings.ELASTICSEARCH_HOST])
+    try:
+        es.delete('voters', 'voter', voter_id)
+    except NotFoundError:
+        pass
 
 
 def save_contact_information(voter, contact_information):

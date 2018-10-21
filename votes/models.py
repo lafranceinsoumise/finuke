@@ -110,11 +110,6 @@ class VoterListItem(models.Model):
     def __str__(self):
         return f"{self.get_full_name()} ({self.departement})"
 
-    HomonymyKey = namedtuple('HomonymyKey', ['first_names', 'last_name', 'commune'])
-
-    def homonymy_key(self):
-        return self.HomonymyKey(self.first_names.upper(), self.last_name.upper(), self.commune)
-
     class Meta:
         verbose_name = 'électeur inscrit'
         verbose_name_plural = 'électeurs inscrits'

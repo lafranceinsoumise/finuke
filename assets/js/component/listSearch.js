@@ -109,10 +109,13 @@ class ListSearch extends React.Component {
       }
 
       this.searchTimeout = setTimeout(async () => {
-        let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
+        let params = {query: input};
+        if (this.state.commune) {
+          params['commune'] = this.state.commune.value;
+        }
 
         try {
-          let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
+          let options = (await axios(`/json/listes/${this.state.departementInfo.code}`, {params})).data
           .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
 
           return resolve({options});
@@ -186,7 +189,7 @@ class ListSearch extends React.Component {
               return options;
             }}
             value={this.state.person}
-            disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details == 'C' && !this.state.commune)}
+            disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details === 'C' && !this.state.commune)}
             onChange={this.personChange}
             loadOptions={this.searchPeople}
             placeholder={this.labels.personPlaceholder}
