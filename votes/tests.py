@@ -262,8 +262,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.get(reverse('person_json_search', kwargs={
             'departement': self.voter1.departement,
-            'search': self.voter1.first_names + ' ' + self.voter1.last_name
-        }), data={'commune': self.voter1.commune})
+        }), data={'commune': self.voter1.commune, 'query': self.voter1.first_names + ' ' + self.voter1.last_name})
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('validate_list'), data={'persons': [self.voter1.id]})

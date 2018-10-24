@@ -21,6 +21,9 @@ _NO_VALUES = ['false', 'no']
 def _boolean_env_var(name, default=False):
     value = os.environ.get(name, '').lower().strip()
 
+    if not value:
+        return default
+
     if any(s.startswith(value) for s in _YES_VALUES):
         return True
     if any(s.startswith(value) for s in _NO_VALUES):

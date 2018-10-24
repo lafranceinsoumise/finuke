@@ -86,7 +86,6 @@ class FindPersonInListForm(forms.Form):
         if not settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE or not birthdate_check:
             del self.fields['birth_date']
 
-
     def clean_persons(self):
         persons = self.cleaned_data['persons']
         if len({p.homonymy_key() for p in persons}) > 1:

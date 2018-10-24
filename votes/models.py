@@ -107,6 +107,13 @@ class VoterListItem(models.Model):
     def get_full_name(self):
         return '{}, {}'.format(self.last_name, self.first_names)
 
+    def homonymy_key(self):
+        from .views import homonymy_key
+        return homonymy_key({
+            'first_names': self.first_names, 'last_name': self.last_name, 'use_last_name': self.use_last_name,
+            'commune': self.commune
+        })
+
     def __str__(self):
         return f"{self.get_full_name()} ({self.departement})"
 
