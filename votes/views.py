@@ -123,7 +123,6 @@ def elasticsearch_search(departement: str, commune: str, search: str):
         query['query']['bool']['filter'] = {'term': {'departement': departement.zfill(2)}}
 
     res = es.search(index='voters', doc_type='voter', body=query)
-    import json
 
     return [{'id': v['_id'], **v['_source'], 'similarity': v['_score']} for v in res['hits'].get('hits', [])]
 

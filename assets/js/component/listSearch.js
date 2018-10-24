@@ -197,7 +197,7 @@ class ListSearch extends React.Component {
             loadingPlaceholder="Chargement..." />
         </div>
 
-        <p>Si vous avez déjà {ENABLE_VOTING ? "voté" : "signé"} en ligne ou dans un bureau{ ENABLE_VOTING && " de vote"}, votre nom n'apparaîtra plus dans la liste déroulante.</p>
+        {ENABLE_HIDING_VOTERS && <p>Si vous avez déjà {ENABLE_VOTING ? "voté" : "signé"} en ligne ou dans un bureau{ ENABLE_VOTING && " de vote"}, votre nom n'apparaîtra plus dans la liste déroulante.</p>}
 
         {
           this.state.person &&

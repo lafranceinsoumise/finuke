@@ -119,7 +119,6 @@ class BasicFunctionalityTestCase(TestCase):
         self.assertEqual(details['link_uuid'], str(self.login_link.uuid))
         self.assertEqual(details['bureau'], self.bureau.id)
 
-
     def test_cannot_see_voting_view_when_unlogged(self):
         res = self.client.get(reverse('vote_bureau', args=[self.bureau.pk]))
         self.assertEqual(res.status_code, 302)

@@ -73,7 +73,7 @@ class BaseForm(forms.Form):
 
 class FindPersonInListForm(forms.Form):
     persons = forms.ModelMultipleChoiceField(
-        queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
+        queryset=VoterListItem.objects.all(),
         widget=None,
         required=True,
         error_messages={'required': "Vous n'avez pas sélectionné de nom dans la liste."})
@@ -109,6 +109,9 @@ class FindPersonInListForm(forms.Form):
                 cleaned_data['person'] = next(p for p in cleaned_data['persons'] if p.birth_date == cleaned_data.get('birth_date'))
             except StopIteration:
                 raise ValidationError('La date de naissance n\'est pas celle inscrite sur les listes électorales.')
+
+        if cleaned_data['person'].vote_status != VoterListItem.VOTE_STATUS_NONE:
+            raise ValidationError('Cette personne a déjà voté !')
 
         return cleaned_data
 
