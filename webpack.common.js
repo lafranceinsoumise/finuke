@@ -26,7 +26,7 @@ module.exports = {
         'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
         'DEPARTEMENTS': JSON.stringify(!!process.env.DEPARTEMENTS && process.env.DEPARTEMENTS.split(',')),
         'ENABLE_VOTING': (process.env.ENABLE_VOTING || 'true').toLowerCase() === 'true',
-        'ENABLE_HIDING_VOTERS': (process.env.ENABLE_VOTING || 'true').toLowerCase() === 'true',
+        'ENABLE_HIDING_VOTERS': (process.env.ENABLE_HIDING_VOTERS || 'true').toLowerCase() === 'true',
         '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],
