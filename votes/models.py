@@ -1,6 +1,6 @@
 import secrets
 import string
-from collections import namedtuple
+from django.conf import settings
 
 from django.db import models
 from django.db.models import fields, ForeignKey
@@ -22,9 +22,9 @@ class Vote(TimestampedModel):
     BLANK = 'B'
 
     VOTE_CHOICES = (
-        (YES, 'Oui'),
-        (NO, 'Non'),
-        (BLANK, 'Blanc'),
+        (YES, settings.VOTE_ANSWERS[0]),
+        (NO, settings.VOTE_ANSWERS[1]),
+        (BLANK, settings.VOTE_ANSWERS[2]),
     )
 
     id = fields.CharField(max_length=32, primary_key=True, editable=False, default=generate_vote_id)

@@ -7,6 +7,16 @@ import 'babel-polyfill';
 
 import departementsData from 'CSVData/departements.csv';
 
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    let regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
 const departements = departementsData
   .map(({
     CodeDept: code,
@@ -31,7 +41,12 @@ class ListSearch extends React.Component {
     this.searchPeople = this.searchPeople.bind(this);
     this.personChange = this.personChange.bind(this);
     this.opMode = this.props.mode === 'operator';
-    this.departement = DEPARTEMENT_PRESELECT;
+    this.communeQueryParameter = getParameterByName('commune');
+    if (!this.communeQueryParameter || this.communeQueryParameter.length !== 5) {
+      this.communeQueryParameter = null;
+    }
+    this.departement = DEPARTEMENT_PRESELECT ||
+      (this.communeQueryParameter ? this.communeQueryParameter.slice(0,2) : null);
     this.departements = DEPARTEMENTS;
     this.communes = COMMUNES;
 
@@ -70,9 +85,14 @@ class ListSearch extends React.Component {
       this.communesChoice = this.communesChoice.filter(c => this.communes.includes(c.value));
     }
 
-    this.setState({
-      communesLoaded: true
-    });
+    const newState = {communesLoaded: true};
+    const commune = this.communesChoice.find(c => c.value === this.communeQueryParameter);
+
+    if (commune) {
+      newState.commune = commune;
+    }
+
+    this.setState(newState);
   }
 
   async departementChange(departementInfo) {

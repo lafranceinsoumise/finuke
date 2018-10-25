@@ -14,6 +14,7 @@ import os
 
 import dj_email_url
 from django.contrib import messages
+from django.core.exceptions import ImproperlyConfigured
 
 _YES_VALUES = ['true', 'yes']
 _NO_VALUES = ['false', 'no']
@@ -295,6 +296,10 @@ ELECTRONIC_VOTE_REQUIRE_BIRTHDATE = _boolean_env_var('ELECTRONIC_VOTE_REQUIRE_BI
 ENABLE_PHYSICAL_VOTE = _boolean_env_var('PHYSICAL_VOTE', True)
 VOTATION_NAME = os.environ.get('VOTATION_NAME', 'citoyenne')
 VOTE_QUESTION = os.environ.get('VOTE_QUESTION', "Pensez-vous qu'être méchant c'est pas gentil ?")
+VOTE_ANSWERS = os.environ.get('VOTE_ANSWERS', 'Oui|Non|Blanc').split('|')
+if len(VOTE_ANSWERS) != 3:
+    raise ImproperlyConfigured('VOTE_ANSWER should be three labels, separated by pipes (|)')
+
 VOTE_TEXT = os.environ.get('VOTE_TEXT', None)
 
 ENABLE_VOTING = _boolean_env_var('ENABLE_VOTING', True)
