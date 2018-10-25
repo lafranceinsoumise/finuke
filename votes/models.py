@@ -1,9 +1,10 @@
 import secrets
 import string
-from collections import namedtuple
+from django.conf import settings
 
 from django.db import models
 from django.db.models import fields, ForeignKey
+from phonenumber_field.modelfields import PhoneNumberField
 
 from finuke.model_mixins import TimestampedModel
 from bureaux.models import Bureau
@@ -21,9 +22,9 @@ class Vote(TimestampedModel):
     BLANK = 'B'
 
     VOTE_CHOICES = (
-        (YES, 'Oui'),
-        (NO, 'Non'),
-        (BLANK, 'Blanc'),
+        (YES, settings.VOTE_ANSWERS[0]),
+        (NO, settings.VOTE_ANSWERS[1]),
+        (BLANK, settings.VOTE_ANSWERS[2]),
     )
 
     id = fields.CharField(max_length=32, primary_key=True, editable=False, default=generate_vote_id)
@@ -33,6 +34,12 @@ class Vote(TimestampedModel):
     class Meta:
         verbose_name = 'Vote exprimé'
         verbose_name_plural = 'Votes exprimés'
+
+
+class VoterInformation(models.Model):
+    voter = models.OneToOneField('VoterListItem', models.CASCADE)
+    phone = PhoneNumberField('Numéro de téléphone', blank=True)
+    email = models.EmailField('Adresse email', blank=True)
 
 
 class FEVoterListItem(models.Model):
@@ -100,13 +107,15 @@ class VoterListItem(models.Model):
     def get_full_name(self):
         return '{}, {}'.format(self.last_name, self.first_names)
 
+    def homonymy_key(self):
+        from .views import homonymy_key
+        return homonymy_key({
+            'first_names': self.first_names, 'last_name': self.last_name, 'use_last_name': self.use_last_name,
+            'commune': self.commune
+        })
+
     def __str__(self):
         return f"{self.get_full_name()} ({self.departement})"
-
-    HomonymyKey = namedtuple('HomonymyKey', ['first_names', 'last_name', 'commune'])
-
-    def homonymy_key(self):
-        return self.HomonymyKey(self.first_names.upper(), self.last_name.upper(), self.commune)
 
     class Meta:
         verbose_name = 'électeur inscrit'

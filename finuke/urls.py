@@ -23,7 +23,7 @@ from finuke.metrics import get_metrics
 
 urlpatterns = [
     path('admin/', admin_site.urls),
-    path('', RedirectView.as_view(url=reverse_lazy('assistant_login'))),
+    path('', RedirectView.as_view(url=reverse_lazy(settings.MAIN_PAGE))),
     path('', include('custom_messages.urls')),
     path('', include('votes.urls'))
 ]

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction, DatabaseError
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -6,7 +7,7 @@ from prometheus_client import Counter
 
 from finuke.exceptions import RateLimitedException
 from token_bucket import TokenBucket
-from votes.actions import check_voter_list_item, AlreadyVotedException
+from votes.actions import check_voter_list_item, AlreadyVotedException, participation_counter, deindex_voter
 from votes.models import VoterListItem
 
 from . import models
@@ -124,6 +125,11 @@ def mark_as_voted(request, voter_list_id, bureau):
                 details={**request_to_json(request), 'voter_list_item': voter_list_id, 'bureau': bureau.id}
             )
             check_voter_list_item(voter_list_id, VoterListItem.VOTE_STATUS_PHYSICAL, bureau)
+
+        participation_counter.incr()
         marked_as_voted_counter.inc()
     except DatabaseError:
         AlreadyVotedException()
+
+    if settings.ELASTICSEARCH_ENABLED and settings.ENABLE_HIDING_VOTERS:
+        deindex_voter(voter_list_id)

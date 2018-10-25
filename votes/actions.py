@@ -1,11 +1,13 @@
 from django.conf import settings
-from django.db import transaction, DatabaseError
-from functools import wraps
+from django.db import DatabaseError, transaction
+from elasticsearch import Elasticsearch, NotFoundError
 
+from phonenumber_field.phonenumber import PhoneNumber
 from prometheus_client import Counter
 
+from finuke.redis import RedisCounter
 from token_bucket import TokenBucket
-from .models import VoterListItem, FEVoterListItem, Vote
+from .models import VoterListItem, FEVoterListItem, Vote, VoterInformation
 from phones.models import PhoneNumber
 
 VoteIPTokenBucket = TokenBucket('VoteIP', 10, 60)
@@ -20,6 +22,9 @@ class VoteLimitException(Exception):
 
 class AlreadyVotedException(Exception):
     pass
+
+
+participation_counter = RedisCounter('participation')
 
 
 class VoterState:
@@ -154,12 +159,27 @@ def check_phone_number_status(phone_number, voter=None):
     return phone_number
 
 
-def make_online_vote(ip, phone_number, voter, is_foreign_french, vote):
+def make_online_validation(*, ip, phone_number=None, voter=None, is_foreign_french=False, vote, contact_information=None):
+    """Make an online vote
+
+    This procedure must be executed inside an atomic transaction
+
+    :param ip: the ip of the client trying to vote
+    :param phone_number: the phone number used to validate the vote (can be None if not phone number validation)
+    :param voter: the voter model instance
+    :param is_foreign_french: is the voter in the foreign French list ?
+    :param vote: the vote choice
+    :return:
+    """
     if not VoteIPTokenBucket.has_tokens(ip):
         raise VoteLimitException("Trop de votes sur cette IP.")
 
+    vote_id = None
+    contact_information_id = None
+
     try:
         with transaction.atomic():
+
             if voter is not None:
                 if is_foreign_french:
                     check_fe_voter_list_item(voter.pk)
@@ -170,10 +190,41 @@ def make_online_vote(ip, phone_number, voter, is_foreign_french, vote):
             if phone_number is not None:
                 check_phone_number_status(phone_number.phone_number, voter=voter)
 
-            vote = Vote.objects.create(vote=vote, with_list=voter is not None)
+            if settings.ENABLE_VOTING:
+                vote_id = Vote.objects.create(vote=vote, with_list=voter is not None).pk
+
+            if settings.ENABLE_CONTACT_INFORMATION:
+                contact_information_id = VoterInformation.objects.create(
+                    voter=voter,
+                    **{
+                        'phone' if isinstance(contact_information, PhoneNumber) else 'email': contact_information
+                    }
+                ).pk
 
     except DatabaseError:
         raise AlreadyVotedException()
 
+    if settings.ELASTICSEARCH_ENABLED and settings.ENABLE_HIDING_VOTERS:
+        deindex_voter(voter.id)
+
+    participation_counter.incr()
     online_vote_counter.inc()
-    return vote.id
+
+    return vote_id, contact_information_id
+
+
+def deindex_voter(voter_id):
+    es = Elasticsearch(hosts=[settings.ELASTICSEARCH_HOST])
+    try:
+        es.delete('voters', 'voter', voter_id)
+    except NotFoundError:
+        pass
+
+
+def save_contact_information(voter, contact_information):
+    return VoterInformation.objects.create(
+        voter=voter,
+        **{
+            'phone' if isinstance(contact_information, PhoneNumber) else 'email': contact_information
+        }
+    )

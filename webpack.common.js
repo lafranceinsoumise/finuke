@@ -22,8 +22,12 @@ module.exports = {
         'BASE_URL': JSON.stringify(process.env.BASE_URL || ''),
         'DEPARTEMENT_PRESELECT': process.env.DEPARTEMENT_PRESELECT || false,
         'ELECTRONIC_VOTE_REQUIRE_BIRTHDATE': (process.env.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE || "false").toLowerCase() === 'true',
+        'ELECTRONIC_VOTE_REQUIRE_LIST': (process.env.ELECTRONIC_VOTE_REQUIRE_LIST || "false").toLowerCase() === 'true',
+        'PHYSICAL_VOTE_REQUIRE_LIST': (process.env.PHYSICAL_VOTE_REQUIRE_LIST || process.env.ELECTRONIC_VOTE_REQUIRE_LIST || "false").toLowerCase() === 'true',
         'COMMUNES': JSON.stringify(!!process.env.COMMUNES && process.env.COMMUNES.split(',')),
         'DEPARTEMENTS': JSON.stringify(!!process.env.DEPARTEMENTS && process.env.DEPARTEMENTS.split(',')),
+        'ENABLE_VOTING': (process.env.ENABLE_VOTING || 'true').toLowerCase() === 'true',
+        'ENABLE_HIDING_VOTERS': (process.env.ENABLE_HIDING_VOTERS || 'true').toLowerCase() === 'true',
         '__VERSION__': JSON.stringify(__VERSION__)
     })
   ],

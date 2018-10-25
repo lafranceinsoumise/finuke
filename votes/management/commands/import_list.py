@@ -77,7 +77,7 @@ class Command(BaseCommand):
             items = []
             date_errors = 0
 
-            for chunk in group_by(enumerate(file_reader), 10000):
+            for chunk in group_by(enumerate(file_reader), 2000):
                 for i, row in chunk:
                     if "more_fields" in row: del row["more_fields"]
                     if i == 0:

@@ -7,11 +7,13 @@ from crispy_forms.helper import FormHelper
 from crispy_forms import layout
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.forms import Form, ModelForm, CharField, ChoiceField, ModelMultipleChoiceField, RadioSelect, DateField
+from django import forms
+from django.forms.fields import validators
 from django.utils import timezone
 from django.utils.html import mark_safe
 from django.urls import reverse
 from phonenumber_field.formfields import PhoneNumberField
+from phonenumber_field.phonenumber import to_python as to_phone_number
 
 from finuke.exceptions import RateLimitedException
 from phones.models import PhoneNumber, SMS
@@ -31,7 +33,7 @@ DROMS_PREFIX = {
     '693': 262,  # Réunion
 }
 
-TOM_COUNTRY_CODES = set([687, 689, 590, 590, 508, 681])
+TOM_COUNTRY_CODES = {687, 689, 590, 590, 508, 681}
 
 DROMS_COUNTRY_CODES = set(DROMS_PREFIX.values())
 
@@ -62,20 +64,20 @@ def normalize_mobile_phone(phone_number, messages):
     return phone_number
 
 
-class BaseForm(Form):
+class BaseForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.add_input(layout.Submit('submit', 'Valider'))
 
 
-class FindPersonInListForm(Form):
-    persons = ModelMultipleChoiceField(
-        queryset=VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE),
+class FindPersonInListForm(forms.Form):
+    persons = forms.ModelMultipleChoiceField(
+        queryset=VoterListItem.objects.all(),
         widget=None,
         required=True,
         error_messages={'required': "Vous n'avez pas sélectionné de nom dans la liste."})
-    birth_date = DateField(required=settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE)
+    birth_date = forms.DateField(required=settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE)
 
     def __init__(self, *args, birthdate_check, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,7 +85,6 @@ class FindPersonInListForm(Form):
         self.birthdate_check = birthdate_check
         if not settings.ELECTRONIC_VOTE_REQUIRE_BIRTHDATE or not birthdate_check:
             del self.fields['birth_date']
-
 
     def clean_persons(self):
         persons = self.cleaned_data['persons']
@@ -108,6 +109,9 @@ class FindPersonInListForm(Form):
                 cleaned_data['person'] = next(p for p in cleaned_data['persons'] if p.birth_date == cleaned_data.get('birth_date'))
             except StopIteration:
                 raise ValidationError('La date de naissance n\'est pas celle inscrite sur les listes électorales.')
+
+        if cleaned_data['person'].vote_status != VoterListItem.VOTE_STATUS_NONE:
+            raise ValidationError('Cette personne a déjà voté !')
 
         return cleaned_data
 
@@ -150,7 +154,7 @@ class ValidatePhoneForm(BaseForm):
 
 
 class ValidateCodeForm(BaseForm):
-    code = CharField(label='Code reçu par SMS')
+    code = forms.CharField(label='Code reçu par SMS')
 
     def __init__(self, *args, phone_number, **kwargs):
         super().__init__(*args, **kwargs)
@@ -179,11 +183,58 @@ class ValidateCodeForm(BaseForm):
         return code
 
 
-class VoteForm(BaseForm):
-    choice = ChoiceField(label='Vote', choices=Vote.VOTE_CHOICES, widget=RadioSelect, required=True)
+class ContactInformationField(forms.CharField):
+    PHONE_CHARS = '+0123456789 .-'
+    email_validator = validators.EmailValidator()
+    default_error_messages = {
+        'phone_or_email': 'Entrez une adresse email ou un numéro de téléphone pour permettre de vous contacter.'
+    }
+
+    def to_python(self, value):
+        value = value.strip()
+
+        if value in self.empty_values:
+            return self.empty_values
+
+        if all(v in self.PHONE_CHARS for v in value):
+            return to_phone_number(value)
+
+        elif '@' in value:
+            self.email_validator(value)
+            return value
+
+        raise ValidationError(self.error_messages['phone_or_email'], 'phone_or_email')
 
 
-class PhoneUnlockingRequestForm(ModelForm):
+class VoteForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.add_input(layout.Submit('submit', 'Je vote !' if settings.ENABLE_VOTING else 'Je signe !'))
+
+        if settings.ENABLE_VOTING:
+            self.fields['choice'] = forms.ChoiceField(
+                label='Vote',
+                choices=Vote.VOTE_CHOICES,
+                widget=forms.RadioSelect,
+                required=True,
+            )
+
+        if settings.ENABLE_CONTACT_INFORMATION:
+            self.fields['contact_information'] = ContactInformationField(
+                label='Information de contact',
+                required=True,
+                help_text="Pour valider votre signature, il est nécessaire d'inclure une information de contact : numéro"
+                          " de téléphone ou adresse email, selon vos préférences. Cette information permet aux autorités"
+                          " de vérifier la réalité de votre signature. Aucun autre usage ne sera fait de cette"
+                          " information."
+            )
+
+
+
+class PhoneUnlockingRequestForm(forms.ModelForm):
     error_messages = {
         'french_only': "Il n'est possible de voter qu'avec des numéros de téléphone français. Ce formulaire ne sert"
                        " qu'à débloquer un numéro qui a DÉJÀ servi à voter.",

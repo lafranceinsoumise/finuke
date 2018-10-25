@@ -7,6 +7,16 @@ import 'babel-polyfill';
 
 import departementsData from 'CSVData/departements.csv';
 
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    let regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
 const departements = departementsData
   .map(({
     CodeDept: code,
@@ -31,7 +41,12 @@ class ListSearch extends React.Component {
     this.searchPeople = this.searchPeople.bind(this);
     this.personChange = this.personChange.bind(this);
     this.opMode = this.props.mode === 'operator';
-    this.departement = DEPARTEMENT_PRESELECT;
+    this.communeQueryParameter = getParameterByName('commune');
+    if (!this.communeQueryParameter || this.communeQueryParameter.length !== 5) {
+      this.communeQueryParameter = null;
+    }
+    this.departement = DEPARTEMENT_PRESELECT ||
+      (this.communeQueryParameter ? this.communeQueryParameter.slice(0,2) : null);
     this.departements = DEPARTEMENTS;
     this.communes = COMMUNES;
 
@@ -54,7 +69,9 @@ class ListSearch extends React.Component {
   async componentDidMount() {
     if (!this.departement) return;
 
-    let departementInfo = findDepartement(String(this.departement));
+    let departementInfo = departements.find(
+      d => d.code === String(this.departement).padStart(2, '0')
+    );
 
     this.setState({
       departement: this.departement,
@@ -68,9 +85,14 @@ class ListSearch extends React.Component {
       this.communesChoice = this.communesChoice.filter(c => this.communes.includes(c.value));
     }
 
-    this.setState({
-      communesLoaded: true
-    });
+    const newState = {communesLoaded: true};
+    const commune = this.communesChoice.find(c => c.value === this.communeQueryParameter);
+
+    if (commune) {
+      newState.commune = commune;
+    }
+
+    this.setState(newState);
   }
 
   async departementChange(departementInfo) {
@@ -107,10 +129,13 @@ class ListSearch extends React.Component {
       }
 
       this.searchTimeout = setTimeout(async () => {
-        let qs = this.state.commune ? `?commune=${this.state.commune.value}` : '';
+        let params = {query: input};
+        if (this.state.commune) {
+          params['commune'] = this.state.commune.value;
+        }
 
         try {
-          let options = (await axios(`/json/listes/${this.state.departementInfo.code}/${input}${qs}`)).data
+          let options = (await axios(`/json/listes/${this.state.departementInfo.code}`, {params})).data
           .map(p => ({value: p.id, label: `${p.first_names} ${p.last_name} - ${p.commune_name}`}));
 
           return resolve({options});
@@ -137,7 +162,7 @@ class ListSearch extends React.Component {
             onBlurResetsInput={false}
             onCloseResetsInput={false}
             onChange={this.departementChange}
-            disabled={this.departement}
+            disabled={!!this.departement}
             placeholder={this.labels.departementPlaceholder}
             options={departements}
             />
@@ -151,7 +176,7 @@ class ListSearch extends React.Component {
         <p className="text-center">
           { this.state.departementInfo ? this.state.departementInfo.name : this.labels.departementHelp }
         </p>
-        {this.state.departementInfo && this.state.departementInfo.details == 'D' ?
+        {this.state.departementInfo && this.state.departementInfo.details === 'D' ?
           <div className="alert alert-warning">
             Nous ne disposons malheureusement pas du détail par communes des listes électorales de ce département.
             Effectuez une recherche sur tout le département.
@@ -184,7 +209,7 @@ class ListSearch extends React.Component {
               return options;
             }}
             value={this.state.person}
-            disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details == 'C' && !this.state.commune)}
+            disabled={!this.state.departementInfo || !this.state.departementInfo.details || (this.state.departementInfo.details === 'C' && !this.state.commune)}
             onChange={this.personChange}
             loadOptions={this.searchPeople}
             placeholder={this.labels.personPlaceholder}
@@ -192,7 +217,7 @@ class ListSearch extends React.Component {
             loadingPlaceholder="Chargement..." />
         </div>
 
-        <p>Si vous avez déjà voté en ligne ou dans un bureau de vote, votre nom n'apparaîtra plus dans la liste déroulante.</p>
+        {ENABLE_HIDING_VOTERS && <p>Si vous avez déjà {ENABLE_VOTING ? "voté" : "signé"} en ligne ou dans un bureau{ ENABLE_VOTING && " de vote"}, votre nom n'apparaîtra plus dans la liste déroulante.</p>}
 
         {
           this.state.person &&
@@ -205,16 +230,19 @@ class ListSearch extends React.Component {
               Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2018
               transmises par la préfecture du département {this.state.departement}.
             </p>
+            {(!this.opMode && !ELECTRONIC_VOTE_REQUIRE_LIST) || (this.opMode && !PHYSICAL_VOTE_REQUIRE_LIST) &&
             <p>
               Dans de très rares cas, il peut cependant subsister des erreurs. Si après avoir réessayé, vous ne trouvez
               toujours pas le nom dans la liste, merci de {this.labels.listErrorHint}.
             </p>
+            }
           </div>
         : '' }
         { this.state.departementInfo && !this.state.departementInfo.details ?
           <div className="alert alert-warning">
             Nous ne disposons malheureusement pas des listes électorales de ce département.
-            {this.labels.noListHint}
+            {(!this.opMode && !ELECTRONIC_VOTE_REQUIRE_LIST) || (this.opMode && !PHYSICAL_VOTE_REQUIRE_LIST)
+            && this.labels.noListHint}
           </div>
         : '' }
       </div>

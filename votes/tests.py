@@ -12,7 +12,7 @@ from phones.models import PhoneNumber, SMS
 from bureaux.actions import mark_as_voted
 
 from .models import VoterListItem, Vote, FEVoterListItem
-from .actions import make_online_vote, AlreadyVotedException, VoterState
+from .actions import make_online_validation, AlreadyVotedException, VoterState
 
 
 class VoteConstraintsTestCase(TestCase):
@@ -28,16 +28,36 @@ class VoteConstraintsTestCase(TestCase):
         self.bureau = Bureau.objects.create(place="In the database", operator=self.operator)
 
     def test_can_only_vote_once_with_phone_number(self):
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation(
+            ip='randomip',
+            phone_number=self.phone1,
+            voter=self.identity1,
+            vote=Vote.YES
+        )
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone1, self.identity2, False, Vote.NO)
+            make_online_validation(
+                ip='randomip',
+                phone_number=self.phone1,
+                voter=self.identity2,
+                vote=Vote.NO
+            )
 
     def test_can_only_vote_once_online_with_identity(self):
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation(
+            ip='randomip',
+            phone_number=self.phone1,
+            voter=self.identity1,
+            vote=Vote.YES
+        )
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone2, self.identity1, False, Vote.NO)
+            make_online_validation(
+                ip='randomip',
+                phone_number=self.phone2,
+                voter=self.identity1,
+                vote=Vote.NO
+            )
 
     def test_cannot_vote_physically_twice(self):
         request_factory = RequestFactory()
@@ -54,7 +74,7 @@ class VoteConstraintsTestCase(TestCase):
         request = request_factory.get('/')
         request.session = {}
 
-        make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+        make_online_validation(ip='randomip', phone_number=self.phone1, voter=self.identity1, vote=Vote.YES)
 
         with self.assertRaises(AlreadyVotedException):
             mark_as_voted(request, self.identity1.id, self.bureau)
@@ -67,7 +87,7 @@ class VoteConstraintsTestCase(TestCase):
         mark_as_voted(request, self.identity1.id, self.bureau)
 
         with self.assertRaises(AlreadyVotedException):
-            make_online_vote('randomip', self.phone1, self.identity1, False, Vote.YES)
+            make_online_validation(ip='randomip', phone_number=self.phone1, voter=self.identity1, vote=Vote.YES)
 
 
 class PhoneNumberViewsTestCase(TestCase):
@@ -242,8 +262,7 @@ class SearchPersonAndVoteTestCase(TestCase):
 
         res = self.client.get(reverse('person_json_search', kwargs={
             'departement': self.voter1.departement,
-            'search': self.voter1.first_names + ' ' + self.voter1.last_name
-        }), data={'commune': self.voter1.commune})
+        }), data={'commune': self.voter1.commune, 'query': self.voter1.first_names + ' ' + self.voter1.last_name})
         self.assertEqual(res.status_code, 200)
 
         res = self.client.post(reverse('validate_list'), data={'persons': [self.voter1.id]})

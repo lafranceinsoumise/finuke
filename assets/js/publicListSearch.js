@@ -32,9 +32,9 @@ class App extends React.Component {
       }
       <div className="input-group margintopless">
         <label><input type="checkbox" required />
-          &nbsp;J'atteste sur l'honneur de mon identité. Mon vote sera anonyme et confidentiel.</label>
+          &nbsp;J'atteste sur l'honneur de mon identité. {ENABLE_VOTING && "Mon vote sera anonyme et confidentiel."}</label>
       </div>
-      <input type="submit" className="btn btn-primary" value="Je veux voter" disabled={!this.state.person} />
+      <input type="submit" className="btn btn-primary" value={`Je veux ${ENABLE_VOTING ? "voter" : "signer"}`} disabled={!this.state.person} />
     </form>
     );
   }

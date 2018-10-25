@@ -3,13 +3,13 @@ from django.urls import path
 
 from votes.views import (
     AskForPhoneView, ValidateCodeView, MakeVoteView, CheckVoteView, commune_json_search, person_json_search,
-    FindPersonInListView, CleanSessionView, ResendSms, FELogin, UnlockingRequestView
+    FindPersonInListView, CleanSessionView, ResendSms, FELogin, UnlockingRequestView, participation_view
 )
 
 urlpatterns = [
     path('clean_session', CleanSessionView.as_view(), name='clean_session'),
     path('json/communes/<departement>', commune_json_search, name='commune_json_search'),
-    path('json/listes/<departement>/<search>', person_json_search, name='person_json_search'),
+    path('json/listes/<departement>', person_json_search, name='person_json_search'),
 ]
 
 if settings.ENABLE_ELECTRONIC_VOTE:
@@ -27,3 +27,8 @@ if settings.ENABLE_ELECTRONIC_VOTE:
             path('validation/renvoyer', ResendSms.as_view(), name='resend_sms'),
             path('validation/code', ValidateCodeView.as_view(), name='validate_code'),
         ])
+
+if settings.ENABLE_PARTICIPATION:
+    urlpatterns.append(
+        path('participation', participation_view, name='view_participation')
+    )

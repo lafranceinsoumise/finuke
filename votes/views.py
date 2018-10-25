@@ -1,4 +1,8 @@
+from collections import namedtuple
 from itertools import groupby
+from operator import itemgetter
+
+from elasticsearch import Elasticsearch
 
 from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -8,6 +12,7 @@ from django.db.models import F, Value, CharField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse_lazy, reverse
+from django.utils.safestring import mark_safe
 from django.views.generic import FormView, DetailView, RedirectView, CreateView
 from django.views.decorators.cache import cache_control
 from django.contrib import messages
@@ -19,7 +24,8 @@ from token_bucket import TokenBucket
 from .data.geodata import communes, communes_names
 from .forms import ValidatePhoneForm, ValidateCodeForm, VoteForm, FindPersonInListForm, PhoneUnlockingRequestForm
 from .models import Vote, VoterListItem, FEVoterListItem, UnlockingRequest
-from .actions import make_online_vote, AlreadyVotedException, VoteLimitException, VoterState
+from .actions import make_online_validation, AlreadyVotedException, VoteLimitException, VoterState, \
+    participation_counter
 from .tokens import mail_token_generator
 
 ListSearchTokenBucket = TokenBucket('ListSearch', 100, 1)
@@ -39,30 +45,30 @@ def commune_json_search(request, departement):
                         safe=False)
 
 
-def groupby_homonyms(qs):
-    sorted_people = sorted(qs, key=VoterListItem.homonymy_key)
-    for k, people in groupby(sorted_people, key=VoterListItem.homonymy_key):
+HomonymyKey = namedtuple('HomonymyKey', ['first_names', 'last_name', 'commune'])
+
+
+def homonymy_key(item):
+    return HomonymyKey(item['first_names'].upper(), item['last_name'].upper(), item['commune'])
+
+
+def group_by_homonyms(items):
+    sorted_voters = sorted(items, key=homonymy_key)
+    for k, voters in groupby(sorted_voters, key=homonymy_key):
+        voters = list(voters)
         yield {
-            'id': [item.id for item in people],
+            'id': [item['id'] for item in voters],
             'first_names': k.first_names,
             'last_name': k.last_name,
-            'commune_name': communes_names.get(k.commune, 'Commune inconnue')
+            'commune_name': communes_names.get(k.commune, 'Commune inconnue'),
+            'similarity': max(item['similarity'] for item in voters)
         }
 
 
-def person_json_search(request, departement, search):
-    voter_state = VoterState(request)
-    if not (voter_state.can_see_list or request.session.get(
-            actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
-        actions.OPERATOR_LOGIN_SESSION_KEY)):
-        raise PermissionDenied("not allowed")
-
-    if not ListSearchTokenBucket.has_tokens(request.session.session_key):
-        return HttpResponse(status=429)
-
-    commune = request.GET.get('commune')
-
-    qs = VoterListItem.objects.filter(vote_status=VoterListItem.VOTE_STATUS_NONE, departement=departement.zfill(2))
+def sql_search(departement, commune, search):
+    qs = VoterListItem.objects.filter(departement=departement.zfill(2))
+    if settings.ENABLE_HIDING_VOTERS:
+        qs = qs.filter(vote_status=VoterListItem.VOTE_STATUS_NONE)
     if commune:
         qs = qs.filter(commune=commune)
 
@@ -84,7 +90,65 @@ def person_json_search(request, departement, search):
         full_name=coumpound_field
     ).filter(full_name__trigram_similar=str(search)).order_by('-similarity')[:20]
 
-    response = list(groupby_homonyms(qs))
+    return [
+        {'id': v.id, 'first_names': v.first_names, 'last_name': v.last_name, 'commune': v.commune,
+         'similarity': v.similarity} for v in qs
+    ]
+
+
+def elasticsearch_search(departement: str, commune: str, search: str):
+    es = Elasticsearch(hosts=[settings.ELASTICSEARCH_HOST])
+
+    fields = ["first_names{suffix}", "last_name{suffix}", "use_last_name{suffix}^0.7"]
+    suffixes = {'': 2, '.ngrams': 1, '.phonetic': 1}
+
+    query = {
+        "query": {
+            "bool": {
+                "should": [{
+                    "multi_match": {
+                        "query": search,
+                        "type": "cross_fields",
+                        "fields": [f.format(suffix=suffix) for f in fields],
+                        "boost": boost
+                    }
+                } for suffix, boost in suffixes.items()]
+            }
+        }
+    }
+
+    if commune:
+        query['query']['bool']['filter'] = {'term': {'commune': commune}}
+    elif departement:
+        query['query']['bool']['filter'] = {'term': {'departement': departement.zfill(2)}}
+
+    res = es.search(index='voters', doc_type='voter', body=query)
+
+    return [{'id': v['_id'], **v['_source'], 'similarity': v['_score']} for v in res['hits'].get('hits', [])]
+
+
+def person_json_search(request, departement):
+    voter_state = VoterState(request)
+    if not (voter_state.can_see_list or request.session.get(
+            actions.ASSISTANT_LOGIN_SESSION_KEY) or request.session.get(
+        actions.OPERATOR_LOGIN_SESSION_KEY)):
+        raise PermissionDenied("not allowed")
+
+    if not ListSearchTokenBucket.has_tokens(request.session.session_key):
+        return HttpResponse(status=429)
+
+    query = request.GET.get('query')
+    commune = request.GET.get('commune')
+
+    if not query:
+        return HttpResponse(status=400)
+
+    if settings.ELASTICSEARCH_ENABLED:
+        results = elasticsearch_search(departement, commune, query)
+    else:
+        results = sql_search(departement, commune, query)
+
+    response = sorted(group_by_homonyms(results), reverse=True, key=itemgetter('similarity'))
 
     return JsonResponse(response, safe=False)
 
@@ -92,6 +156,10 @@ def person_json_search(request, departement, search):
 class VoterStateMixin():
     def dispatch(self, request, *args, **kwargs):
         self.voter_state = VoterState(request)
+
+        if "multiple" in request.GET:
+            request.session['multiple'] = request.GET['multiple'] == True
+
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -107,8 +175,8 @@ class AskForPhoneView(VoterStateMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        if self.voter_state.is_phone_valid and self.voter_state.phone_number and self.voter_state.phone_number.phone_number == \
-                form.cleaned_data['phone_number']:
+        if self.voter_state.is_phone_valid and self.voter_state.phone_number and \
+                self.voter_state.phone_number.phone_number == form.cleaned_data['phone_number']:
             return HttpResponseRedirect(reverse('validate_list'))
 
         self.voter_state.clean_session()
@@ -207,9 +275,19 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     form_class = VoteForm
     success_url = settings.THANK_YOU_URL
 
+    def get_success_url(self):
+        if self.request.session.get('multiple', False):
+            messages.add_message(
+                self.request,
+                messages.SUCCESS,
+                'La participation de cette personne a bien été prise en compte.'
+            )
+            return reverse('validate_list')
+        return super().get_success_url()
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        if isinstance(response, HttpResponseRedirect):
+        if isinstance(response, HttpResponseRedirect) and hasattr(self, 'vote_id'):
             response.set_cookie('vote_id', self.vote_id, max_age=600)
 
         return response
@@ -222,17 +300,19 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     def get_context_data(self, **kwargs):
         kwargs['person'] = self.voter_state.voter
         kwargs['question'] = settings.VOTE_QUESTION
+        kwargs['text'] = settings.VOTE_TEXT and mark_safe(settings.VOTE_TEXT)
 
         return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         try:
-            self.vote_id = make_online_vote(
+            self.vote_id, self.contact_information_id = make_online_validation(
                 ip=self.request.META['REMOTE_ADDR'],
                 phone_number=self.voter_state.phone_number,
                 voter=self.voter_state.voter,
                 is_foreign_french=self.voter_state.is_foreign_french,
-                vote=form.cleaned_data['choice']
+                vote=form.cleaned_data.get('choice'),
+                contact_information=form.cleaned_data.get('contact_information')
             )
         except AlreadyVotedException:
             return JsonResponse({'error': 'already voted'})
@@ -292,3 +372,7 @@ class UnlockingRequestView(CreateView):
         )
 
         return res
+
+
+def participation_view(request):
+    return JsonResponse({"participation": participation_counter.get()})

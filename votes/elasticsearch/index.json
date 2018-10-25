@@ -1,0 +1,94 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "unaccented": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        },
+        "ngrams": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "my_ngram"
+          ]
+        },
+        "phonetic": {
+          "tokenizer": "standard",
+          "filter": [
+            "my_phonetic"
+          ]
+        }
+      },
+      "filter": {
+        "my_phonetic": {
+          "type": "phonetic",
+          "encoder": "beider_morse"
+        },
+        "my_ngram": {
+          "type": "nGram",
+          "min_gram": 1,
+          "max_gram": 3
+        }
+      }
+    }
+  },
+  "mappings": {
+    "voter": {
+      "properties": {
+        "first_names": {
+          "type": "text",
+          "analyzer": "unaccented",
+          "fields": {
+            "ngrams": {
+              "type": "text",
+              "analyzer": "ngrams"
+            },
+            "phonetic": {
+              "type": "text",
+              "analyzer": "phonetic"
+            }
+          }
+        },
+        "last_name": {
+          "type": "text",
+          "analyzer": "unaccented",
+          "fields": {
+            "ngrams": {
+              "type": "text",
+              "analyzer": "ngrams"
+            },
+            "phonetic": {
+              "type": "text",
+              "analyzer": "phonetic"
+            }
+          }
+        },
+        "use_last_name": {
+          "type": "text",
+          "analyzer": "unaccented",
+          "fields": {
+            "ngrams": {
+              "type": "text",
+              "analyzer": "ngrams"
+            },
+            "phonetic": {
+              "type": "text",
+              "analyzer": "phonetic"
+            }
+          }
+        },
+        "commune": {
+          "type": "keyword"
+        },
+        "departement": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
