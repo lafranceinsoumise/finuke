@@ -34,8 +34,16 @@ if settings.ENABLE_PHYSICAL_VOTE:
     @admin.register(Bureau, site=admin_site)
     class BureauAdmin(admin.ModelAdmin):
         search_fields = ('place', 'operator__email')
-        list_display = ('place', 'operator', 'start_time', 'end_time', 'has_results', 'result1', 'emargements', 'difference', 'result2')
-        readonly_fields = ('has_results', 'result1', 'result2', 'emargements', 'difference')
+        list_display = ['place', 'operator', 'start_time', 'end_time', 'has_results', 'result1', 'emargements', 'difference']
+        if not settings.PHYSICAL_VOTE_REQUIRE_LIST:
+            list_display.append('result2')
+        readonly_fields = ['has_results', 'result1']
+        if not settings.PHYSICAL_VOTE_REQUIRE_LIST:
+            readonly_fields.append('result2')
+        readonly_fields.extend(['emargements', 'difference'])
+
+        if settings.PHYSICAL_VOTE_REQUIRE_LIST:
+            exclude = ('result2_yes', 'result2_no', 'result2_blank', 'result2_null')
 
         def get_queryset(self, request):
             return Bureau.objects.annotate(emargements=Count('voterlistitem'))\

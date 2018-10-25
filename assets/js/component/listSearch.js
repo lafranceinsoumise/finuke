@@ -230,7 +230,7 @@ class ListSearch extends React.Component {
               Vous devez cliquer sur un nom dans la liste déroulante. Les listes électorales sont celles de 2018
               transmises par la préfecture du département {this.state.departement}.
             </p>
-            {!ELECTRONIC_VOTE_REQUIRE_LIST &&
+            {(!this.opMode && !ELECTRONIC_VOTE_REQUIRE_LIST) || (this.opMode && !PHYSICAL_VOTE_REQUIRE_LIST) &&
             <p>
               Dans de très rares cas, il peut cependant subsister des erreurs. Si après avoir réessayé, vous ne trouvez
               toujours pas le nom dans la liste, merci de {this.labels.listErrorHint}.
@@ -241,7 +241,8 @@ class ListSearch extends React.Component {
         { this.state.departementInfo && !this.state.departementInfo.details ?
           <div className="alert alert-warning">
             Nous ne disposons malheureusement pas des listes électorales de ce département.
-            {!ELECTRONIC_VOTE_REQUIRE_LIST && this.labels.noListHint}
+            {(!this.opMode && !ELECTRONIC_VOTE_REQUIRE_LIST) || (this.opMode && !PHYSICAL_VOTE_REQUIRE_LIST)
+            && this.labels.noListHint}
           </div>
         : '' }
       </div>

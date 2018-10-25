@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django import forms
 from bureaux.models import Bureau
@@ -30,17 +31,21 @@ class BureauResultsForm(forms.ModelForm):
 
     class Meta:
         model = Bureau
-        fields = (
+        fields = [
             'result1_yes',
             'result1_no',
             'result1_blank',
             'result1_null',
-            'result2_yes',
-            'result2_no',
-            'result2_blank',
-            'result2_null',
-            'results_comment'
-        )
+        ]
+        if not settings.ELECTRONIC_VOTE_REQUIRE_LIST:
+            fields.extend([
+                'result2_yes',
+                'result2_no',
+                'result2_blank',
+                'result2_null',
+            ])
+        fields.append('results_comment')
+
 
 
 class AssistantCodeForm(forms.Form):
