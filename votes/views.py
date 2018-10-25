@@ -300,7 +300,7 @@ class MakeVoteView(VoterStateMixin, UserPassesTestMixin, FormView):
     def get_context_data(self, **kwargs):
         kwargs['person'] = self.voter_state.voter
         kwargs['question'] = settings.VOTE_QUESTION
-        kwargs['text'] = mark_safe(settings.VOTE_TEXT)
+        kwargs['text'] = settings.VOTE_TEXT and mark_safe(settings.VOTE_TEXT)
 
         return super().get_context_data(**kwargs)
 
