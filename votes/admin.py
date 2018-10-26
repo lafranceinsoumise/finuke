@@ -1,11 +1,15 @@
+from itertools import groupby
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import CharField, ExpressionWrapper, Value, F
+from django.db.models import CharField, ExpressionWrapper, Value, F, Sum, Count
 from django.urls import reverse
+from django.views.generic import TemplateView
 
+from bureaux.models import Bureau
 from finuke.admin import admin_site
-from votes.models import VoterListItem, Vote, FEVoterListItem, UnlockingRequest
+from votes.models import VoterListItem, Vote, FEVoterListItem, UnlockingRequest, Results
 from .tokens import mail_token_generator
 
 
@@ -110,3 +114,56 @@ if settings.ENABLE_ELECTRONIC_VOTE:
         actual_voter.short_description = 'Nom du votant'
 
         actions = [accept_request, refuse_request]
+
+
+class ResultsAdminView(TemplateView):
+    template_name = 'votes/admin/results.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+
+        context['title'] = 'Résultats'
+        context['opts'] = Results._meta
+        context['add'] = False
+        context['change'] = False
+        context['is_popup'] = False
+        context['save_as'] = False
+        context['has_add_permission'] = False
+        context['has_change_permission'] = False
+        context['has_view_permission'] = False
+        context['has_editable_inline_admin_formsets'] = False
+        context['has_delete_permission'] = False
+        context['show_close'] = False
+
+        online_results = list(Vote.objects.values('with_list', 'vote').annotate(count=Count('*')).order_by('with_list', 'vote'))
+        context['vote'] = {
+            'enable_voting': settings.ENABLE_VOTING,
+            'question': settings.VOTE_QUESTION,
+            'answers': settings.VOTE_ANSWERS,
+            'bureau_results': Bureau.objects.filter(end_time__isnull=False).aggregate(
+                result1_yes_sum=Sum('result1_yes'),
+                result1_no_sum=Sum('result1_no'),
+                result1_blank_sum=Sum('result1_blank'),
+                result1_null_sum=Sum('result1_null'),
+                result1_total_sum=Sum(F('result1_yes') + F('result1_no') + F('result1_blank') + F('result1_null')),
+                result2_yes_sum=Sum('result2_yes'),
+                result2_no_sum=Sum('result2_no'),
+                result2_blank_sum=Sum('result2_blank'),
+                result2_null_sum=Sum('result2_null'),
+                result2_total_sum=Sum(F('result2_yes') + F('result2_no') + F('result2_blank') + F('result2_null')),
+            ),
+            'online_results': {
+                str(key): {
+                    **dict([(e['vote'], e['count']) for e in g]),
+                    'T': sum(e['count'] for e in g)
+                } for key, g in groupby(online_results, lambda v:v['with_list'])}
+        }
+        context['vote']['total_results'] = {
+            key: (value or 0) + context['vote']['online_results'].get(str(key[6] == '1'), {}).get(key[8].capitalize(), 0)
+        for key, value in context['vote']['bureau_results'].items()}
+
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        request.current_app = 'finuke_admin'
+        return super().dispatch(request, *args, **kwargs)

@@ -1,0 +1,8 @@
+{% extends "admin/index.html" %}
+
+{% block sidebar %}
+  {{ block.super }}
+  <div>
+  <a href="{% url 'admin:results' %}">Voir les résultats</a>
+  </div>
+{% endblock %}

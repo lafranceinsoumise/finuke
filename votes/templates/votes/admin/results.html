@@ -1,0 +1,86 @@
+{% extends "admin/change_form.html" %}
+
+{% block content_title %}
+    <h1> Résultats </h1>
+{% endblock %}
+
+{% block content %}
+  {% if vote.enable_voting %}
+    <h3>{{ question }}</h3>
+    <table>
+      <tr>
+        <th>
+          Vote
+        </th>
+        {% for a in vote.answers %}
+          <th>{{ a }}</th>
+        {% endfor %}
+        <th>Nul</th>
+        <th>Total</th>
+      </tr>
+      <tr>
+        <th>
+          En bureaux (inscrits)
+        </th>
+        <td>{{ vote.bureau_results.result1_yes_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result1_no_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result1_blank_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result1_null_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result1_total_sum|default:0 }}</td>
+      </tr>
+      <tr>
+        <th>
+          En bureaux (non-inscrits)
+        </th>
+        <td>{{ vote.bureau_results.result2_yes_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result2_no_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result2_blank_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result2_null_sum|default:0 }}</td>
+        <td>{{ vote.bureau_results.result2_total_sum|default:0 }}</td>
+      </tr>
+      <tr>
+        <th>
+          En ligne (inscrits)
+        </th>
+        <td>{{ vote.online_results.True.Y|default:0 }}</td>
+        <td>{{ vote.online_results.True.N|default:0 }}</td>
+        <td>{{ vote.online_results.True.B|default:0 }}</td>
+        <td>NA</td>
+        <td>{{ vote.online_results.True.T|default:0 }}</td>
+      </tr>
+      <tr>
+        <th>
+          En ligne (non-inscrits)
+        </th>
+        <td>{{ vote.online_results.False.Y|default:0 }}</td>
+        <td>{{ vote.online_results.False.N|default:0 }}</td>
+        <td>{{ vote.online_results.False.B|default:0 }}</td>
+        <td>NA</td>
+        <td>{{ vote.online_results.False.T|default:0 }}</td>
+      </tr>
+      <tr>
+        <th>
+          Total inscrits
+        </th>
+        <td>{{ vote.total_results.result1_yes_sum }}</td>
+        <td>{{ vote.total_results.result1_no_sum }}</td>
+        <td>{{ vote.total_results.result1_blank_sum }}</td>
+        <td>{{ vote.total_results.result1_null_sum }}</td>
+        <td>{{ vote.total_results.result1_total_sum }}</td>
+      </tr>
+      <tr>
+        <th>
+          Total non inscrits
+        </th>
+        <td>{{ vote.total_results.result2_yes_sum }}</td>
+        <td>{{ vote.total_results.result2_no_sum }}</td>
+        <td>{{ vote.total_results.result2_blank_sum }}</td>
+        <td>{{ vote.total_results.result2_null_sum }}</td>
+        <td>{{ vote.total_results.result2_total_sum }}</td>
+      </tr>
+    </table>
+  {% endif %}
+
+{% endblock %}
+
+{% block submit_buttons_bottom %}{% endblock %}

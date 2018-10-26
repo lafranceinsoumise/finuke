@@ -158,3 +158,10 @@ class UnlockingRequest(models.Model):
     class Meta:
         verbose_name = "demande de déblocage d'un numéro de téléphone"
         verbose_name_plural = 'demandes de déblocages de numéros de téléphone'
+
+
+class Results(VoterListItem):
+    class Meta:
+        proxy = True
+        verbose_name_plural = "Résultats"
+        verbose_name = "Résultats"
