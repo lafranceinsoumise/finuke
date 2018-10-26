@@ -153,11 +153,13 @@ class ResultsAdminView(TemplateView):
                 result2_total_sum=Sum(F('result2_yes') + F('result2_no') + F('result2_blank') + F('result2_null')),
             ),
             'online_results': {
-                str(key): {
-                    **dict([(e['vote'], e['count']) for e in g]),
-                    'T': sum(e['count'] for e in g)
-                } for key, g in groupby(online_results, lambda v:v['with_list'])}
+                str(key): dict([(e['vote'], e['count']) for e in g])
+                    for key, g in groupby(online_results, lambda v:v['with_list'])
+            }
         }
+
+        for k in context['vote']['online_results']:
+            context['vote']['online_results'][k]['T'] = sum(context['vote']['online_results'][k].values())
         context['vote']['total_results'] = {
             key: (value or 0) + context['vote']['online_results'].get(str(key[6] == '1'), {}).get(key[8].capitalize(), 0)
         for key, value in context['vote']['bureau_results'].items()}
