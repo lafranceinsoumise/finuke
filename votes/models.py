@@ -78,7 +78,7 @@ class VoterListItem(models.Model):
         return communes_names.get(self.commune, 'Commune inconnue')
 
     vote_status = fields.CharField('Statut du vote', max_length=1, choices=VOTED_CHOICES, default=VOTE_STATUS_NONE)
-    vote_bureau = ForeignKey(Bureau, on_delete=models.CASCADE, null=True)
+    vote_bureau = ForeignKey(Bureau, on_delete=models.SET_NULL, null=True)
 
     origin_file = fields.IntegerField('Identifiant du fichier d\'origine')
     file_line = fields.IntegerField('Numéro de la ligne dans le fichier d\'origine')
