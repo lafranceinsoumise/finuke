@@ -25,7 +25,9 @@ class OperatorViewMixin(UserPassesTestMixin):
             return False
 
         try:
-            self.request.operator = LoginLink.objects.select_related('operator').get(uuid=login_uuid, valid=True).operator
+            self.request.operator = LoginLink.objects.select_related('operator').get(
+                uuid=login_uuid, valid=True, operator__active=True
+            ).operator
             return True
         except LoginLink.DoesNotExist:
             return False

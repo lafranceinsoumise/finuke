@@ -17,7 +17,7 @@ if settings.ENABLE_PHYSICAL_VOTE:
 
     @admin.register(BureauOperator, site=admin_site)
     class BureauOperatorAdmin(admin.ModelAdmin):
-        list_display = ('email', 'bureau_count')
+        list_display = ('email', 'bureau_count', 'active')
         search_fields = ('email',)
 
         readonly_fields = ('bureau_count', 'login_link')

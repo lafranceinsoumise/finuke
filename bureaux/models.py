@@ -24,6 +24,7 @@ class LoginLink(TimestampedModel):
 
 class BureauOperator(TimestampedModel):
     email = fields.EmailField("Adresse email", unique=True)
+    active = fields.BooleanField("Compte actif", default=True)
 
     def __str__(self):
         return self.email
@@ -51,6 +52,8 @@ class Bureau(models.Model):
 
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux',
                                  verbose_name='président⋅e du bureau')
+    operator = models.ForeignKey('BureauOperator', on_delete=models.PROTECT, related_name='bureaux',
+                                 verbose_name='opérateur du bureau')
     place = fields.CharField("Lieu", max_length=255)
     start_time = fields.DateTimeField("Heure de d'ouverture du bureau", auto_now_add=True, editable=False)
     end_time = fields.DateTimeField("Heure de fermeture du bureau", blank=True, null=True, editable=False)
