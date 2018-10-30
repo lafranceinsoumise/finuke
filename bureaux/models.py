@@ -67,7 +67,7 @@ class Bureau(models.Model):
     result2_null = fields.IntegerField("Bulletins non-inscrit⋅e⋅s : nuls", blank=True, null=True)
     results_comment = fields.TextField("Remarques", blank=True)
 
-    assistant_code = fields.CharField("Code d'accès pour les assistant⋅e⋅s", default=new_assistant_code, max_length=10)
+    assistant_code = fields.CharField("Code d'accès pour les assesseur⋅e⋅s", default=new_assistant_code, max_length=10)
 
     def has_results(self):
         return self.result1_yes is not None
@@ -93,7 +93,7 @@ class Operation(TimestampedModel):
         (START_BUREAU, "Ouverture de bureau"),
         (END_BUREAU, "Fermeture de bureau"),
         (SEND_RESULTS, "Envoi des résultats"),
-        (ASSISTANT_LOGIN, "Connexion d'un⋅e assistant⋅e"),
+        (ASSISTANT_LOGIN, "Connexion d'un⋅e assesseur⋅e"),
         (PERSON_VOTE, "Validation du vote d'un⋅e personne inscrite sur les listes")
     )
 
