@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'phones',
     'votes',
     'bureaux',
+    'documentation',
 ]
 
 MIDDLEWARE = [

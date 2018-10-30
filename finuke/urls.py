@@ -49,3 +49,8 @@ if settings.DEBUG:
     urlpatterns = [
                       url(r'^__debug__/', include(debug_toolbar.urls)),
                   ] + urlpatterns
+
+
+urlpatterns += [
+    path('documentation/', include('documentation.urls'))
+]

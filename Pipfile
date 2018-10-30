@@ -28,6 +28,7 @@ dj-email-url = "*"
 requests = "*"
 "html2text" = "*"
 elasticsearch = "*"
+markdown = "*"
 
 [dev-packages]
 redislite = "*"
