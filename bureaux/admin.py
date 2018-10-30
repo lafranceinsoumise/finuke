@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
+from django.contrib.admin import SimpleListFilter
 from django.db.models import Count, F
 from django.shortcuts import reverse
 
@@ -24,17 +25,43 @@ if settings.ENABLE_PHYSICAL_VOTE:
 
         def bureau_count(self, obj):
             return obj.bureaux.all().count()
+
         bureau_count.short_description = "Nombre de bureaux"
 
         def login_link(self, obj):
             return f"https://{settings.DOMAIN_NAME}{reverse('login', args=[obj.login_links.first().uuid])}"
+
         login_link.short_description = "Lien de connexion"
+
+
+    class BureauStatusFilter(SimpleListFilter):
+        title = "Statut du bureau"
+        parameter_name = 'status'
+
+        def lookups(self, request, model_admin):
+            return (
+                ('open', 'Ouvert'),
+                ('no_results', 'Fermé mais résultats non remontés'),
+                ('closed', 'Fermé avec résultats')
+            )
+
+        def queryset(self, request, queryset):
+            value = self.value()
+            if value == 'open':
+                return queryset.filter(end_time__isnull=True)
+            if value == 'no_results':
+                return queryset.filter(end_time__isnull=False, result1_yes__isnull=True)
+            if value == 'closed':
+                return queryset.filter(result1_yes__isnull=False)
+            return queryset
 
 
     @admin.register(Bureau, site=admin_site)
     class BureauAdmin(admin.ModelAdmin):
         search_fields = ('place', 'operator__email')
-        list_display = ['place', 'operator', 'start_time', 'end_time', 'has_results', 'result1', 'emargements', 'difference']
+        list_display = ['place', 'operator', 'start_time', 'end_time', 'has_results', 'result1', 'emargements',
+                        'difference']
+        list_filter = (BureauStatusFilter,)
         if not settings.PHYSICAL_VOTE_REQUIRE_LIST:
             list_display.append('result2')
         readonly_fields = ['has_results', 'result1']
@@ -74,7 +101,6 @@ if settings.ENABLE_PHYSICAL_VOTE:
 
         emargements.short_description = 'Émargements'
         emargements.admin_order_field = 'emargements'
-
 
 
     @admin.register(Operation, site=admin_site)
