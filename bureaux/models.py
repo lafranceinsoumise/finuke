@@ -29,8 +29,8 @@ class BureauOperator(TimestampedModel):
         return self.email
 
     class Meta:
-        verbose_name = 'opérateur de bureaux de vote'
-        verbose_name_plural = 'opérateurs de bureaux de votes'
+        verbose_name = 'président⋅e de bureaux de vote'
+        verbose_name_plural = 'président⋅e⋅s de bureaux de votes'
 
 
 def new_assistant_code():
@@ -50,7 +50,7 @@ class Bureau(models.Model):
     objects = BureauQueryset.as_manager()
 
     operator = models.ForeignKey('BureauOperator', on_delete=models.CASCADE, related_name='bureaux',
-                                 verbose_name='opérateur du bureau')
+                                 verbose_name='président⋅e du bureau')
     place = fields.CharField("Lieu", max_length=255)
     start_time = fields.DateTimeField("Heure de d'ouverture du bureau", auto_now_add=True, editable=False)
     end_time = fields.DateTimeField("Heure de fermeture du bureau", blank=True, null=True, editable=False)
@@ -86,7 +86,7 @@ class Operation(TimestampedModel):
     PERSON_VOTE = "PERSON_VOTE"
 
     OPERATION_CHOICES = (
-        (OPERATOR_LOGIN, "Connexion d'un⋅e opérateur⋅rice"),
+        (OPERATOR_LOGIN, "Connexion d'un⋅e président⋅e"),
         (START_BUREAU, "Ouverture de bureau"),
         (END_BUREAU, "Fermeture de bureau"),
         (SEND_RESULTS, "Envoi des résultats"),

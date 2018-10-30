@@ -148,8 +148,7 @@ class MakePersonVoteMixin(SingleObjectMixin, OperatorViewMixin):
     def show_voting_message(self, person):
         messages.add_message(
             self.request, messages.SUCCESS,
-            f'{person.get_full_name()} a bien été marqué⋅e comme votant⋅e. Vous pouvez lui donner enveloppe et bulletin'
-            f' vert.')
+            f'{person.get_full_name()} a bien été marqué⋅e comme votant⋅e. Vous pouvez lui donner une enveloppe et bulletin.')
 
 
 class FindVoterInListView(MakePersonVoteMixin, FormView):
